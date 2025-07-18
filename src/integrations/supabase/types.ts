@@ -14,7 +14,330 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      confluence_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
+      notes: {
+        Row: {
+          category: string | null
+          content: string | null
+          created_at: string
+          id: string
+          is_favorite: boolean
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_favorite?: boolean
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_favorite?: boolean
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          timezone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      strategies: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          max_daily_risk: number | null
+          name: string
+          risk_per_trade: number | null
+          rules: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_daily_risk?: number | null
+          name: string
+          risk_per_trade?: number | null
+          rules?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_daily_risk?: number | null
+          name?: string
+          risk_per_trade?: number | null
+          rules?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trade_confluence: {
+        Row: {
+          confluence_item_id: string
+          created_at: string
+          id: string
+          is_present: boolean
+          notes: string | null
+          trade_id: string
+        }
+        Insert: {
+          confluence_item_id: string
+          created_at?: string
+          id?: string
+          is_present?: boolean
+          notes?: string | null
+          trade_id: string
+        }
+        Update: {
+          confluence_item_id?: string
+          created_at?: string
+          id?: string
+          is_present?: boolean
+          notes?: string | null
+          trade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_trade_confluence_item"
+            columns: ["confluence_item_id"]
+            isOneToOne: false
+            referencedRelation: "confluence_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_trade_confluence_trade"
+            columns: ["trade_id"]
+            isOneToOne: false
+            referencedRelation: "trades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trades: {
+        Row: {
+          commission: number | null
+          confluence_score: number | null
+          created_at: string
+          entry_date: string
+          entry_price: number
+          exit_date: string | null
+          exit_price: number | null
+          id: string
+          notes: string | null
+          pnl: number | null
+          quantity: number
+          risk_amount: number | null
+          risk_reward_ratio: number | null
+          screenshots: string[] | null
+          status: string
+          stop_loss: number | null
+          strategy_id: string | null
+          swap: number | null
+          symbol: string
+          take_profit: number | null
+          trade_type: string
+          trading_account_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          commission?: number | null
+          confluence_score?: number | null
+          created_at?: string
+          entry_date: string
+          entry_price: number
+          exit_date?: string | null
+          exit_price?: number | null
+          id?: string
+          notes?: string | null
+          pnl?: number | null
+          quantity: number
+          risk_amount?: number | null
+          risk_reward_ratio?: number | null
+          screenshots?: string[] | null
+          status?: string
+          stop_loss?: number | null
+          strategy_id?: string | null
+          swap?: number | null
+          symbol: string
+          take_profit?: number | null
+          trade_type: string
+          trading_account_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          commission?: number | null
+          confluence_score?: number | null
+          created_at?: string
+          entry_date?: string
+          entry_price?: number
+          exit_date?: string | null
+          exit_price?: number | null
+          id?: string
+          notes?: string | null
+          pnl?: number | null
+          quantity?: number
+          risk_amount?: number | null
+          risk_reward_ratio?: number | null
+          screenshots?: string[] | null
+          status?: string
+          stop_loss?: number | null
+          strategy_id?: string | null
+          swap?: number | null
+          symbol?: string
+          take_profit?: number | null
+          trade_type?: string
+          trading_account_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_trades_account"
+            columns: ["trading_account_id"]
+            isOneToOne: false
+            referencedRelation: "trading_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_trades_strategy"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trading_accounts: {
+        Row: {
+          account_type: string
+          broker: string | null
+          created_at: string
+          currency: string
+          current_balance: number
+          current_equity: number
+          id: string
+          initial_balance: number
+          is_active: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_type: string
+          broker?: string | null
+          created_at?: string
+          currency?: string
+          current_balance?: number
+          current_equity?: number
+          id?: string
+          initial_balance?: number
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_type?: string
+          broker?: string | null
+          created_at?: string
+          currency?: string
+          current_balance?: number
+          current_equity?: number
+          id?: string
+          initial_balance?: number
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
