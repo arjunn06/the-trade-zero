@@ -54,7 +54,7 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive ? 
-      "bg-primary text-primary-foreground font-medium shadow-sm" : 
+      "bg-primary text-black font-medium shadow-sm" : 
       "text-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors";
 
   const handleSignOut = async () => {
@@ -70,7 +70,7 @@ export function AppSidebar() {
       <SidebarHeader className="p-6 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-3">
-            <div className="bg-primary text-primary-foreground rounded-lg p-2">
+            <div className="bg-primary text-black rounded-lg p-2">
               <TrendingUp className="h-5 w-5" />
             </div>
             <div>
@@ -80,7 +80,7 @@ export function AppSidebar() {
           </div>
         )}
         {collapsed && (
-          <div className="bg-primary text-primary-foreground rounded-lg p-2 mx-auto">
+          <div className="bg-primary text-black rounded-lg p-2 mx-auto">
             <TrendingUp className="h-5 w-5" />
           </div>
         )}
