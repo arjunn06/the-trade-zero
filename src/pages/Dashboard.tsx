@@ -226,7 +226,7 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className="space-y-4 md:space-y-8">
         {/* Header with Account Filter */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-1">
@@ -278,7 +278,7 @@ const Dashboard = () => {
         </div>
 
         {/* Key Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           <MetricCard
             title="Current Balance"
             value={formatCurrency(stats.currentBalance)}
@@ -325,14 +325,14 @@ const Dashboard = () => {
         </div>
 
         {/* Charts and Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
           {/* Equity Curve */}
           <Card className="metric-card">
-            <CardHeader className="pb-4">
+            <CardHeader className="pb-2 sm:pb-4 p-3 sm:p-6">
               <CardTitle className="text-lg font-semibold">Equity Metrics</CardTitle>
               <CardDescription>Account balance progression over time</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6">
               {equityData.length > 1 ? (
                 <ResponsiveContainer width="100%" height={240}>
                   <AreaChart data={equityData}>
@@ -382,7 +382,7 @@ const Dashboard = () => {
 
           {/* Recent Trades */}
           <Card className="metric-card">
-            <CardHeader className="pb-4">
+            <CardHeader className="pb-2 sm:pb-4 p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg font-semibold">Recent Trades</CardTitle>
@@ -398,7 +398,7 @@ const Dashboard = () => {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6">
               {recentTrades.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="bg-muted/50 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">

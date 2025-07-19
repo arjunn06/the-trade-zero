@@ -19,7 +19,7 @@ interface MetricCardProps {
 export function MetricCard({ title, value, change, icon, className }: MetricCardProps) {
   return (
     <Card className={cn("metric-card", className)}>
-      <CardContent className="p-6">
+      <CardContent className="p-3 sm:p-4 md:p-6">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
             <p className="metric-label">{title}</p>

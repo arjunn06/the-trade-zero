@@ -287,7 +287,7 @@ export function SmartSuggestions({ trades }: SmartSuggestionsProps) {
         {/* Gradient background overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 pointer-events-none" />
         
-        <CardHeader className="pb-4 relative z-10">
+        <CardHeader className="pb-2 sm:pb-4 p-3 sm:p-6 relative z-10">
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="absolute inset-0 bg-primary/20 rounded-full blur-sm" />
@@ -304,12 +304,12 @@ export function SmartSuggestions({ trades }: SmartSuggestionsProps) {
           <CardDescription className="ml-12">AI-powered suggestions based on your trading patterns</CardDescription>
         </CardHeader>
         
-        <CardContent className="relative z-10">
-          <div className="space-y-4">
+        <CardContent className="p-3 sm:p-6 relative z-10">
+          <div className="space-y-3 sm:space-y-4">
             {suggestions.slice(0, 4).map((suggestion, index) => (
               <div 
                 key={index}
-                className={`relative p-4 rounded-lg border transition-all duration-300 hover:shadow-md hover:scale-[1.01] ${
+                className={`relative p-2 sm:p-3 md:p-4 rounded-lg border transition-all duration-300 hover:shadow-md hover:scale-[1.01] ${
                   suggestion.type === 'positive' 
                     ? 'bg-gradient-to-r from-profit/5 to-profit/10 border-profit/20 hover:border-profit/30' 
                     : suggestion.type === 'warning'
