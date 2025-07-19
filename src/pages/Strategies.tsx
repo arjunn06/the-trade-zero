@@ -6,6 +6,7 @@ import { Plus, Target, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import {
   Dialog,
   DialogContent,
@@ -189,7 +190,8 @@ const Strategies = () => {
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+    <DashboardLayout>
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Trading Strategies</h1>
@@ -338,7 +340,8 @@ const Strategies = () => {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 

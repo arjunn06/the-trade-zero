@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Calendar } from '@/components/ui/calendar';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Upload, X, ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
@@ -210,7 +211,8 @@ const NewTrade = () => {
 
   if (accounts.length === 0) {
     return (
-      <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+      <DashboardLayout>
+        <div className="space-y-6">
         <h1 className="text-3xl font-bold">New Trade</h1>
         <Card>
           <CardContent className="pt-6">
@@ -223,12 +225,14 @@ const NewTrade = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+    <DashboardLayout>
+      <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">New Trade</h1>
         <p className="text-muted-foreground">Record a new trading position</p>
@@ -460,7 +464,8 @@ const NewTrade = () => {
           </form>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 
