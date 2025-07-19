@@ -25,9 +25,7 @@ import {
   SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { UserProfileManager } from '@/components/UserProfileManager';
 
 const menuItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
@@ -46,8 +44,6 @@ const systemItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
-  const { signOut } = useAuth();
-  const { toast } = useToast();
   const currentPath = location.pathname;
   const collapsed = state === 'collapsed';
 
@@ -57,13 +53,6 @@ export function AppSidebar() {
       "bg-primary text-black font-medium shadow-sm" : 
       "text-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors";
 
-  const handleSignOut = async () => {
-    await signOut();
-    toast({
-      title: "Signed out",
-      description: "You have been successfully signed out."
-    });
-  };
 
   return (
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
@@ -129,14 +118,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-sidebar-border">
-        <Button 
-          variant="ghost" 
-          onClick={handleSignOut}
-          className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-        >
-          <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="ml-3">Sign Out</span>}
-        </Button>
+        <UserProfileManager collapsed={collapsed} />
       </SidebarFooter>
     </Sidebar>
   );
