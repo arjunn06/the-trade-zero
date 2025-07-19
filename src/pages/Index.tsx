@@ -1,10 +1,32 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, BarChart3, Shield, Calendar } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { TrendingUp, BarChart3, Shield, Calendar, Check, Star } from 'lucide-react';
 
 const Index = () => {
   const { user, loading } = useAuth();
+  const { toast } = useToast();
+
+  // Handle payment integration with Zoho payments
+  const handlePayment = (plan: string, amount: number) => {
+    // For now, redirect to auth for registration
+    // This will be replaced with Zoho payments integration
+    if (!user) {
+      // Redirect to auth with plan information
+      window.location.href = `/auth?plan=${plan}&amount=${amount}`;
+      return;
+    }
+    
+    // TODO: Integrate with Zoho payments API
+    // This is where Zoho payment integration will be implemented
+    toast({
+      title: "Payment Integration Coming Soon",
+      description: `${plan} plan ($${amount}/month) will be integrated with Zoho payments.`,
+    });
+    
+    console.log('Zoho Payment Integration:', { plan, amount, user: user.id });
+  };
 
   // Redirect authenticated users to dashboard
   if (!loading && user) {
@@ -85,6 +107,165 @@ const Index = () => {
             <p className="text-muted-foreground">
               Visual calendar view of your daily, weekly, and monthly trading performance.
             </p>
+          </div>
+        </div>
+
+        {/* Pricing Section */}
+        <div className="mt-32">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Choose Your Plan</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Start free and upgrade as your trading grows. All plans include our core features.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Free Plan */}
+            <div className="bg-card border rounded-lg p-8 relative">
+              <div className="text-center">
+                <h3 className="text-2xl font-bold mb-4">Starter</h3>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold">$0</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+                <p className="text-muted-foreground mb-8">Perfect for getting started with trading journaling</p>
+              </div>
+              
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Up to 100 trades per month</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Basic performance analytics</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>P&L calendar view</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>1 trading account</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Basic confluence checklist</span>
+                </li>
+              </ul>
+              
+              <Button className="w-full" asChild>
+                <a href="/auth">Get Started Free</a>
+              </Button>
+            </div>
+
+            {/* Pro Plan */}
+            <div className="bg-card border rounded-lg p-8 relative border-primary">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+                  <Star className="h-4 w-4" />
+                  Most Popular
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <h3 className="text-2xl font-bold mb-4">Professional</h3>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold">$29</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+                <p className="text-muted-foreground mb-8">Advanced features for serious traders</p>
+              </div>
+              
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Unlimited trades</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Advanced analytics & reports</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Multiple trading accounts</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Custom strategies & rules</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Advanced confluence system</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Trade screenshots & notes</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Export & backup</span>
+                </li>
+              </ul>
+              
+              <Button 
+                className="w-full" 
+                onClick={() => handlePayment('professional', 29)}
+              >
+                Start Professional Plan
+              </Button>
+            </div>
+
+            {/* Enterprise Plan */}
+            <div className="bg-card border rounded-lg p-8 relative">
+              <div className="text-center">
+                <h3 className="text-2xl font-bold mb-4">Enterprise</h3>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold">$99</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+                <p className="text-muted-foreground mb-8">For professional trading teams and institutions</p>
+              </div>
+              
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Everything in Professional</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Team collaboration</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>API access</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Custom integrations</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Priority support</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>White-label options</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Custom reporting</span>
+                </li>
+              </ul>
+              
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => handlePayment('enterprise', 99)}
+              >
+                Contact Sales
+              </Button>
+            </div>
           </div>
         </div>
 

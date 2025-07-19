@@ -16,6 +16,8 @@ import Strategies from "./pages/Strategies";
 import Notes from "./pages/Notes";
 import Calendar from "./pages/Calendar";
 import Confluence from "./pages/Confluence";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancel from "./pages/PaymentCancel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +44,8 @@ const App = () => (
             <Route path="/strategies" element={<ProtectedRoute><Strategies /></ProtectedRoute>} />
             <Route path="/confluence" element={<ProtectedRoute><Confluence /></ProtectedRoute>} />
             <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/payment-cancel" element={<PaymentCancel />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
