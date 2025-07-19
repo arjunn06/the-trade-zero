@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Calendar } from '@/components/ui/calendar';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -33,6 +33,8 @@ const NewTrade = () => {
   const { toast } = useToast();
   const { isPremium } = useSubscription();
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditing = !!id;
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
@@ -67,8 +69,61 @@ const NewTrade = () => {
     if (user) {
       fetchAccounts();
       fetchStrategies();
+      if (isEditing && id) {
+        fetchTrade();
+      }
     }
-  }, [user]);
+  }, [user, isEditing, id]);
+
+  const fetchTrade = async () => {
+    if (!user || !id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('trades')
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      // Populate form with existing trade data
+      setFormData({
+        symbol: data.symbol || '',
+        trade_type: data.trade_type || '',
+        entry_price: data.entry_price?.toString() || '',
+        quantity: data.quantity?.toString() || '',
+        stop_loss: data.stop_loss?.toString() || '',
+        take_profit: data.take_profit?.toString() || '',
+        trading_account_id: data.trading_account_id || '',
+        strategy_id: data.strategy_id || '',
+        notes: data.notes || '',
+        risk_amount: data.risk_amount?.toString() || '',
+        risk_reward_ratio: data.risk_reward_ratio?.toString() || '',
+        order_type: data.order_type || '',
+        execution_price: data.execution_price?.toString() || '',
+        slippage_points: data.slippage_points?.toString() || '',
+        spread: data.spread?.toString() || '',
+        commission: data.commission?.toString() || '',
+        swap: data.swap?.toString() || '',
+        margin_rate: data.margin_rate?.toString() || '',
+        filled_volume: data.filled_volume?.toString() || ''
+      });
+
+      if (data.entry_date) {
+        setEntryDate(new Date(data.entry_date));
+      }
+    } catch (error) {
+      console.error('Error fetching trade:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load trade data",
+        variant: "destructive"
+      });
+      navigate('/trades');
+    }
+  };
 
   const fetchAccounts = async () => {
     if (!user) return;
@@ -208,16 +263,33 @@ const NewTrade = () => {
         source: 'manual'
       };
 
-      const { error } = await supabase
-        .from('trades')
-        .insert([tradeData]);
+      if (isEditing && id) {
+        // Update existing trade
+        const { error } = await supabase
+          .from('trades')
+          .update(tradeData)
+          .eq('id', id)
+          .eq('user_id', user.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Trade created successfully"
-      });
+        toast({
+          title: "Success",
+          description: "Trade updated successfully"
+        });
+      } else {
+        // Create new trade
+        const { error } = await supabase
+          .from('trades')
+          .insert([tradeData]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Trade created successfully"
+        });
+      }
 
       navigate('/trades');
     } catch (error) {
@@ -257,8 +329,8 @@ const NewTrade = () => {
     <DashboardLayout>
       <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">New Trade</h1>
-        <p className="text-muted-foreground">Record a new trading position</p>
+        <h1 className="text-3xl font-bold">{isEditing ? 'Edit Trade' : 'New Trade'}</h1>
+        <p className="text-muted-foreground">{isEditing ? 'Update trading position details' : 'Record a new trading position'}</p>
       </div>
 
       <Card>
@@ -630,7 +702,7 @@ const NewTrade = () => {
 
             <div className="flex space-x-4">
               <Button type="submit" disabled={loading || uploadingScreenshots}>
-                {loading ? (uploadingScreenshots ? 'Uploading Screenshots...' : 'Creating...') : 'Create Trade'}
+                {loading ? (uploadingScreenshots ? 'Uploading Screenshots...' : (isEditing ? 'Updating...' : 'Creating...')) : (isEditing ? 'Update Trade' : 'Create Trade')}
               </Button>
               <Button type="button" variant="outline" onClick={() => navigate('/trades')}>
                 Cancel

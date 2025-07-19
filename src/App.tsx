@@ -51,6 +51,7 @@ const App = () => (
             <Route path="/trades" element={<ProtectedRoute><Trades /></ProtectedRoute>} />
             <Route path="/trades/:id" element={<ProtectedRoute><TradeDetail /></ProtectedRoute>} />
             <Route path="/trades/new" element={<ProtectedRoute><NewTrade /></ProtectedRoute>} />
+            <Route path="/trades/edit/:id" element={<ProtectedRoute><NewTrade /></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
             <Route path="/accounts" element={<ProtectedRoute><TradingAccounts /></ProtectedRoute>} />
             <Route path="/strategies" element={<ProtectedRoute><Strategies /></ProtectedRoute>} />
