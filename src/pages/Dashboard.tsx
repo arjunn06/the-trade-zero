@@ -20,6 +20,8 @@ interface DashboardStats {
   worstTrade: number;
   avgWin: number;
   avgLoss: number;
+  currentBalance: number;
+  initialBalance: number;
 }
 
 const Dashboard = () => {
@@ -33,7 +35,9 @@ const Dashboard = () => {
     bestTrade: 0,
     worstTrade: 0,
     avgWin: 0,
-    avgLoss: 0
+    avgLoss: 0,
+    currentBalance: 0,
+    initialBalance: 0
   });
   const [recentTrades, setRecentTrades] = useState<any[]>([]);
   const [equityData, setEquityData] = useState<any[]>([]);
@@ -49,18 +53,33 @@ const Dashboard = () => {
     if (!user) return;
 
     try {
-      // Fetch trades for statistics
-      const { data: trades, error } = await supabase
-        .from('trades')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      // Fetch trades and trading accounts simultaneously
+      const [tradesResult, accountsResult] = await Promise.all([
+        supabase
+          .from('trades')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('trading_accounts')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+      ]);
 
-      if (error) throw error;
+      if (tradesResult.error) throw tradesResult.error;
+      if (accountsResult.error) throw accountsResult.error;
+
+      const trades = tradesResult.data || [];
+      const accounts = accountsResult.data || [];
+
+      // Calculate account totals
+      const totalCurrentBalance = accounts.reduce((sum, account) => sum + (account.current_balance || 0), 0);
+      const totalInitialBalance = accounts.reduce((sum, account) => sum + (account.initial_balance || 0), 0);
 
       // Calculate statistics
-      const closedTrades = trades?.filter(t => t.status === 'closed') || [];
-      const activeTrades = trades?.filter(t => t.status === 'open') || [];
+      const closedTrades = trades.filter(t => t.status === 'closed');
+      const activeTrades = trades.filter(t => t.status === 'open');
       const winningTrades = closedTrades.filter(t => (t.pnl || 0) > 0);
       const losingTrades = closedTrades.filter(t => (t.pnl || 0) < 0);
 
@@ -74,22 +93,24 @@ const Dashboard = () => {
       setStats({
         totalPnl,
         winRate,
-        totalTrades: trades?.length || 0,
+        totalTrades: trades.length,
         activeTrades: activeTrades.length,
         bestTrade,
         worstTrade,
         avgWin,
-        avgLoss
+        avgLoss,
+        currentBalance: totalCurrentBalance,
+        initialBalance: totalInitialBalance
       });
 
-      setRecentTrades(trades?.slice(0, 5) || []);
+      setRecentTrades(trades.slice(0, 5));
 
-      // Generate equity curve data
+      // Generate equity curve data using actual initial balance
       const sortedTrades = closedTrades.sort((a, b) => new Date(a.exit_date || a.entry_date).getTime() - new Date(b.exit_date || b.entry_date).getTime());
-      let runningBalance = 10000; // Starting balance
+      let runningBalance = totalInitialBalance || 0; // Use actual initial balance
       const equityCurve = [{ date: 'Start', balance: runningBalance }];
       
-      sortedTrades.forEach((trade, index) => {
+      sortedTrades.forEach((trade) => {
         runningBalance += (trade.pnl || 0);
         equityCurve.push({
           date: new Date(trade.exit_date || trade.entry_date).toLocaleDateString(),
@@ -144,25 +165,25 @@ const Dashboard = () => {
         {/* Key Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
-            title="Profit and Loss"
-            value={formatCurrency(stats.totalPnl)}
+            title="Current Balance"
+            value={formatCurrency(stats.currentBalance)}
             change={{
-              value: stats.totalPnl,
-              percentage: "11.49%",
-              isPositive: stats.totalPnl >= 0
+              value: stats.currentBalance - stats.initialBalance,
+              percentage: stats.initialBalance > 0 ? `${(((stats.currentBalance - stats.initialBalance) / stats.initialBalance) * 100).toFixed(1)}%` : "0.0%",
+              isPositive: stats.currentBalance >= stats.initialBalance
             }}
             icon={<DollarSign className="h-5 w-5" />}
           />
           
           <MetricCard
-            title="Trades Taken"
-            value={stats.totalTrades}
+            title="Profit and Loss"
+            value={formatCurrency(stats.totalPnl)}
             change={{
-              value: stats.totalTrades,
-              percentage: `${Math.round((stats.winRate / 100) * stats.totalTrades)} Longs, ${stats.totalTrades - Math.round((stats.winRate / 100) * stats.totalTrades)} Shorts`,
-              isPositive: true
+              value: stats.totalPnl,
+              percentage: stats.initialBalance > 0 ? `${((stats.totalPnl / stats.initialBalance) * 100).toFixed(1)}%` : "0.0%",
+              isPositive: stats.totalPnl >= 0
             }}
-            icon={<BarChart3 className="h-5 w-5" />}
+            icon={<TrendingUp className="h-5 w-5" />}
           />
           
           <MetricCard
@@ -170,21 +191,21 @@ const Dashboard = () => {
             value={formatPercentage(stats.winRate)}
             change={{
               value: stats.winRate,
-              percentage: "Keep it up!",
+              percentage: `${stats.totalTrades} trades`,
               isPositive: stats.winRate >= 50
             }}
             icon={<Target className="h-5 w-5" />}
           />
           
           <MetricCard
-            title="Average Win"
-            value={formatCurrency(stats.avgWin)}
+            title="Active Trades"
+            value={stats.activeTrades}
             change={{
-              value: stats.avgWin,
-              percentage: "11.49%",
-              isPositive: stats.avgWin > 0
+              value: stats.activeTrades,
+              percentage: "Currently open",
+              isPositive: true
             }}
-            icon={<TrendingUp className="h-5 w-5" />}
+            icon={<BarChart3 className="h-5 w-5" />}
           />
         </div>
 
