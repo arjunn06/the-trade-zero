@@ -11,6 +11,7 @@ import {
   TrendingUp,
   LogOut
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -48,10 +49,10 @@ export function AppSidebar() {
   const collapsed = state === 'collapsed';
 
   const isActive = (path: string) => currentPath === path;
-  const getNavCls = ({ isActive }: { isActive: boolean }) =>
+  const getNavCls = (isActive: boolean) =>
     isActive ? 
-      "bg-primary text-primary-foreground font-medium shadow-sm rounded-md" : 
-      "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors rounded-md";
+      "bg-primary text-primary-foreground font-medium shadow-sm w-full justify-start rounded-md" : 
+      "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full justify-start rounded-md";
 
 
   return (
@@ -85,18 +86,21 @@ export function AppSidebar() {
             Trading
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <div className="space-y-1">
               {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end className={getNavCls}>
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span className="ml-3">{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <Button
+                  key={item.title}
+                  variant="ghost"
+                  asChild
+                  className={getNavCls(currentPath === item.url)}
+                >
+                  <NavLink to={item.url} end>
+                    <item.icon className="h-4 w-4" />
+                    {!collapsed && <span className="ml-3">{item.title}</span>}
+                  </NavLink>
+                </Button>
               ))}
-            </SidebarMenu>
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
 
@@ -105,18 +109,21 @@ export function AppSidebar() {
             System
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <div className="space-y-1">
               {systemItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end className={getNavCls}>
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span className="ml-3">{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <Button
+                  key={item.title}
+                  variant="ghost"
+                  asChild
+                  className={getNavCls(currentPath === item.url)}
+                >
+                  <NavLink to={item.url} end>
+                    <item.icon className="h-4 w-4" />
+                    {!collapsed && <span className="ml-3">{item.title}</span>}
+                  </NavLink>
+                </Button>
               ))}
-            </SidebarMenu>
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
