@@ -282,8 +282,6 @@ const Trades = () => {
 
   // Filter and sort trades
   const filteredAndSortedTrades = useMemo(() => {
-    console.log('Filtering trades:', { totalTrades: trades.length, filters });
-    
     let filtered = trades.filter(trade => {
       // Search term filter (matches symbol, trade type, status)
       if (filters.searchTerm) {
@@ -292,58 +290,18 @@ const Trades = () => {
         const matchesType = trade.trade_type.toLowerCase().includes(searchLower);
         const matchesStatus = trade.status.toLowerCase().includes(searchLower);
         if (!matchesSymbol && !matchesType && !matchesStatus) {
-          console.log(`Trade ${trade.symbol} excluded by search term:`, searchLower);
           return false;
         }
-      }
-      
-      // Trade type filter
-      if (filters.tradeType && trade.trade_type !== filters.tradeType) {
-        console.log(`Trade ${trade.symbol} excluded by trade type:`, filters.tradeType);
-        return false;
-      }
-      
-      // Status filter
-      if (filters.status && trade.status !== filters.status) {
-        console.log(`Trade ${trade.symbol} excluded by status:`, filters.status);
-        return false;
       }
       
       return true;
     });
 
-    console.log('Filtered trades count:', filtered.length);
-
-    // Sort trades
+    // Sort trades by entry date (newest first)
     filtered.sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
-
-      switch (filters.sortBy) {
-        case 'entry_date':
-          aValue = new Date(a.entry_date);
-          bValue = new Date(b.entry_date);
-          break;
-        case 'pnl':
-          aValue = a.pnl || 0;
-          bValue = b.pnl || 0;
-          break;
-        case 'quantity':
-          aValue = a.quantity;
-          bValue = b.quantity;
-          break;
-        case 'symbol':
-          aValue = a.symbol;
-          bValue = b.symbol;
-          break;
-        default:
-          aValue = a.entry_date;
-          bValue = b.entry_date;
-      }
-
-      if (aValue < bValue) return filters.sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return filters.sortDirection === 'asc' ? 1 : -1;
-      return 0;
+      const aValue = new Date(a.entry_date);
+      const bValue = new Date(b.entry_date);
+      return bValue.getTime() - aValue.getTime();
     });
 
     return filtered;
@@ -389,14 +347,12 @@ const Trades = () => {
           )}
         </div>
 
-        {/* Search and Filters */}
+        {/* Search */}
         {trades.length > 0 && (
-          <div className="w-full">
-            <TradeFilters
-              onFiltersChange={setFilters}
-              symbolOptions={symbolOptions}
-            />
-          </div>
+          <TradeFilters
+            onFiltersChange={setFilters}
+            symbolOptions={symbolOptions}
+          />
         )}
 
         {trades.length === 0 ? (
