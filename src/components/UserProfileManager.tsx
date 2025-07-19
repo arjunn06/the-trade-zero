@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { User, Settings, LogOut, Crown, Mail, Lock, Camera, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -33,12 +34,15 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
   const { user, signOut } = useAuth();
   const { isPremium } = useSubscription();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [displayName, setDisplayName] = useState(user?.user_metadata?.display_name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -48,13 +52,142 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
     });
   };
 
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        variant: "destructive",
+        title: "File too large",
+        description: "Please select an image under 5MB."
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        variant: "destructive",
+        title: "Invalid file type",
+        description: "Please select an image file."
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Upload file to storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Update user metadata
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          avatar_url: data.publicUrl
+        }
+      });
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Photo updated",
+        description: "Your profile photo has been updated successfully."
+      });
+
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: error.message || "Failed to upload photo."
+      });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const handleUpdateProfile = async () => {
-    // TODO: Implement profile update logic
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been updated successfully."
-    });
-    setProfileDialogOpen(false);
+    if (!user) return;
+
+    setUpdating(true);
+    try {
+      // Update user metadata
+      const updates: any = {};
+      
+      if (displayName !== user.user_metadata?.display_name) {
+        updates.display_name = displayName;
+      }
+
+      if (email !== user.email) {
+        updates.email = email;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        if (updates.email) {
+          // Email update requires separate call
+          const { error: emailError } = await supabase.auth.updateUser({
+            email: updates.email
+          });
+          if (emailError) throw emailError;
+          delete updates.email;
+        }
+
+        if (Object.keys(updates).length > 0) {
+          const { error: metadataError } = await supabase.auth.updateUser({
+            data: updates
+          });
+          if (metadataError) throw metadataError;
+        }
+      }
+
+      // Update profiles table if it exists
+      try {
+        await supabase
+          .from('profiles')
+          .upsert({
+            user_id: user.id,
+            display_name: displayName,
+            email: email
+          });
+      } catch (error) {
+        // Profiles table might not exist, that's okay
+        console.log('Profiles table update skipped:', error);
+      }
+
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully."
+      });
+      setProfileDialogOpen(false);
+
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Update failed",
+        description: error.message || "Failed to update profile."
+      });
+    } finally {
+      setUpdating(false);
+    }
   };
 
   const handlePasswordChange = async () => {
@@ -67,13 +200,36 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
       return;
     }
     
-    // TODO: Implement password change logic
-    toast({
-      title: "Password changed",
-      description: "Your password has been changed successfully."
-    });
-    setNewPassword('');
-    setConfirmPassword('');
+    if (newPassword.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Password must be at least 6 characters long."
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password changed",
+        description: "Your password has been changed successfully."
+      });
+      setNewPassword('');
+      setConfirmPassword('');
+
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Password change failed",
+        description: error.message || "Failed to change password."
+      });
+    }
   };
 
   const getInitials = (name?: string) => {
@@ -191,9 +347,21 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
                   </div>
                 )}
               </div>
-              <Button variant="outline" size="sm">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handlePhotoUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
                 <Camera className="h-4 w-4 mr-2" />
-                Change Photo
+                {uploading ? 'Uploading...' : 'Change Photo'}
               </Button>
             </div>
 
@@ -258,8 +426,12 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
             </div>
 
             <div className="flex gap-3 pt-4 border-t">
-              <Button onClick={handleUpdateProfile} className="flex-1">
-                Save Changes
+              <Button 
+                onClick={handleUpdateProfile} 
+                className="flex-1"
+                disabled={updating}
+              >
+                {updating ? 'Saving...' : 'Save Changes'}
               </Button>
               <Button variant="outline" onClick={() => setProfileDialogOpen(false)}>
                 Cancel
