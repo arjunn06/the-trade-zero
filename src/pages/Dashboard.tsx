@@ -310,7 +310,11 @@ const Dashboard = () => {
               ) : (
                 <div className="space-y-3">
                   {recentTrades.map((trade) => (
-                    <div key={trade.id} className="flex items-center justify-between p-3 rounded-lg border bg-card/50 hover:bg-card transition-colors">
+                    <div 
+                      key={trade.id} 
+                      className="flex items-center justify-between p-3 rounded-lg border bg-card/50 hover:bg-card transition-colors cursor-pointer"
+                      onClick={() => navigate(`/trades/${trade.id}`)}
+                    >
                       <div className="flex items-center space-x-3">
                         <div className={`w-2 h-2 rounded-full ${trade.trade_type === 'long' ? 'bg-profit' : 'bg-primary'}`} />
                         <div>
