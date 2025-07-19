@@ -81,6 +81,13 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
+  const getDisplayName = () => {
+    return user?.user_metadata?.display_name || 
+           user?.user_metadata?.full_name || 
+           user?.email?.split('@')[0] || 
+           'User';
+  };
+
   if (collapsed) {
     return (
       <DropdownMenu>
@@ -98,7 +105,7 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
           <DropdownMenuLabel className="flex items-center gap-2">
             <span>My Account</span>
             {isPremium && (
-              <Badge variant="default" className="bg-gradient-primary text-primary-foreground">
+              <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
                 <Crown className="h-3 w-3 mr-1" />
                 Premium
               </Badge>
@@ -134,14 +141,14 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
         </Avatar>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-sidebar-foreground truncate">
-            {user?.user_metadata?.display_name || 'User'}
+            {getDisplayName()}
           </p>
           <div className="flex items-center gap-2">
             <p className="text-xs text-sidebar-foreground/60 truncate">
               {user?.email}
             </p>
             {isPremium && (
-              <Badge variant="default" className="bg-gradient-primary text-primary-foreground text-xs">
+              <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-xs">
                 <Crown className="h-3 w-3 mr-1" />
                 Premium
               </Badge>
