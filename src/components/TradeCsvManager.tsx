@@ -181,7 +181,15 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
               trade.symbol = value;
               break;
             case 'trade type':
-              trade.trade_type = value.toLowerCase();
+              // Map trade type values to database constraints
+              const lowerValue = value.toLowerCase();
+              if (lowerValue === 'buy' || lowerValue === 'long') {
+                trade.trade_type = 'long';
+              } else if (lowerValue === 'sell' || lowerValue === 'short') {
+                trade.trade_type = 'short';
+              } else {
+                trade.trade_type = lowerValue; // Let database validation handle invalid values
+              }
               break;
             case 'entry price':
               trade.entry_price = parseFloat(value);
