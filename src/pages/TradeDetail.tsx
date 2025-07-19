@@ -161,7 +161,46 @@ const TradeDetail = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
+        {/* Mobile Header */}
+        <div className="flex flex-col gap-4 lg:hidden">
+          <Button variant="ghost" onClick={() => navigate('/trades')} className="self-start">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Trades
+          </Button>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold">{trade.symbol}</h1>
+              <Badge variant={trade.trade_type === 'long' ? 'default' : 'secondary'}>
+                {trade.trade_type === 'long' ? (
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                ) : (
+                  <TrendingDown className="h-3 w-3 mr-1" />
+                )}
+                {trade.trade_type.toUpperCase()}
+              </Badge>
+              <Badge 
+                variant={trade.status === 'open' ? 'outline' : 'default'}
+                className={trade.status === 'closed' && trade.pnl && trade.pnl > 0 ? 'bg-profit text-profit-foreground' : 
+                          trade.status === 'closed' && trade.pnl && trade.pnl < 0 ? 'bg-loss text-destructive-foreground' : ''}
+              >
+                {trade.status}
+              </Badge>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate(`/trades/edit/${trade.id}`)} className="flex-1">
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+              <Button variant="destructive" onClick={handleDelete} className="flex-1">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden lg:flex items-center gap-4">
           <Button variant="ghost" onClick={() => navigate('/trades')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Trades
@@ -198,7 +237,7 @@ const TradeDetail = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {/* Price Information */}
           <Card>
             <CardHeader>
@@ -207,12 +246,12 @@ const TradeDetail = () => {
             <CardContent className="space-y-4">
               <div>
                 <p className="text-sm text-muted-foreground">Entry Price</p>
-                <p className="text-2xl font-bold">{trade.entry_price}</p>
+                <p className="text-xl md:text-2xl font-bold">{trade.entry_price}</p>
               </div>
               {trade.exit_price && (
                 <div>
                   <p className="text-sm text-muted-foreground">Exit Price</p>
-                  <p className="text-2xl font-bold">{trade.exit_price}</p>
+                  <p className="text-xl md:text-2xl font-bold">{trade.exit_price}</p>
                 </div>
               )}
               <div>
@@ -231,7 +270,7 @@ const TradeDetail = () => {
               {trade.pnl && (
                 <div>
                   <p className="text-sm text-muted-foreground">P&L</p>
-                  <p className={`text-2xl font-bold ${trade.pnl >= 0 ? 'text-profit' : 'text-loss'}`}>
+                  <p className={`text-xl md:text-2xl font-bold ${trade.pnl >= 0 ? 'text-profit' : 'text-loss'}`}>
                     {formatCurrency(trade.pnl, trade.trading_accounts.currency)}
                   </p>
                 </div>
@@ -239,13 +278,13 @@ const TradeDetail = () => {
               {trade.commission && (
                 <div>
                   <p className="text-sm text-muted-foreground">Commission</p>
-                  <p className="text-lg">{formatCurrency(trade.commission, trade.trading_accounts.currency)}</p>
+                  <p className="text-base md:text-lg">{formatCurrency(trade.commission, trade.trading_accounts.currency)}</p>
                 </div>
               )}
               {trade.swap && (
                 <div>
                   <p className="text-sm text-muted-foreground">Swap</p>
-                  <p className="text-lg">{formatCurrency(trade.swap, trade.trading_accounts.currency)}</p>
+                  <p className="text-base md:text-lg">{formatCurrency(trade.swap, trade.trading_accounts.currency)}</p>
                 </div>
               )}
             </CardContent>
@@ -260,19 +299,19 @@ const TradeDetail = () => {
               {trade.stop_loss && (
                 <div>
                   <p className="text-sm text-muted-foreground">Stop Loss</p>
-                  <p className="text-lg font-semibold">{trade.stop_loss}</p>
+                  <p className="text-base md:text-lg font-semibold">{trade.stop_loss}</p>
                 </div>
               )}
               {trade.take_profit && (
                 <div>
                   <p className="text-sm text-muted-foreground">Take Profit</p>
-                  <p className="text-lg font-semibold">{trade.take_profit}</p>
+                  <p className="text-base md:text-lg font-semibold">{trade.take_profit}</p>
                 </div>
               )}
               {trade.risk_reward_ratio && (
                 <div>
                   <p className="text-sm text-muted-foreground">Risk:Reward Ratio</p>
-                  <p className="text-lg font-semibold">1:{trade.risk_reward_ratio}</p>
+                  <p className="text-base md:text-lg font-semibold">1:{trade.risk_reward_ratio}</p>
                 </div>
               )}
             </CardContent>
@@ -336,6 +375,7 @@ const TradeDetail = () => {
                 <Button
                   onClick={() => setScreenshotDialog(true)}
                   className="w-full"
+                  size="sm"
                 >
                   View Charts ({trade.screenshots.length})
                 </Button>
@@ -351,7 +391,7 @@ const TradeDetail = () => {
               <CardTitle>Notes</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap">{trade.notes}</p>
+            <div className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">{trade.notes}</div>
             </CardContent>
           </Card>
         )}
@@ -365,7 +405,7 @@ const TradeDetail = () => {
                 Trading chart screenshots for {trade.symbol}
               </DialogDescription>
             </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
               {trade.screenshots?.map((screenshot, index) => (
                 <div key={index} className="relative group">
                   <img

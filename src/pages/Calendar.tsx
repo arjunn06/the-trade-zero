@@ -250,7 +250,8 @@ export default function CalendarPage() {
                 Click on any date to view detailed trading metrics. Green indicates profit, red indicates loss.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-x-auto">
+              <div className="min-w-[320px]">
               <Calendar
                 mode="single"
                 selected={date}
@@ -268,6 +269,7 @@ export default function CalendarPage() {
                   )
                 }}
               />
+              </div>
             </CardContent>
           </Card>
 
@@ -286,7 +288,7 @@ export default function CalendarPage() {
               <div className="space-y-4">
                 {selectedDayData ? (
                   <>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="text-center p-3 bg-muted/50 rounded-lg">
                         <div className="text-sm text-muted-foreground">Total P&L</div>
                         <div className={`text-lg font-bold ${selectedDayData.pnl >= 0 ? 'text-profit' : 'text-loss'}`}>
@@ -301,7 +303,7 @@ export default function CalendarPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="text-center p-3 bg-muted/50 rounded-lg">
                         <div className="text-sm text-muted-foreground">Best Trade</div>
                         <div className="text-lg font-bold text-profit">
@@ -358,7 +360,7 @@ export default function CalendarPage() {
           </CardHeader>
           <CardContent>
             {periodMetrics ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
