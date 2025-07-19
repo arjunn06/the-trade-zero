@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { TrendingUp, TrendingDown, DollarSign, Target, Calendar, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface DashboardStats {
   totalPnl: number;
@@ -32,6 +33,7 @@ const Dashboard = () => {
     avgLoss: 0
   });
   const [recentTrades, setRecentTrades] = useState<any[]>([]);
+  const [equityData, setEquityData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -78,6 +80,21 @@ const Dashboard = () => {
       });
 
       setRecentTrades(trades?.slice(0, 5) || []);
+
+      // Generate equity curve data
+      const sortedTrades = closedTrades.sort((a, b) => new Date(a.exit_date || a.entry_date).getTime() - new Date(b.exit_date || b.entry_date).getTime());
+      let runningBalance = 10000; // Starting balance
+      const equityCurve = [{ date: 'Start', balance: runningBalance }];
+      
+      sortedTrades.forEach((trade, index) => {
+        runningBalance += (trade.pnl || 0);
+        equityCurve.push({
+          date: new Date(trade.exit_date || trade.entry_date).toLocaleDateString(),
+          balance: runningBalance
+        });
+      });
+      
+      setEquityData(equityCurve);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -200,7 +217,39 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Equity Curve</CardTitle>
+            <CardDescription>Account balance over time</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {equityData.length > 1 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={equityData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value: number) => [formatCurrency(value), 'Balance']}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="balance" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No closed trades yet to show equity curve
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader>
             <CardTitle>Recent Trades</CardTitle>
             <CardDescription>Your last 5 trades</CardDescription>
@@ -236,7 +285,7 @@ const Dashboard = () => {
                       <Badge 
                         variant={trade.status === 'open' ? 'outline' : 'default'}
                         className={trade.status === 'closed' && trade.pnl > 0 ? 'bg-profit text-profit-foreground' : 
-                                 trade.status === 'closed' && trade.pnl < 0 ? 'bg-loss text-destructive-foreground' : ''}
+                                  trade.status === 'closed' && trade.pnl < 0 ? 'bg-loss text-destructive-foreground' : ''}
                       >
                         {trade.status}
                       </Badge>
