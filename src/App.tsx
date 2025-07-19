@@ -20,6 +20,7 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
 import Terms from "./pages/Terms";
 import Refund from "./pages/Refund";
+import Welcome from "./pages/Welcome";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,11 @@ const App = () => (
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/welcome" element={
+              <ProtectedRoute>
+                <Welcome />
               </ProtectedRoute>
             } />
             <Route path="/trades" element={<ProtectedRoute><Trades /></ProtectedRoute>} />
