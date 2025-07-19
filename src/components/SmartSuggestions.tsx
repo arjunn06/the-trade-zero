@@ -332,21 +332,7 @@ export function SmartSuggestions({ trades }: SmartSuggestionsProps) {
                     {suggestion.icon}
                   </div>
                   <div className="flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-medium text-sm">{suggestion.title}</h4>
-                      <Badge 
-                        variant={
-                          suggestion.priority === 'high' 
-                            ? 'destructive' 
-                            : suggestion.priority === 'medium'
-                            ? 'default'
-                            : 'secondary'
-                        }
-                        className="text-xs px-2 py-0 shadow-sm"
-                      >
-                        {suggestion.priority}
-                      </Badge>
-                    </div>
+                    <h4 className="font-medium text-sm">{suggestion.title}</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       {suggestion.description}
                     </p>
@@ -354,18 +340,6 @@ export function SmartSuggestions({ trades }: SmartSuggestionsProps) {
                 </div>
               </div>
             ))}
-          </div>
-          
-          {/* Always show the insights counter */}
-          <div className="mt-4 pt-4 border-t border-primary/10 text-center relative">
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-            <p className="text-xs text-muted-foreground bg-gradient-to-r from-muted-foreground to-muted-foreground/80 bg-clip-text">
-              {suggestions.length > 4 ? (
-                `+${suggestions.length - 4} more insights available`
-              ) : (
-                "+0 more insights available"
-              )}
-            </p>
           </div>
         </CardContent>
       </Card>
