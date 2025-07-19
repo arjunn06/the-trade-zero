@@ -9,7 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumFeature } from '@/components/PremiumFeature';
-import { TradeCsvManager } from '@/components/TradeCsvManager';
 import { CsvImportSection } from '@/components/CsvImportSection';
 import { CTraderIntegration } from '@/components/CTraderIntegration';
 import {
@@ -432,22 +431,17 @@ const TradingAccounts = () => {
         </div>
       )}
 
-      {/* CSV Import/Export and cTrader Integration Section - Premium Features */}
+      {/* cTrader Integration Section */}
       {accounts.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Trade Management</h2>
+          <h2 className="text-xl font-semibold">cTrader Integration</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {accounts.map((account) => (
-              <div key={account.id} className="space-y-4">
-                <TradeCsvManager
-                  accountId={account.id}
-                  accountName={account.name}
-                />
-                <CTraderIntegration
-                  accountId={account.id}
-                  accountName={account.name}
-                />
-              </div>
+              <CTraderIntegration
+                key={account.id}
+                accountId={account.id}
+                accountName={account.name}
+              />
             ))}
           </div>
         </div>

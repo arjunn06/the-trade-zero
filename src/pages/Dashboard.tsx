@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { TrendingUp, TrendingDown, DollarSign, Target, Calendar, Plus, Activity, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Target, Calendar, Plus, Activity, BarChart3, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
@@ -47,6 +47,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('all');
+  const [primaryAccountId, setPrimaryAccountId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -79,6 +80,15 @@ const Dashboard = () => {
       const allAccounts = accountsResult.data || [];
       
       setAccounts(allAccounts);
+
+      // Set primary account on first login if not already set
+      if (allAccounts.length > 0 && selectedAccountId === 'all' && !primaryAccountId) {
+        const savedPrimaryId = localStorage.getItem('primaryAccountId');
+        if (savedPrimaryId && allAccounts.find(acc => acc.id === savedPrimaryId)) {
+          setPrimaryAccountId(savedPrimaryId);
+          setSelectedAccountId(savedPrimaryId);
+        }
+      }
 
       // Filter trades by selected account
       const trades = selectedAccountId === 'all' 
@@ -167,6 +177,12 @@ const Dashboard = () => {
     }
   };
 
+  const handleStarAccount = (accountId: string) => {
+    setPrimaryAccountId(accountId);
+    localStorage.setItem('primaryAccountId', accountId);
+    setSelectedAccountId(accountId);
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -210,7 +226,21 @@ const Dashboard = () => {
                     <SelectItem value="all" className="hover:bg-muted/50">All Accounts</SelectItem>
                     {accounts.map((account) => (
                       <SelectItem key={account.id} value={account.id} className="hover:bg-muted/50">
-                        {account.name}
+                        <div className="flex items-center justify-between w-full">
+                          <span>{account.name}</span>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleStarAccount(account.id);
+                            }}
+                            className="ml-2 p-1 hover:bg-muted rounded"
+                          >
+                            <Star 
+                              className={`h-3 w-3 ${primaryAccountId === account.id ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} 
+                            />
+                          </button>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>

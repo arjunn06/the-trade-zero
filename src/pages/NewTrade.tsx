@@ -339,7 +339,7 @@ const NewTrade = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
                 <Label htmlFor="symbol">Symbol</Label>
                 <Input
@@ -416,13 +416,15 @@ const NewTrade = () => {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="w-full justify-start text-left font-normal"
+                      className="w-full justify-start text-left font-normal text-sm"
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {entryDate ? format(entryDate, "PPP") : <span>Pick a date</span>}
+                      <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">
+                        {entryDate ? format(entryDate, "PPP") : "Pick a date"}
+                      </span>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0 max-w-[280px]" align="start">
                     <Calendar
                       mode="single"
                       selected={entryDate}
