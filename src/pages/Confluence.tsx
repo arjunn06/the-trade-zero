@@ -45,17 +45,10 @@ const categories = [
   'Other'
 ];
 
-const DEFAULT_CONFLUENCE_ITEMS = [
-  { name: 'Price at Key Support/Resistance', category: 'Technical Analysis', weight: 2.0, description: 'Price is at a significant support or resistance level' },
-  { name: 'Trend Confirmation', category: 'Technical Analysis', weight: 1.5, description: 'Trade direction aligns with the higher timeframe trend' },
-  { name: 'RSI Signal', category: 'Technical Analysis', weight: 1.0, description: 'RSI showing oversold/overbought in favorable condition' },
-  { name: 'Volume Confirmation', category: 'Technical Analysis', weight: 1.5, description: 'Volume supports the expected price movement' },
+const STARTER_CONFLUENCE_ITEMS = [
   { name: 'Risk-Reward Ratio', category: 'Risk Management', weight: 2.5, description: 'Risk-reward ratio is at least 1:2 or better' },
   { name: 'Stop Loss Defined', category: 'Risk Management', weight: 2.0, description: 'Clear stop loss level identified and acceptable' },
-  { name: 'Position Size Calculated', category: 'Risk Management', weight: 2.0, description: 'Position size calculated based on risk percentage' },
-  { name: 'Market Structure', category: 'Market Structure', weight: 1.5, description: 'Market structure supports the trade direction' },
-  { name: 'News/Events Check', category: 'Fundamental Analysis', weight: 1.5, description: 'No conflicting news or events scheduled' },
-  { name: 'Market Session Timing', category: 'Time-based', weight: 1.0, description: 'Trading during active market hours' }
+  { name: 'Position Size Calculated', category: 'Risk Management', weight: 2.0, description: 'Position size calculated based on risk percentage' }
 ];
 
 export default function Confluence() {
@@ -124,7 +117,7 @@ export default function Confluence() {
 
   const createDefaultItems = async () => {
     try {
-      const defaultItems = DEFAULT_CONFLUENCE_ITEMS.map(item => ({
+      const starterItems = STARTER_CONFLUENCE_ITEMS.map(item => ({
         ...item,
         user_id: user?.id,
         is_active: true
@@ -132,17 +125,17 @@ export default function Confluence() {
 
       const { error } = await supabase
         .from('confluence_items')
-        .insert(defaultItems);
+        .insert(starterItems);
 
       if (error) throw error;
       
       fetchConfluenceItems();
       toast({
         title: "Welcome!",
-        description: "Default confluence items have been created for you",
+        description: "Starter confluence items have been created. You can customize them anytime!",
       });
     } catch (error) {
-      console.error('Error creating default items:', error);
+      console.error('Error creating starter items:', error);
     }
   };
 
