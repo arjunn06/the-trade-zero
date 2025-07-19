@@ -51,12 +51,13 @@ const Dashboard = () => {
   const [primaryAccountId, setPrimaryAccountId] = useState<string | null>(null);
   const [allTrades, setAllTrades] = useState<any[]>([]);
   const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest');
+  const [timeFilter, setTimeFilter] = useState<string>('all');
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
     }
-  }, [user, selectedAccountId, sortOrder]); // Add sortOrder dependency
+  }, [user, selectedAccountId, sortOrder, timeFilter]); // Add timeFilter dependency
 
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -94,9 +95,39 @@ const Dashboard = () => {
       }
 
       // Filter trades by selected account
-      const trades = selectedAccountId === 'all' 
+      let filteredTrades = selectedAccountId === 'all' 
         ? allTrades 
         : allTrades.filter(trade => trade.trading_account_id === selectedAccountId);
+
+      // Apply time filter
+      if (timeFilter !== 'all') {
+        const now = new Date();
+        const filterDate = new Date();
+        
+        switch (timeFilter) {
+          case '7d':
+            filterDate.setDate(now.getDate() - 7);
+            break;
+          case '30d':
+            filterDate.setDate(now.getDate() - 30);
+            break;
+          case '90d':
+            filterDate.setDate(now.getDate() - 90);
+            break;
+          case '6m':
+            filterDate.setMonth(now.getMonth() - 6);
+            break;
+          case '1y':
+            filterDate.setFullYear(now.getFullYear() - 1);
+            break;
+        }
+        
+        filteredTrades = filteredTrades.filter(trade => 
+          new Date(trade.entry_date) >= filterDate
+        );
+      }
+
+      const trades = filteredTrades;
 
       // Filter accounts by selected account for balance calculations
       const accounts = selectedAccountId === 'all'
@@ -233,7 +264,25 @@ const Dashboard = () => {
             <h1 className="text-3xl font-bold tracking-tight">Performance Dashboard</h1>
             <p className="text-muted-foreground">Monitor your trading performance and analytics</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            {/* Time Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">Period:</span>
+              <Select value={timeFilter} onValueChange={setTimeFilter}>
+                <SelectTrigger className="w-[140px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border border-border shadow-lg">
+                  <SelectItem value="all" className="hover:bg-muted/50">All Time</SelectItem>
+                  <SelectItem value="7d" className="hover:bg-muted/50">Last 7 Days</SelectItem>
+                  <SelectItem value="30d" className="hover:bg-muted/50">Last 30 Days</SelectItem>
+                  <SelectItem value="90d" className="hover:bg-muted/50">Last 3 Months</SelectItem>
+                  <SelectItem value="6m" className="hover:bg-muted/50">Last 6 Months</SelectItem>
+                  <SelectItem value="1y" className="hover:bg-muted/50">Last Year</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
             {/* Account Selector */}
             {accounts.length > 0 && (
               <div className="flex items-center gap-2">
