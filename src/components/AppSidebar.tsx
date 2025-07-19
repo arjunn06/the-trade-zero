@@ -63,8 +63,8 @@ export function AppSidebar() {
               <TrendingUp className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <span className="font-bold text-lg text-sidebar-foreground">Trade Zero</span>
-              <p className="text-xs text-sidebar-foreground/60">Trading Journal</p>
+              <span className="font-bold text-lg text-sidebar-foreground">The Trade Zero</span>
+              <p className="text-xs text-sidebar-foreground/60">Trading Platform</p>
             </div>
           </div>
         )}

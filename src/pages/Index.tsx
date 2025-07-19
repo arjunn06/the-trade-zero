@@ -40,7 +40,7 @@ const Index = () => {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">Trade Journal</span>
+            <span className="font-bold text-xl">The Trade Zero</span>
           </div>
           <Button asChild>
             <a href="/auth">Get Started</a>
@@ -52,7 +52,7 @@ const Index = () => {
       <main className="container mx-auto px-4 py-16">
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Professional Trading Journal
+            The Trade Zero
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Track your trades, analyze performance, and improve your trading strategy with our comprehensive journal platform.
@@ -237,7 +237,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <TrendingUp className="h-5 w-5 text-primary" />
-            <span className="font-semibold">Trade Journal</span>
+            <span className="font-semibold">The Trade Zero</span>
           </div>
           <p className="text-center text-muted-foreground mb-4">
             Professional trading journal platform for serious traders.

@@ -58,7 +58,7 @@ const Auth = () => {
       });
     } else {
       toast({
-        title: "Welcome to Trade Journal! 🎉",
+        title: "Welcome to The Trade Zero! 🎉",
         description: `Thanks for joining us, ${displayName}! Please check your email to confirm your account.`
       });
     }
@@ -70,7 +70,7 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Trade Journal</CardTitle>
+          <CardTitle className="text-2xl font-bold">The Trade Zero</CardTitle>
           <CardDescription>
             Sign in to your trading journal or create a new account
           </CardDescription>

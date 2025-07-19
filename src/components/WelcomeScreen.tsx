@@ -101,7 +101,7 @@ export function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
             </div>
           </div>
           <h1 className="text-4xl font-bold">
-            Welcome, {displayName}! 🎉
+            Welcome to The Trade Zero, {displayName}! 🎉
           </h1>
           <p className="text-xl text-muted-foreground max-w-lg mx-auto">
             Your trading journal is ready! Let's set up a few things to get you started on your trading journey.
