@@ -196,7 +196,7 @@ const Upgrade = () => {
                   )}
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">₹749</span>
+                  <span className="text-4xl font-bold">₹2</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 <CardDescription>
@@ -242,7 +242,7 @@ const Upgrade = () => {
                 {!isCurrentlyPremium ? (
                   <RazorpayPayment 
                     plan="professional" 
-                    amount={749}
+                    amount={2}
                     onSuccess={handlePaymentSuccess}
                     onError={handlePaymentError}
                   >
