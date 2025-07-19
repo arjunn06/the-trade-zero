@@ -105,9 +105,9 @@ const Dashboard = () => {
 
       setRecentTrades(trades.slice(0, 5));
 
-      // Generate equity curve data using actual initial balance
+      // Generate equity curve data showing progression to current balance
       const sortedTrades = closedTrades.sort((a, b) => new Date(a.exit_date || a.entry_date).getTime() - new Date(b.exit_date || b.entry_date).getTime());
-      let runningBalance = totalInitialBalance || 0; // Use actual initial balance
+      let runningBalance = totalInitialBalance || 0;
       const equityCurve = [{ date: 'Start', balance: runningBalance }];
       
       sortedTrades.forEach((trade) => {
@@ -117,6 +117,20 @@ const Dashboard = () => {
           balance: runningBalance
         });
       });
+
+      // Add current balance as the final point if different from calculated
+      if (sortedTrades.length > 0 && Math.abs(runningBalance - totalCurrentBalance) > 0.01) {
+        equityCurve.push({
+          date: 'Current',
+          balance: totalCurrentBalance
+        });
+      } else if (sortedTrades.length === 0) {
+        // If no trades, just show progression from initial to current
+        equityCurve.push({
+          date: 'Current',
+          balance: totalCurrentBalance
+        });
+      }
       
       setEquityData(equityCurve);
     } catch (error) {
