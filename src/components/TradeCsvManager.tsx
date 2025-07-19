@@ -236,6 +236,16 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
           }
         });
 
+        // Auto-determine status based on exit data
+        if (!trade.status || trade.status === 'open') {
+          // If trade has exit price, exit date, or PnL, it should be closed
+          if (trade.exit_price || trade.exit_date || trade.pnl !== undefined) {
+            trade.status = 'closed';
+          } else {
+            trade.status = 'open';
+          }
+        }
+
         // Validate required fields
         if (!trade.symbol || !trade.trade_type || !trade.entry_price || !trade.quantity || !trade.entry_date) {
           throw new Error(`Invalid trade data in row: ${row}`);
