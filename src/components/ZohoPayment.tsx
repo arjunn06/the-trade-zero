@@ -139,9 +139,9 @@ export function ZohoPayment({ plan, amount, onSuccess, onCancel }: ZohoPaymentPr
 
 export const zohoPaymentConfig = {
   // TODO: Add Zoho Payments configuration
-  merchantId: process.env.REACT_APP_ZOHO_MERCHANT_ID || 'your-merchant-id',
-  apiKey: process.env.REACT_APP_ZOHO_API_KEY || 'your-api-key',
-  environment: process.env.NODE_ENV === 'production' ? 'live' : 'sandbox',
+  merchantId: 'your-merchant-id',
+  apiKey: 'your-api-key',
+  environment: 'sandbox',
   currency: 'USD',
   returnUrl: window.location.origin + '/payment-success',
   cancelUrl: window.location.origin + '/payment-cancel',
