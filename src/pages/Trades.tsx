@@ -282,6 +282,8 @@ const Trades = () => {
 
   // Filter and sort trades
   const filteredAndSortedTrades = useMemo(() => {
+    console.log('Filtering trades:', { totalTrades: trades.length, filters });
+    
     let filtered = trades.filter(trade => {
       // Search term filter (matches symbol, trade type, status)
       if (filters.searchTerm) {
@@ -289,17 +291,28 @@ const Trades = () => {
         const matchesSymbol = trade.symbol.toLowerCase().includes(searchLower);
         const matchesType = trade.trade_type.toLowerCase().includes(searchLower);
         const matchesStatus = trade.status.toLowerCase().includes(searchLower);
-        if (!matchesSymbol && !matchesType && !matchesStatus) return false;
+        if (!matchesSymbol && !matchesType && !matchesStatus) {
+          console.log(`Trade ${trade.symbol} excluded by search term:`, searchLower);
+          return false;
+        }
       }
       
       // Trade type filter
-      if (filters.tradeType && trade.trade_type !== filters.tradeType) return false;
+      if (filters.tradeType && trade.trade_type !== filters.tradeType) {
+        console.log(`Trade ${trade.symbol} excluded by trade type:`, filters.tradeType);
+        return false;
+      }
       
       // Status filter
-      if (filters.status && trade.status !== filters.status) return false;
+      if (filters.status && trade.status !== filters.status) {
+        console.log(`Trade ${trade.symbol} excluded by status:`, filters.status);
+        return false;
+      }
       
       return true;
     });
+
+    console.log('Filtered trades count:', filtered.length);
 
     // Sort trades
     filtered.sort((a, b) => {
@@ -378,10 +391,12 @@ const Trades = () => {
 
         {/* Search and Filters */}
         {trades.length > 0 && (
-          <TradeFilters
-            onFiltersChange={setFilters}
-            symbolOptions={symbolOptions}
-          />
+          <div className="w-full">
+            <TradeFilters
+              onFiltersChange={setFilters}
+              symbolOptions={symbolOptions}
+            />
+          </div>
         )}
 
         {trades.length === 0 ? (

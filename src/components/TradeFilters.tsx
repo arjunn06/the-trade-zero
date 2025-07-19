@@ -36,6 +36,7 @@ export function TradeFilters({ onFiltersChange, symbolOptions }: TradeFiltersPro
     const updated = { ...filters, ...newFilters };
     setFilters(updated);
     onFiltersChange(updated);
+    console.log('Filters updated:', updated); // Debug log
   };
 
   const clearFilters = () => {
@@ -49,15 +50,15 @@ export function TradeFilters({ onFiltersChange, symbolOptions }: TradeFiltersPro
   });
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
       {/* Search Input */}
-      <div className="relative flex-1 max-w-sm">
+      <div className="relative flex-1 max-w-full sm:max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search trades by symbol..."
           value={filters.searchTerm}
           onChange={(e) => updateFilters({ searchTerm: e.target.value })}
-          className="pl-10"
+          className="pl-10 w-full"
         />
       </div>
 
@@ -67,7 +68,7 @@ export function TradeFilters({ onFiltersChange, symbolOptions }: TradeFiltersPro
           <Button 
             variant="outline" 
             size="sm"
-            className="relative"
+            className="relative w-full sm:w-auto shrink-0"
           >
             <Filter className="h-4 w-4 mr-2" />
             Filters
@@ -77,7 +78,7 @@ export function TradeFilters({ onFiltersChange, symbolOptions }: TradeFiltersPro
           </Button>
         </PopoverTrigger>
         <PopoverContent 
-          className="w-80 bg-background border shadow-lg z-50" 
+          className="w-80 max-w-[calc(100vw-2rem)] bg-background border shadow-lg z-50" 
           align="end"
           sideOffset={4}
         >
