@@ -43,7 +43,23 @@ serve(async (req) => {
     const REDIRECT_URI = `${Deno.env.get('SUPABASE_URL')}/functions/v1/ctrader-callback`;
 
     if (!CTRADER_CLIENT_ID || !CTRADER_CLIENT_SECRET) {
-      throw new Error('cTrader credentials not configured');
+      console.error('Missing cTrader credentials:', { 
+        hasClientId: !!CTRADER_CLIENT_ID, 
+        hasClientSecret: !!CTRADER_CLIENT_SECRET 
+      });
+      return new Response(
+        JSON.stringify({ 
+          error: 'cTrader integration not configured. Please add CTRADER_CLIENT_ID and CTRADER_CLIENT_SECRET to your Supabase secrets.',
+          missingCredentials: !CTRADER_CLIENT_ID || !CTRADER_CLIENT_SECRET
+        }),
+        { 
+          status: 400, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
     }
 
     // Generate state parameter for security
