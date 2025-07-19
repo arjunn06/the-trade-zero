@@ -20,6 +20,7 @@ import Calendar from "./pages/Calendar";
 import Confluence from "./pages/Confluence";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
+import Upgrade from "./pages/Upgrade";
 import Terms from "./pages/Terms";
 import Refund from "./pages/Refund";
 import Welcome from "./pages/Welcome";
@@ -55,6 +56,7 @@ const App = () => (
             <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
             <Route path="/accounts" element={<ProtectedRoute><TradingAccounts /></ProtectedRoute>} />
             <Route path="/strategies" element={<ProtectedRoute><Strategies /></ProtectedRoute>} />
+            <Route path="/upgrade" element={<ProtectedRoute><Upgrade /></ProtectedRoute>} />
             <Route path="/confluence" element={<ProtectedRoute><Confluence /></ProtectedRoute>} />
             <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
             <Route path="/payment-success" element={<PaymentSuccess />} />

@@ -9,7 +9,8 @@ import {
   Building2,
   Target,
   TrendingUp,
-  LogOut
+  LogOut,
+  Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NavLink, useLocation } from 'react-router-dom';
@@ -40,6 +41,7 @@ const systemItems = [
   { title: 'Strategies', url: '/strategies', icon: Target },
   { title: 'Confluence', url: '/confluence', icon: BookOpen },
   { title: 'Notes', url: '/notes', icon: StickyNote },
+  { title: 'Upgrade', url: '/upgrade', icon: Crown },
 ];
 
 export function AppSidebar() {
