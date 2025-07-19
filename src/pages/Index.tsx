@@ -119,7 +119,7 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Free Plan */}
             <div className="bg-card border rounded-lg p-8 relative">
               <div className="text-center">
@@ -215,57 +215,6 @@ const Index = () => {
                 Start Professional Plan
               </Button>
             </div>
-
-            {/* Enterprise Plan */}
-            <div className="bg-card border rounded-lg p-8 relative">
-              <div className="text-center">
-                <h3 className="text-2xl font-bold mb-4">Enterprise</h3>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">$99</span>
-                  <span className="text-muted-foreground">/month</span>
-                </div>
-                <p className="text-muted-foreground mb-8">For professional trading teams and institutions</p>
-              </div>
-              
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>Everything in Professional</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>Team collaboration</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>API access</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>Custom integrations</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>Priority support</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>White-label options</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>Custom reporting</span>
-                </li>
-              </ul>
-              
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => handlePayment('enterprise', 99)}
-              >
-                Contact Sales
-              </Button>
-            </div>
           </div>
         </div>
 
@@ -286,13 +235,17 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t mt-24">
         <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2 mb-4">
             <TrendingUp className="h-5 w-5 text-primary" />
             <span className="font-semibold">Trade Journal</span>
           </div>
-          <p className="text-center text-muted-foreground mt-2">
+          <p className="text-center text-muted-foreground mb-4">
             Professional trading journal platform for serious traders.
           </p>
+          <div className="flex justify-center gap-6 text-sm text-muted-foreground">
+            <a href="/terms" className="hover:text-foreground transition-colors">Terms & Conditions</a>
+            <a href="/refund" className="hover:text-foreground transition-colors">Refund Policy</a>
+          </div>
         </div>
       </footer>
     </div>

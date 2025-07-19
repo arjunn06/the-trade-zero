@@ -18,6 +18,8 @@ import Calendar from "./pages/Calendar";
 import Confluence from "./pages/Confluence";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
+import Terms from "./pages/Terms";
+import Refund from "./pages/Refund";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +48,8 @@ const App = () => (
             <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/payment-cancel" element={<PaymentCancel />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/refund" element={<Refund />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
