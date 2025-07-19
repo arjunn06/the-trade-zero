@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Lightbulb, TrendingUp, AlertTriangle, Calendar, Target, BarChart3 } from 'lucide-react';
+import { Lightbulb, TrendingUp, AlertTriangle, Calendar, Target, BarChart3, Sparkles, Star } from 'lucide-react';
 
 interface Trade {
   id: string;
@@ -274,69 +274,101 @@ export function SmartSuggestions({ trades }: SmartSuggestionsProps) {
   }
 
   return (
-    <Card className="metric-card">
-      <CardHeader className="pb-4">
-        <div className="flex items-center gap-2">
-          <Lightbulb className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg font-semibold">Smart Insights</CardTitle>
-        </div>
-        <CardDescription>AI-powered suggestions based on your trading patterns</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {suggestions.slice(0, 4).map((suggestion, index) => (
-            <div 
-              key={index}
-              className={`p-4 rounded-lg border transition-colors ${
-                suggestion.type === 'positive' 
-                  ? 'bg-profit/5 border-profit/20' 
-                  : suggestion.type === 'warning'
-                  ? 'bg-loss/5 border-loss/20'
-                  : 'bg-muted/30 border-border'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-full ${
-                  suggestion.type === 'positive' 
-                    ? 'bg-profit/10 text-profit' 
-                    : suggestion.type === 'warning'
-                    ? 'bg-loss/10 text-loss'
-                    : 'bg-primary/10 text-primary'
-                }`}>
-                  {suggestion.icon}
-                </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-medium text-sm">{suggestion.title}</h4>
-                    <Badge 
-                      variant={
-                        suggestion.priority === 'high' 
-                          ? 'destructive' 
-                          : suggestion.priority === 'medium'
-                          ? 'default'
-                          : 'secondary'
-                      }
-                      className="text-xs px-2 py-0"
-                    >
-                      {suggestion.priority}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {suggestion.description}
-                  </p>
-                </div>
+    <div className="relative">
+      {/* Background decorative stars */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <Star className="absolute top-4 right-6 h-3 w-3 text-primary/20 animate-pulse" />
+        <Star className="absolute top-12 right-16 h-2 w-2 text-primary/30" />
+        <Sparkles className="absolute bottom-8 left-6 h-4 w-4 text-primary/20 animate-pulse" style={{ animationDelay: '0.5s' }} />
+        <Star className="absolute bottom-16 left-16 h-2 w-2 text-primary/25" />
+      </div>
+
+      <Card className="metric-card relative overflow-hidden">
+        {/* Gradient background overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 pointer-events-none" />
+        
+        <CardHeader className="pb-4 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 rounded-full blur-sm" />
+              <div className="relative bg-gradient-to-br from-primary/20 to-primary/30 p-2 rounded-full">
+                <Sparkles className="h-5 w-5 text-primary" />
               </div>
             </div>
-          ))}
-        </div>
-        {suggestions.length > 4 && (
-          <div className="mt-4 pt-4 border-t text-center">
-            <p className="text-xs text-muted-foreground">
-              +{suggestions.length - 4} more insights available
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg font-semibold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+                AI Insights
+              </CardTitle>
+              <Star className="h-4 w-4 text-primary/60" />
+            </div>
+          </div>
+          <CardDescription className="ml-12">AI-powered suggestions based on your trading patterns</CardDescription>
+        </CardHeader>
+        
+        <CardContent className="relative z-10">
+          <div className="space-y-4">
+            {suggestions.slice(0, 4).map((suggestion, index) => (
+              <div 
+                key={index}
+                className={`relative p-4 rounded-lg border transition-all duration-300 hover:shadow-md hover:scale-[1.01] ${
+                  suggestion.type === 'positive' 
+                    ? 'bg-gradient-to-r from-profit/5 to-profit/10 border-profit/20 hover:border-profit/30' 
+                    : suggestion.type === 'warning'
+                    ? 'bg-gradient-to-r from-loss/5 to-loss/10 border-loss/20 hover:border-loss/30'
+                    : 'bg-gradient-to-r from-muted/20 to-muted/40 border-border hover:border-primary/20'
+                }`}
+              >
+                {/* Subtle shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -skew-x-12 opacity-0 hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                
+                <div className="flex items-start gap-3 relative z-10">
+                  <div className={`p-2 rounded-full transition-transform hover:scale-110 ${
+                    suggestion.type === 'positive' 
+                      ? 'bg-gradient-to-br from-profit/10 to-profit/20 text-profit shadow-sm' 
+                      : suggestion.type === 'warning'
+                      ? 'bg-gradient-to-br from-loss/10 to-loss/20 text-loss shadow-sm'
+                      : 'bg-gradient-to-br from-primary/10 to-primary/20 text-primary shadow-sm'
+                  }`}>
+                    {suggestion.icon}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium text-sm">{suggestion.title}</h4>
+                      <Badge 
+                        variant={
+                          suggestion.priority === 'high' 
+                            ? 'destructive' 
+                            : suggestion.priority === 'medium'
+                            ? 'default'
+                            : 'secondary'
+                        }
+                        className="text-xs px-2 py-0 shadow-sm"
+                      >
+                        {suggestion.priority}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {suggestion.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Always show the insights counter */}
+          <div className="mt-4 pt-4 border-t border-primary/10 text-center relative">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+            <p className="text-xs text-muted-foreground bg-gradient-to-r from-muted-foreground to-muted-foreground/80 bg-clip-text">
+              {suggestions.length > 4 ? (
+                `+${suggestions.length - 4} more insights available`
+              ) : (
+                "+0 more insights available"
+              )}
             </p>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
