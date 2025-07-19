@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Calendar } from '@/components/ui/calendar';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { useSubscription } from '@/hooks/useSubscription';
+import { PremiumFeature } from '@/components/PremiumFeature';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Upload, X, ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
@@ -29,6 +31,7 @@ interface Strategy {
 const NewTrade = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isPremium } = useSubscription();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
@@ -404,7 +407,23 @@ const NewTrade = () => {
 
             <div>
               <Label htmlFor="screenshots">Chart Screenshots (Optional)</Label>
-              <div className="space-y-4">
+              <PremiumFeature
+                feature="Chart Screenshots"
+                description="Upload and save chart screenshots with your trades. Available in premium plan only."
+                fallback={
+                  <div className="flex items-center justify-center w-full h-32 border-2 border-dashed border-muted-foreground/30 rounded-lg bg-muted/30">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <ImageIcon className="w-8 h-8 mb-2 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Chart screenshots available in <span className="font-semibold">Premium</span>
+                      </p>
+                      <Button size="sm" variant="outline" onClick={() => navigate('/')}>
+                        Upgrade to Premium
+                      </Button>
+                    </div>
+                  </div>
+                }
+              >
                 <div className="flex items-center justify-center w-full">
                   <label htmlFor="screenshot-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -450,7 +469,7 @@ const NewTrade = () => {
                     ))}
                   </div>
                 )}
-              </div>
+              </PremiumFeature>
             </div>
 
             <div className="flex space-x-4">

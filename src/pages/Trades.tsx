@@ -8,6 +8,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { useSubscription } from '@/hooks/useSubscription';
+import { PremiumFeature, UpgradePrompt } from '@/components/PremiumFeature';
 import {
   Table,
   TableBody,
@@ -54,6 +56,7 @@ const Trades = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { isPremium } = useSubscription();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
@@ -67,6 +70,9 @@ const Trades = () => {
     commission: '',
     swap: ''
   });
+
+  // Premium limits for basic users
+  const BASIC_TRADE_LIMIT = 50;
 
   useEffect(() => {
     if (user) {
@@ -198,40 +204,76 @@ const Trades = () => {
     return <div>Loading trades...</div>;
   }
 
+  // Check if basic user has exceeded trade limit
+  const hasExceededLimit = !isPremium && trades.length >= BASIC_TRADE_LIMIT;
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Trade History</h1>
-          <p className="text-muted-foreground">View and manage your trading history</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Trade History</h1>
+            <p className="text-muted-foreground">View and manage your trading history</p>
+          </div>
+          {hasExceededLimit ? (
+            <PremiumFeature
+              feature="Unlimited Trades"
+              description="You've reached the 50 trade limit for basic users. Upgrade to premium for unlimited trade tracking."
+              showUpgrade={false}
+              fallback={
+                <Button disabled variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Upgrade for More Trades
+                </Button>
+              }
+            />
+          ) : (
+            <Button onClick={() => navigate('/trades/new')}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Trade
+            </Button>
+          )}
         </div>
-        <Button onClick={() => navigate('/trades/new')}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Trade
-        </Button>
-      </div>
 
-      {trades.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-8">
-              <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">No trades yet</h3>
-              <p className="text-muted-foreground mb-4">Start by creating your first trade</p>
-              <Button onClick={() => navigate('/trades/new')}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Trade
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>All Trades</CardTitle>
-            <CardDescription>Complete history of your trading activity</CardDescription>
-          </CardHeader>
+        {trades.length === 0 ? (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8">
+                <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No trades yet</h3>
+                <p className="text-muted-foreground mb-4">Start by creating your first trade</p>
+                {hasExceededLimit ? (
+                  <PremiumFeature
+                    feature="Unlimited Trades"
+                    description="Upgrade to premium for unlimited trade tracking and advanced features."
+                  />
+                ) : (
+                  <Button onClick={() => navigate('/trades/new')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Trade
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                All Trades
+                {!isPremium && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>{trades.length}/{BASIC_TRADE_LIMIT} trades used</span>
+                    {trades.length >= BASIC_TRADE_LIMIT * 0.8 && (
+                      <Button size="sm" variant="outline" onClick={() => navigate('/')}>
+                        Upgrade
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </CardTitle>
+              <CardDescription>Complete history of your trading activity</CardDescription>
+            </CardHeader>
            <CardContent>
              <Table>
                <TableHeader>

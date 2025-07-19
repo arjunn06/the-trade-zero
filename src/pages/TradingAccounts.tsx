@@ -7,6 +7,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { useSubscription } from '@/hooks/useSubscription';
+import { PremiumFeature } from '@/components/PremiumFeature';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +37,7 @@ interface TradingAccount {
 const TradingAccounts = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isPremium } = useSubscription();
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -48,6 +51,9 @@ const TradingAccounts = () => {
     current_equity: '',
     currency: 'USD'
   });
+
+  // Premium limits for basic users
+  const BASIC_ACCOUNT_LIMIT = 1;
 
   useEffect(() => {
     if (user) {
@@ -183,21 +189,37 @@ const TradingAccounts = () => {
     return <div>Loading accounts...</div>;
   }
 
+  // Check if basic user has exceeded account limit
+  const hasExceededLimit = !isPremium && accounts.length >= BASIC_ACCOUNT_LIMIT;
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Trading Accounts</h1>
-          <p className="text-muted-foreground">Manage your trading accounts and track balances</p>
-        </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { resetForm(); setEditingAccount(null); }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Account
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Trading Accounts</h1>
+            <p className="text-muted-foreground">Manage your trading accounts and track balances</p>
+          </div>
+          {hasExceededLimit ? (
+            <PremiumFeature
+              feature="Multiple Trading Accounts"
+              description="Basic users can track 1 account. Upgrade to premium for unlimited accounts."
+              showUpgrade={false}
+              fallback={
+                <Button disabled variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Upgrade for More Accounts
+                </Button>
+              }
+            />
+          ) : (
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => { resetForm(); setEditingAccount(null); }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Account
+                </Button>
+              </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{editingAccount ? 'Edit' : 'Add'} Trading Account</DialogTitle>
@@ -291,36 +313,48 @@ const TradingAccounts = () => {
                 {editingAccount ? 'Update' : 'Create'} Account
               </Button>
             </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </DialogContent>
+          </Dialog>
+          )}
+        </div>
 
       {accounts.length === 0 ? (
-        <div className="text-center py-12">
-          <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">No trading accounts yet</h3>
-          <p className="text-muted-foreground mb-4">Create your first trading account to start tracking your performance</p>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Your First Account
-          </Button>
-        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">No trading accounts yet</h3>
+              <p className="text-muted-foreground mb-4">Add your first trading account to start tracking</p>
+              {hasExceededLimit ? (
+                <PremiumFeature
+                  feature="Multiple Trading Accounts"
+                  description="Upgrade to premium to track unlimited trading accounts."
+                />
+              ) : (
+                <Button onClick={() => setDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Account
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {accounts.map((account) => (
-            <Card key={account.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{account.name}</CardTitle>
-                  <div className="flex space-x-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(account)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(account.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+             <Card key={account.id} className={!account.is_active ? 'opacity-60' : ''}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-lg font-medium">{account.name}</CardTitle>
+                  <div className="flex items-center space-x-2">
+                    {account.is_active && <Badge variant="default">Active</Badge>}
+                    {!isPremium && accounts.length >= BASIC_ACCOUNT_LIMIT && (
+                      <Badge variant="outline" className="text-xs">
+                        Limit Reached
+                      </Badge>
+                    )}
                   </div>
-                </div>
+                </CardHeader>
+              <CardContent className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <Badge variant={account.account_type === 'live' ? 'default' : 'secondary'}>
                     {account.account_type.toUpperCase()}
@@ -331,28 +365,38 @@ const TradingAccounts = () => {
                     </Badge>
                   )}
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Initial Balance</span>
-                  <span className="font-medium">{formatCurrency(account.initial_balance, account.currency)}</span>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Initial Balance</span>
+                    <span className="font-medium">{formatCurrency(account.initial_balance, account.currency)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Current Balance</span>
+                    <span className="font-medium">{formatCurrency(account.current_balance, account.currency)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Current Equity</span>
+                    <span className="font-medium">{formatCurrency(account.current_equity, account.currency)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">P&L</span>
+                    <span className={`font-medium ${account.current_balance - account.initial_balance >= 0 ? 'text-profit' : 'text-loss'}`}>
+                      {formatCurrency(account.current_balance - account.initial_balance, account.currency)}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Current Balance</span>
-                  <span className="font-medium">{formatCurrency(account.current_balance, account.currency)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Current Equity</span>
-                  <span className="font-medium">{formatCurrency(account.current_equity, account.currency)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">P&L</span>
-                  <span className={`font-medium ${account.current_balance - account.initial_balance >= 0 ? 'text-profit' : 'text-loss'}`}>
-                    {formatCurrency(account.current_balance - account.initial_balance, account.currency)}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="flex justify-between pt-2 border-t">
+                    <div className="flex space-x-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(account)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(account.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
           ))}
         </div>
       )}

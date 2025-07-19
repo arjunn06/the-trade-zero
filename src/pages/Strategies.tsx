@@ -7,6 +7,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { useSubscription } from '@/hooks/useSubscription';
+import { PremiumFeature } from '@/components/PremiumFeature';
 import {
   Dialog,
   DialogContent,
@@ -33,6 +35,7 @@ interface Strategy {
 const Strategies = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isPremium } = useSubscription();
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -44,6 +47,9 @@ const Strategies = () => {
     risk_per_trade: '',
     max_daily_risk: ''
   });
+
+  // Premium limits for basic users  
+  const BASIC_STRATEGY_LIMIT = 3;
 
   useEffect(() => {
     if (user) {
@@ -192,18 +198,31 @@ const Strategies = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Trading Strategies</h1>
-          <p className="text-muted-foreground">Create and manage your trading strategies</p>
-        </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { resetForm(); setEditingStrategy(null); }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Strategy
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Trading Strategies</h1>
+            <p className="text-muted-foreground">Create and manage your trading strategies</p>
+          </div>
+          {!isPremium && strategies.length >= BASIC_STRATEGY_LIMIT ? (
+            <PremiumFeature
+              feature="Unlimited Strategies"
+              description="Basic users can create 3 strategies. Upgrade to premium for unlimited strategies."
+              showUpgrade={false}
+              fallback={
+                <Button disabled variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Upgrade for More Strategies
+                </Button>
+              }
+            />
+          ) : (
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => { resetForm(); setEditingStrategy(null); }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Strategy
+                </Button>
+              </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>{editingStrategy ? 'Edit' : 'Add'} Trading Strategy</DialogTitle>
@@ -268,19 +287,27 @@ const Strategies = () => {
                 {editingStrategy ? 'Update' : 'Create'} Strategy
               </Button>
             </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </DialogContent>
+          </Dialog>
+          )}
+        </div>
 
       {strategies.length === 0 ? (
         <div className="text-center py-12">
           <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium mb-2">No strategies yet</h3>
           <p className="text-muted-foreground mb-4">Create your first trading strategy to organize your approach</p>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Your First Strategy
-          </Button>
+          {!isPremium && strategies.length >= BASIC_STRATEGY_LIMIT ? (
+            <PremiumFeature
+              feature="Unlimited Strategies"
+              description="Upgrade to premium to create unlimited trading strategies."
+            />
+          ) : (
+            <Button onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Your First Strategy
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
