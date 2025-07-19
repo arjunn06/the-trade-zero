@@ -60,3 +60,12 @@ inspector_port = 8083
 
 [functions.send-welcome-email]
 verify_jwt = false
+
+[functions.send-password-reset]
+verify_jwt = false
+
+[functions.send-upgrade-success]
+verify_jwt = false
+
+[functions.send-general-notification]
+verify_jwt = false
