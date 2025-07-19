@@ -3,9 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Filter, X } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Separator } from '@/components/ui/separator';
+import { Filter, X, Search } from 'lucide-react';
 
 interface TradeFiltersProps {
   onFiltersChange: (filters: TradeFilters) => void;
@@ -13,29 +13,17 @@ interface TradeFiltersProps {
 }
 
 export interface TradeFilters {
-  symbol: string;
+  searchTerm: string;
   tradeType: string;
   status: string;
-  dateFrom: string;
-  dateTo: string;
-  minPnl: string;
-  maxPnl: string;
-  minQuantity: string;
-  maxQuantity: string;
   sortBy: string;
   sortDirection: 'asc' | 'desc';
 }
 
 const initialFilters: TradeFilters = {
-  symbol: '',
+  searchTerm: '',
   tradeType: '',
   status: '',
-  dateFrom: '',
-  dateTo: '',
-  minPnl: '',
-  maxPnl: '',
-  minQuantity: '',
-  maxQuantity: '',
   sortBy: 'entry_date',
   sortDirection: 'desc'
 };
@@ -61,64 +49,62 @@ export function TradeFilters({ onFiltersChange, symbolOptions }: TradeFiltersPro
   });
 
   return (
-    <Card>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                Filters & Sorting
-                {hasActiveFilters && (
-                  <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
-                    Active
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                {hasActiveFilters && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      clearFilters();
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                    Clear
-                  </Button>
-                )}
-              </div>
-            </CardTitle>
-          </CardHeader>
-        </CollapsibleTrigger>
-        
-        <CollapsibleContent>
-          <CardContent className="space-y-6">
-            {/* Search and Basic Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="symbol-filter">Symbol</Label>
-                <Select value={filters.symbol} onValueChange={(value) => updateFilters({ symbol: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All symbols" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All symbols</SelectItem>
-                    {symbolOptions.map((symbol) => (
-                      <SelectItem key={symbol} value={symbol}>
-                        {symbol}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+    <div className="flex items-center gap-2">
+      {/* Search Input */}
+      <div className="relative flex-1 max-w-sm">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search trades by symbol..."
+          value={filters.searchTerm}
+          onChange={(e) => updateFilters({ searchTerm: e.target.value })}
+          className="pl-10"
+        />
+      </div>
 
+      {/* Filter Popup */}
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="relative"
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+            {hasActiveFilters && (
+              <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full" />
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent 
+          className="w-80 bg-background border shadow-lg z-50" 
+          align="end"
+          sideOffset={4}
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium text-sm">Filter Trades</h4>
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="h-auto p-1 text-xs"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Clear
+                </Button>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Quick Filters */}
+            <div className="space-y-3">
               <div>
-                <Label htmlFor="trade-type-filter">Trade Type</Label>
+                <Label className="text-xs font-medium text-muted-foreground">TRADE TYPE</Label>
                 <Select value={filters.tradeType} onValueChange={(value) => updateFilters({ tradeType: value })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-8">
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
                   <SelectContent>
@@ -130,9 +116,9 @@ export function TradeFilters({ onFiltersChange, symbolOptions }: TradeFiltersPro
               </div>
 
               <div>
-                <Label htmlFor="status-filter">Status</Label>
+                <Label className="text-xs font-medium text-muted-foreground">STATUS</Label>
                 <Select value={filters.status} onValueChange={(value) => updateFilters({ status: value })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-8">
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent>
@@ -142,118 +128,42 @@ export function TradeFilters({ onFiltersChange, symbolOptions }: TradeFiltersPro
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            {/* Date Range */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="date-from">From Date</Label>
-                <Input
-                  id="date-from"
-                  type="date"
-                  value={filters.dateFrom}
-                  onChange={(e) => updateFilters({ dateFrom: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="date-to">To Date</Label>
-                <Input
-                  id="date-to"
-                  type="date"
-                  value={filters.dateTo}
-                  onChange={(e) => updateFilters({ dateTo: e.target.value })}
-                />
-              </div>
-            </div>
+              <Separator />
 
-            {/* P&L Range */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Sorting */}
               <div>
-                <Label htmlFor="min-pnl">Min P&L</Label>
-                <Input
-                  id="min-pnl"
-                  type="number"
-                  step="0.01"
-                  placeholder="Minimum P&L"
-                  value={filters.minPnl}
-                  onChange={(e) => updateFilters({ minPnl: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="max-pnl">Max P&L</Label>
-                <Input
-                  id="max-pnl"
-                  type="number"
-                  step="0.01"
-                  placeholder="Maximum P&L"
-                  value={filters.maxPnl}
-                  onChange={(e) => updateFilters({ maxPnl: e.target.value })}
-                />
-              </div>
-            </div>
-
-            {/* Position Size Range */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="min-quantity">Min Position Size</Label>
-                <Input
-                  id="min-quantity"
-                  type="number"
-                  step="0.01"
-                  placeholder="Minimum quantity"
-                  value={filters.minQuantity}
-                  onChange={(e) => updateFilters({ minQuantity: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="max-quantity">Max Position Size</Label>
-                <Input
-                  id="max-quantity"
-                  type="number"
-                  step="0.01"
-                  placeholder="Maximum quantity"
-                  value={filters.maxQuantity}
-                  onChange={(e) => updateFilters({ maxQuantity: e.target.value })}
-                />
+                <Label className="text-xs font-medium text-muted-foreground">SORT BY</Label>
+                <div className="flex gap-2">
+                  <Select value={filters.sortBy} onValueChange={(value) => updateFilters({ sortBy: value })}>
+                    <SelectTrigger className="h-8 flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="entry_date">Date</SelectItem>
+                      <SelectItem value="pnl">P&L</SelectItem>
+                      <SelectItem value="quantity">Size</SelectItem>
+                      <SelectItem value="symbol">Symbol</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select 
+                    value={filters.sortDirection} 
+                    onValueChange={(value: 'asc' | 'desc') => updateFilters({ sortDirection: value })}
+                  >
+                    <SelectTrigger className="h-8 w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="desc">↓</SelectItem>
+                      <SelectItem value="asc">↑</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
-
-            {/* Sorting */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="sort-by">Sort By</Label>
-                <Select value={filters.sortBy} onValueChange={(value) => updateFilters({ sortBy: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="entry_date">Entry Date</SelectItem>
-                    <SelectItem value="exit_date">Exit Date</SelectItem>
-                    <SelectItem value="pnl">P&L</SelectItem>
-                    <SelectItem value="quantity">Position Size</SelectItem>
-                    <SelectItem value="symbol">Symbol</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="sort-direction">Sort Direction</Label>
-                <Select 
-                  value={filters.sortDirection} 
-                  onValueChange={(value: 'asc' | 'desc') => updateFilters({ sortDirection: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="desc">Highest First</SelectItem>
-                    <SelectItem value="asc">Lowest First</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }

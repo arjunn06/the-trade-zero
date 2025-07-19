@@ -69,15 +69,9 @@ const Trades = () => {
   const [screenshotDialog, setScreenshotDialog] = useState(false);
   const [selectedScreenshots, setSelectedScreenshots] = useState<string[]>([]);
   const [filters, setFilters] = useState<TradeFiltersType>({
-    symbol: '',
+    searchTerm: '',
     tradeType: '',
     status: '',
-    dateFrom: '',
-    dateTo: '',
-    minPnl: '',
-    maxPnl: '',
-    minQuantity: '',
-    maxQuantity: '',
     sortBy: 'entry_date',
     sortDirection: 'desc'
   });
@@ -289,26 +283,20 @@ const Trades = () => {
   // Filter and sort trades
   const filteredAndSortedTrades = useMemo(() => {
     let filtered = trades.filter(trade => {
-      // Symbol filter
-      if (filters.symbol && trade.symbol !== filters.symbol) return false;
+      // Search term filter (matches symbol, trade type, status)
+      if (filters.searchTerm) {
+        const searchLower = filters.searchTerm.toLowerCase();
+        const matchesSymbol = trade.symbol.toLowerCase().includes(searchLower);
+        const matchesType = trade.trade_type.toLowerCase().includes(searchLower);
+        const matchesStatus = trade.status.toLowerCase().includes(searchLower);
+        if (!matchesSymbol && !matchesType && !matchesStatus) return false;
+      }
       
       // Trade type filter
       if (filters.tradeType && trade.trade_type !== filters.tradeType) return false;
       
       // Status filter
       if (filters.status && trade.status !== filters.status) return false;
-      
-      // Date range filter
-      if (filters.dateFrom && new Date(trade.entry_date) < new Date(filters.dateFrom)) return false;
-      if (filters.dateTo && new Date(trade.entry_date) > new Date(filters.dateTo)) return false;
-      
-      // P&L range filter
-      if (filters.minPnl && (!trade.pnl || trade.pnl < parseFloat(filters.minPnl))) return false;
-      if (filters.maxPnl && (!trade.pnl || trade.pnl > parseFloat(filters.maxPnl))) return false;
-      
-      // Quantity range filter
-      if (filters.minQuantity && trade.quantity < parseFloat(filters.minQuantity)) return false;
-      if (filters.maxQuantity && trade.quantity > parseFloat(filters.maxQuantity)) return false;
       
       return true;
     });
@@ -322,10 +310,6 @@ const Trades = () => {
         case 'entry_date':
           aValue = new Date(a.entry_date);
           bValue = new Date(b.entry_date);
-          break;
-        case 'exit_date':
-          aValue = a.exit_date ? new Date(a.exit_date) : new Date(0);
-          bValue = b.exit_date ? new Date(b.exit_date) : new Date(0);
           break;
         case 'pnl':
           aValue = a.pnl || 0;
@@ -392,7 +376,7 @@ const Trades = () => {
           )}
         </div>
 
-        {/* Filters */}
+        {/* Search and Filters */}
         {trades.length > 0 && (
           <TradeFilters
             onFiltersChange={setFilters}
