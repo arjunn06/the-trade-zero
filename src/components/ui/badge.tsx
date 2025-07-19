@@ -17,6 +17,8 @@ const badgeVariants = cva(
         outline: "text-foreground",
         short:
           "border-transparent bg-red-50 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:border-red-800 dark:hover:bg-red-900",
+        long:
+          "border-transparent bg-green-50 text-green-700 border-green-200 hover:bg-green-100 dark:bg-green-950 dark:text-green-300 dark:border-green-800 dark:hover:bg-green-900",
       },
     },
     defaultVariants: {

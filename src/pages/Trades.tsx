@@ -460,7 +460,7 @@ const Trades = () => {
                       >
                         <TableCell className="font-medium">{trade.symbol}</TableCell>
                         <TableCell>
-                          <Badge variant={trade.trade_type === 'long' ? 'default' : 'short'}>
+                          <Badge variant={trade.trade_type === 'long' ? 'long' : 'short'}>
                             {trade.trade_type === 'long' ? (
                               <TrendingUp className="h-3 w-3 mr-1" />
                             ) : (

@@ -251,7 +251,7 @@ export default function CalendarPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="overflow-x-auto">
-              <div className="min-w-[320px]">
+              <div className="min-w-[280px] max-w-full">
               <Calendar
                 mode="single"
                 selected={date}

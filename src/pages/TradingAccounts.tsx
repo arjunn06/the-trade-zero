@@ -312,21 +312,30 @@ const TradingAccounts = () => {
                  </div>
                </div>
                
-               {/* CSV Import Section - only show for existing accounts */}
-               {editingAccount && (
-                 <div className="pt-4 border-t">
-                   <CsvImportSection 
-                     accountId={editingAccount.id} 
-                     compact={true}
-                     onImportComplete={() => {
-                       toast({
-                         title: "Import complete",
-                         description: "Trades have been imported to this account"
-                       });
-                     }}
-                   />
-                 </div>
-               )}
+                {/* CSV Import Section - only show for existing accounts */}
+                {editingAccount && (
+                  <div className="pt-4 border-t space-y-4">
+                    <CsvImportSection 
+                      accountId={editingAccount.id} 
+                      compact={true}
+                      onImportComplete={() => {
+                        toast({
+                          title: "Import complete",
+                          description: "Trades have been imported to this account"
+                        });
+                      }}
+                    />
+                    
+                    {/* cTrader Integration for existing account */}
+                    <div className="border-t pt-4">
+                      <h3 className="text-sm font-medium mb-3">cTrader Integration</h3>
+                      <CTraderIntegration
+                        accountId={editingAccount.id}
+                        accountName={editingAccount.name}
+                      />
+                    </div>
+                  </div>
+                )}
               <Button type="submit" className="w-full">
                 {editingAccount ? 'Update' : 'Create'} Account
               </Button>
@@ -370,7 +379,7 @@ const TradingAccounts = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {accounts.map((account) => (
              <Card key={account.id} className={!account.is_active ? 'opacity-60' : ''}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -431,21 +440,6 @@ const TradingAccounts = () => {
         </div>
       )}
 
-      {/* cTrader Integration Section */}
-      {accounts.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">cTrader Integration</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {accounts.map((account) => (
-              <CTraderIntegration
-                key={account.id}
-                accountId={account.id}
-                accountName={account.name}
-              />
-            ))}
-          </div>
-        </div>
-      )}
       </div>
     </DashboardLayout>
   );
