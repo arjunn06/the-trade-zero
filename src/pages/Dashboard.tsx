@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { MetricCard } from '@/components/MetricCard';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { SmartSuggestions } from '@/components/SmartSuggestions';
 
 interface DashboardStats {
   totalPnl: number;
@@ -48,6 +49,7 @@ const Dashboard = () => {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('all');
   const [primaryAccountId, setPrimaryAccountId] = useState<string | null>(null);
+  const [allTrades, setAllTrades] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -141,6 +143,7 @@ const Dashboard = () => {
       });
 
       setRecentTrades(trades.slice(0, 5));
+      setAllTrades(trades);
 
       // Generate equity curve data showing progression to current balance
       const sortedTrades = closedTrades.sort((a, b) => new Date(a.exit_date || a.entry_date).getTime() - new Date(b.exit_date || b.entry_date).getTime());
@@ -442,6 +445,9 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Smart Suggestions Section */}
+        <SmartSuggestions trades={allTrades} />
 
         {/* Additional Performance Metrics */}
         <Card className="metric-card">
