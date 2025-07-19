@@ -210,7 +210,7 @@ const NewTrade = () => {
 
   if (accounts.length === 0) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-4 sm:p-6 lg:p-8">
         <h1 className="text-3xl font-bold">New Trade</h1>
         <Card>
           <CardContent className="pt-6">
@@ -228,7 +228,7 @@ const NewTrade = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
       <div>
         <h1 className="text-3xl font-bold">New Trade</h1>
         <p className="text-muted-foreground">Record a new trading position</p>
