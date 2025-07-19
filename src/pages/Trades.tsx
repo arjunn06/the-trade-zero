@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumFeature, UpgradePrompt } from '@/components/PremiumFeature';
+import { TradeCard } from '@/components/TradeCard';
 import {
   Table,
   TableBody,
@@ -200,6 +201,10 @@ const Trades = () => {
     setScreenshotDialog(true);
   };
 
+  const handleRowClick = (tradeId: string) => {
+    navigate(`/trades/${tradeId}`);
+  };
+
   if (loading) {
     return <div>Loading trades...</div>;
   }
@@ -257,114 +262,143 @@ const Trades = () => {
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                All Trades
-                {!isPremium && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>{trades.length}/{BASIC_TRADE_LIMIT} trades used</span>
-                    {trades.length >= BASIC_TRADE_LIMIT * 0.8 && (
-                      <Button size="sm" variant="outline" onClick={() => navigate('/')}>
-                        Upgrade
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </CardTitle>
-              <CardDescription>Complete history of your trading activity</CardDescription>
-            </CardHeader>
-           <CardContent>
-             <Table>
-               <TableHeader>
-                 <TableRow>
-                   <TableHead>Symbol</TableHead>
-                   <TableHead>Type</TableHead>
-                   <TableHead>Entry</TableHead>
-                   <TableHead>Exit</TableHead>
-                   <TableHead>Quantity</TableHead>
-                   <TableHead>P&L</TableHead>
-                   <TableHead>Status</TableHead>
-                   <TableHead>Charts</TableHead>
-                   <TableHead>Date</TableHead>
-                   <TableHead>Actions</TableHead>
-                 </TableRow>
-               </TableHeader>
-               <TableBody>
-                 {trades.map((trade) => (
-                   <TableRow key={trade.id}>
-                     <TableCell className="font-medium">{trade.symbol}</TableCell>
-                    <TableCell>
-                      <Badge variant={trade.trade_type === 'long' ? 'default' : 'secondary'}>
-                        {trade.trade_type === 'long' ? (
-                          <TrendingUp className="h-3 w-3 mr-1" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3 mr-1" />
-                        )}
-                        {trade.trade_type.toUpperCase()}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{trade.entry_price}</TableCell>
-                    <TableCell>{trade.exit_price || '-'}</TableCell>
-                    <TableCell>{trade.quantity}</TableCell>
-                    <TableCell>
-                      {trade.pnl ? (
-                        <span className={trade.pnl >= 0 ? 'text-profit' : 'text-loss'}>
-                          {formatCurrency(trade.pnl, trade.trading_accounts.currency)}
-                        </span>
-                      ) : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={trade.status === 'open' ? 'outline' : 'default'}
-                        className={trade.status === 'closed' && trade.pnl && trade.pnl > 0 ? 'bg-profit text-profit-foreground' : 
-                                  trade.status === 'closed' && trade.pnl && trade.pnl < 0 ? 'bg-loss text-destructive-foreground' : ''}
-                      >
-                        {trade.status}
-                       </Badge>
-                     </TableCell>
-                     <TableCell>
-                       {trade.screenshots && trade.screenshots.length > 0 ? (
-                         <Button
-                           size="sm"
-                           variant="outline"
-                           onClick={() => openScreenshotDialog(trade.screenshots!)}
-                         >
-                           <ImageIcon className="h-4 w-4 mr-1" />
-                           {trade.screenshots.length}
-                         </Button>
-                       ) : (
-                         <span className="text-muted-foreground">-</span>
-                       )}
-                     </TableCell>
-                     <TableCell>{formatDate(trade.entry_date)}</TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        {trade.status === 'open' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openCloseDialog(trade)}
-                          >
-                            Close
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteTrade(trade.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
+          <>
+            {/* Mobile View - Cards */}
+            <div className="block lg:hidden space-y-4">
+              {trades.map((trade) => (
+                <TradeCard
+                  key={trade.id}
+                  trade={trade}
+                  onClose={openCloseDialog}
+                  onDelete={handleDeleteTrade}
+                  onViewScreenshots={openScreenshotDialog}
+                />
+              ))}
+            </div>
+
+            {/* Desktop View - Table */}
+            <Card className="hidden lg:block">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  All Trades
+                  {!isPremium && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>{trades.length}/{BASIC_TRADE_LIMIT} trades used</span>
+                      {trades.length >= BASIC_TRADE_LIMIT * 0.8 && (
+                        <Button size="sm" variant="outline" onClick={() => navigate('/')}>
+                          Upgrade
                         </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+                      )}
+                    </div>
+                  )}
+                </CardTitle>
+                <CardDescription>Complete history of your trading activity</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Symbol</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Entry</TableHead>
+                      <TableHead>Exit</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>P&L</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Charts</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {trades.map((trade) => (
+                      <TableRow 
+                        key={trade.id} 
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleRowClick(trade.id)}
+                      >
+                        <TableCell className="font-medium">{trade.symbol}</TableCell>
+                        <TableCell>
+                          <Badge variant={trade.trade_type === 'long' ? 'default' : 'secondary'}>
+                            {trade.trade_type === 'long' ? (
+                              <TrendingUp className="h-3 w-3 mr-1" />
+                            ) : (
+                              <TrendingDown className="h-3 w-3 mr-1" />
+                            )}
+                            {trade.trade_type.toUpperCase()}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{trade.entry_price}</TableCell>
+                        <TableCell>{trade.exit_price || '-'}</TableCell>
+                        <TableCell>{trade.quantity}</TableCell>
+                        <TableCell>
+                          {trade.pnl ? (
+                            <span className={trade.pnl >= 0 ? 'text-profit' : 'text-loss'}>
+                              {formatCurrency(trade.pnl, trade.trading_accounts.currency)}
+                            </span>
+                          ) : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={trade.status === 'open' ? 'outline' : 'default'}
+                            className={trade.status === 'closed' && trade.pnl && trade.pnl > 0 ? 'bg-profit text-profit-foreground' : 
+                                      trade.status === 'closed' && trade.pnl && trade.pnl < 0 ? 'bg-loss text-destructive-foreground' : ''}
+                          >
+                            {trade.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {trade.screenshots && trade.screenshots.length > 0 ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openScreenshotDialog(trade.screenshots!);
+                              }}
+                            >
+                              <ImageIcon className="h-4 w-4 mr-1" />
+                              {trade.screenshots.length}
+                            </Button>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>{formatDate(trade.entry_date)}</TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            {trade.status === 'open' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openCloseDialog(trade);
+                                }}
+                              >
+                                Close
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteTrade(trade.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </>
+        )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
