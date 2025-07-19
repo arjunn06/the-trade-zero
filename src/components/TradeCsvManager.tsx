@@ -39,6 +39,7 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleExportCsv = async () => {
     if (!user) return;
@@ -138,13 +139,19 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
     }
   };
 
-  const handleImportCsv = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user) return;
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleImportCsv = async () => {
+    if (!selectedFile || !user) return;
 
     setIsImporting(true);
     try {
-      const text = await file.text();
+      const text = await selectedFile.text();
       const lines = text.split('\n').filter(line => line.trim());
       
       if (lines.length < 2) {
@@ -266,8 +273,8 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
         description: `Successfully imported ${trades.length} trades.`
       });
 
-      // Reset file input
-      event.target.value = '';
+      // Reset file selection
+      setSelectedFile(null);
     } catch (error) {
       console.error('Error importing CSV:', error);
       toast({
@@ -298,17 +305,32 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
               <Label htmlFor="csv-import" className="text-sm font-medium">
                 Import Trades
               </Label>
-              <div className="mt-2">
+              <div className="mt-2 space-y-2">
                 <Input
                   id="csv-import"
                   type="file"
                   accept=".csv"
-                  onChange={handleImportCsv}
+                  onChange={handleFileSelect}
                   disabled={isImporting}
                   className="cursor-pointer"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Upload a CSV file with your trade data
+                {selectedFile && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      Selected: {selectedFile.name}
+                    </span>
+                    <Button
+                      onClick={handleImportCsv}
+                      disabled={isImporting}
+                      size="sm"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {isImporting ? 'Importing...' : 'Upload'}
+                    </Button>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Select a CSV file with your trade data, then click Upload
                 </p>
               </div>
             </div>

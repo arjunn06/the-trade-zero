@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,9 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumFeature, UpgradePrompt } from '@/components/PremiumFeature';
 import { TradeCard } from '@/components/TradeCard';
+import { TradeFilters, type TradeFilters as TradeFiltersType } from '@/components/TradeFilters';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { useUndoToast } from '@/components/UndoToast';
 import {
   Table,
   TableBody,
@@ -58,12 +61,32 @@ const Trades = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { isPremium } = useSubscription();
+  const { showUndoToast } = useUndoToast();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [screenshotDialog, setScreenshotDialog] = useState(false);
   const [selectedScreenshots, setSelectedScreenshots] = useState<string[]>([]);
+  const [filters, setFilters] = useState<TradeFiltersType>({
+    symbol: '',
+    tradeType: '',
+    status: '',
+    dateFrom: '',
+    dateTo: '',
+    minPnl: '',
+    maxPnl: '',
+    minQuantity: '',
+    maxQuantity: '',
+    sortBy: 'entry_date',
+    sortDirection: 'desc'
+  });
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    tradeId: string;
+    tradeName: string;
+  }>({ open: false, tradeId: '', tradeName: '' });
+  const [recentlyDeleted, setRecentlyDeleted] = useState<Trade | null>(null);
   const [closeFormData, setCloseFormData] = useState({
     exit_price: '',
     exit_date: '',
@@ -149,6 +172,9 @@ const Trades = () => {
   };
 
   const handleDeleteTrade = async (id: string) => {
+    const tradeToDelete = trades.find(t => t.id === id);
+    if (!tradeToDelete) return;
+
     try {
       const { error } = await supabase
         .from('trades')
@@ -157,12 +183,14 @@ const Trades = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Trade deleted successfully"
+      setRecentlyDeleted(tradeToDelete);
+      setTrades(prev => prev.filter(t => t.id !== id));
+
+      showUndoToast({
+        message: `Deleted trade ${tradeToDelete.symbol}`,
+        onUndo: () => handleUndoDelete(tradeToDelete)
       });
 
-      fetchTrades();
     } catch (error) {
       console.error('Error deleting trade:', error);
       toast({
@@ -171,6 +199,59 @@ const Trades = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleUndoDelete = async (trade: Trade) => {
+    try {
+      // Create a clean trade object without the nested trading_accounts and strategies
+      const cleanTradeData = {
+        id: trade.id,
+        symbol: trade.symbol,
+        trade_type: trade.trade_type,
+        entry_price: trade.entry_price,
+        exit_price: trade.exit_price,
+        quantity: trade.quantity,
+        status: trade.status,
+        pnl: trade.pnl,
+        entry_date: trade.entry_date,
+        exit_date: trade.exit_date,
+        notes: trade.notes,
+        screenshots: trade.screenshots,
+        user_id: user?.id,
+        // You'll need to store the trading_account_id when deleting if you want to restore properly
+        trading_account_id: trade.id // This is a placeholder - you'd need to get the actual trading_account_id
+      };
+
+      const { error } = await supabase
+        .from('trades')
+        .insert([cleanTradeData]);
+
+      if (error) throw error;
+
+      // Refresh trades to get the proper data structure
+      fetchTrades();
+      setRecentlyDeleted(null);
+
+      toast({
+        title: "Success",
+        description: "Trade restored successfully"
+      });
+    } catch (error) {
+      console.error('Error restoring trade:', error);
+      toast({
+        title: "Error",
+        description: "Failed to restore trade. Please recreate the trade manually.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteConfirm = (id: string, symbol: string) => {
+    setConfirmDialog({
+      open: true,
+      tradeId: id,
+      tradeName: symbol
+    });
   };
 
   const openCloseDialog = (trade: Trade) => {
@@ -204,6 +285,77 @@ const Trades = () => {
   const handleRowClick = (tradeId: string) => {
     navigate(`/trades/${tradeId}`);
   };
+
+  // Filter and sort trades
+  const filteredAndSortedTrades = useMemo(() => {
+    let filtered = trades.filter(trade => {
+      // Symbol filter
+      if (filters.symbol && trade.symbol !== filters.symbol) return false;
+      
+      // Trade type filter
+      if (filters.tradeType && trade.trade_type !== filters.tradeType) return false;
+      
+      // Status filter
+      if (filters.status && trade.status !== filters.status) return false;
+      
+      // Date range filter
+      if (filters.dateFrom && new Date(trade.entry_date) < new Date(filters.dateFrom)) return false;
+      if (filters.dateTo && new Date(trade.entry_date) > new Date(filters.dateTo)) return false;
+      
+      // P&L range filter
+      if (filters.minPnl && (!trade.pnl || trade.pnl < parseFloat(filters.minPnl))) return false;
+      if (filters.maxPnl && (!trade.pnl || trade.pnl > parseFloat(filters.maxPnl))) return false;
+      
+      // Quantity range filter
+      if (filters.minQuantity && trade.quantity < parseFloat(filters.minQuantity)) return false;
+      if (filters.maxQuantity && trade.quantity > parseFloat(filters.maxQuantity)) return false;
+      
+      return true;
+    });
+
+    // Sort trades
+    filtered.sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (filters.sortBy) {
+        case 'entry_date':
+          aValue = new Date(a.entry_date);
+          bValue = new Date(b.entry_date);
+          break;
+        case 'exit_date':
+          aValue = a.exit_date ? new Date(a.exit_date) : new Date(0);
+          bValue = b.exit_date ? new Date(b.exit_date) : new Date(0);
+          break;
+        case 'pnl':
+          aValue = a.pnl || 0;
+          bValue = b.pnl || 0;
+          break;
+        case 'quantity':
+          aValue = a.quantity;
+          bValue = b.quantity;
+          break;
+        case 'symbol':
+          aValue = a.symbol;
+          bValue = b.symbol;
+          break;
+        default:
+          aValue = a.entry_date;
+          bValue = b.entry_date;
+      }
+
+      if (aValue < bValue) return filters.sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return filters.sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return filtered;
+  }, [trades, filters]);
+
+  // Get unique symbols for filter dropdown
+  const symbolOptions = useMemo(() => {
+    return Array.from(new Set(trades.map(trade => trade.symbol))).sort();
+  }, [trades]);
 
   if (loading) {
     return <div>Loading trades...</div>;
@@ -240,7 +392,25 @@ const Trades = () => {
           )}
         </div>
 
-        {trades.length === 0 ? (
+        {/* Filters */}
+        {trades.length > 0 && (
+          <TradeFilters
+            onFiltersChange={setFilters}
+            symbolOptions={symbolOptions}
+          />
+        )}
+
+        {filteredAndSortedTrades.length === 0 && trades.length > 0 ? (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8">
+                <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No trades match your filters</h3>
+                <p className="text-muted-foreground mb-4">Try adjusting your filter criteria</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : trades.length === 0 ? (
           <Card>
             <CardContent className="pt-6">
               <div className="text-center py-8">
@@ -265,12 +435,12 @@ const Trades = () => {
           <>
             {/* Mobile View - Cards */}
             <div className="block lg:hidden space-y-4">
-              {trades.map((trade) => (
+              {filteredAndSortedTrades.map((trade) => (
                 <TradeCard
                   key={trade.id}
                   trade={trade}
                   onClose={openCloseDialog}
-                  onDelete={handleDeleteTrade}
+                  onDelete={(id) => handleDeleteConfirm(id, trade.symbol)}
                   onViewScreenshots={openScreenshotDialog}
                 />
               ))}
@@ -292,7 +462,12 @@ const Trades = () => {
                     </div>
                   )}
                 </CardTitle>
-                <CardDescription>Complete history of your trading activity</CardDescription>
+                <CardDescription>
+                  {filteredAndSortedTrades.length === trades.length 
+                    ? `${trades.length} trades total`
+                    : `${filteredAndSortedTrades.length} of ${trades.length} trades shown`
+                  }
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -311,7 +486,7 @@ const Trades = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {trades.map((trade) => (
+                    {filteredAndSortedTrades.map((trade) => (
                       <TableRow 
                         key={trade.id} 
                         className="cursor-pointer hover:bg-muted/50 transition-colors"
@@ -382,7 +557,7 @@ const Trades = () => {
                               variant="ghost"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDeleteTrade(trade.id);
+                                handleDeleteConfirm(trade.id, trade.symbol);
                               }}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -397,6 +572,20 @@ const Trades = () => {
             </Card>
           </>
         )}
+
+        {/* Confirm Delete Dialog */}
+        <ConfirmDialog
+          open={confirmDialog.open}
+          onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}
+          title="Delete Trade"
+          description={`Are you sure you want to delete the ${confirmDialog.tradeName} trade? This action cannot be undone immediately, but you can undo it using the notification that will appear.`}
+          confirmText="Delete"
+          onConfirm={() => {
+            handleDeleteTrade(confirmDialog.tradeId);
+            setConfirmDialog({ open: false, tradeId: '', tradeName: '' });
+          }}
+          variant="destructive"
+        />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>

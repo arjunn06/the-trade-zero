@@ -432,12 +432,14 @@ export default function Confluence() {
                   {items.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-start gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                      className="flex items-start gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => handleItemCheck(item.id, !currentSession.checkedItems.has(item.id))}
                     >
                       <Checkbox
                         checked={currentSession.checkedItems.has(item.id)}
                         onCheckedChange={(checked) => handleItemCheck(item.id, checked as boolean)}
                         className="mt-1"
+                        onClick={(e) => e.stopPropagation()}
                       />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
