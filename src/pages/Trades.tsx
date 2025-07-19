@@ -340,9 +340,7 @@ const Trades = () => {
                         </TableCell>
                         <TableCell>
                           <Badge 
-                            variant={trade.status === 'open' ? 'outline' : 'default'}
-                            className={trade.status === 'closed' && trade.pnl && trade.pnl > 0 ? 'bg-profit text-profit-foreground' : 
-                                      trade.status === 'closed' && trade.pnl && trade.pnl < 0 ? 'bg-loss text-destructive-foreground' : ''}
+                            variant={trade.status === 'open' ? 'outline' : 'secondary'}
                           >
                             {trade.status}
                           </Badge>

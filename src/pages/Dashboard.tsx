@@ -22,6 +22,7 @@ interface DashboardStats {
   avgLoss: number;
   currentBalance: number;
   initialBalance: number;
+  mostTradedAsset: string;
 }
 
 const Dashboard = () => {
@@ -37,7 +38,8 @@ const Dashboard = () => {
     avgWin: 0,
     avgLoss: 0,
     currentBalance: 0,
-    initialBalance: 0
+    initialBalance: 0,
+    mostTradedAsset: ''
   });
   const [recentTrades, setRecentTrades] = useState<any[]>([]);
   const [equityData, setEquityData] = useState<any[]>([]);
@@ -90,6 +92,15 @@ const Dashboard = () => {
       const avgWin = winningTrades.length > 0 ? winningTrades.reduce((sum, t) => sum + (t.pnl || 0), 0) / winningTrades.length : 0;
       const avgLoss = losingTrades.length > 0 ? losingTrades.reduce((sum, t) => sum + (t.pnl || 0), 0) / losingTrades.length : 0;
 
+      // Calculate most traded asset
+      const symbolCounts = trades.reduce((acc, trade) => {
+        acc[trade.symbol] = (acc[trade.symbol] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      const mostTradedAsset = Object.keys(symbolCounts).length > 0 
+        ? Object.entries(symbolCounts).sort(([,a], [,b]) => b - a)[0][0] 
+        : '';
+
       setStats({
         totalPnl,
         winRate,
@@ -100,7 +111,8 @@ const Dashboard = () => {
         avgWin,
         avgLoss,
         currentBalance: totalCurrentBalance,
-        initialBalance: totalInitialBalance
+        initialBalance: totalInitialBalance,
+        mostTradedAsset
       });
 
       setRecentTrades(trades.slice(0, 5));
@@ -334,11 +346,8 @@ const Dashboard = () => {
                       </div>
                       <div className="text-right">
                         <Badge 
-                          variant={trade.status === 'open' ? 'outline' : 'default'}
-                          className={`text-xs ${
-                            trade.status === 'closed' && trade.pnl > 0 ? 'bg-profit/10 text-profit border-profit/20' : 
-                            trade.status === 'closed' && trade.pnl < 0 ? 'bg-loss/10 text-loss border-loss/20' : ''
-                          }`}
+                          variant={trade.status === 'open' ? 'outline' : 'secondary'}
+                          className="text-xs"
                         >
                           {trade.status}
                         </Badge>
@@ -363,7 +372,11 @@ const Dashboard = () => {
             <CardDescription>Most traded asset performance</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+              <div className="text-center">
+                <div className="text-sm text-muted-foreground mb-1">Most Traded</div>
+                <div className="text-lg font-semibold">{stats.mostTradedAsset || 'N/A'}</div>
+              </div>
               <div className="text-center">
                 <div className="text-sm text-muted-foreground mb-1">Average Win</div>
                 <div className="text-lg font-semibold text-profit">{formatCurrency(stats.avgWin)}</div>
