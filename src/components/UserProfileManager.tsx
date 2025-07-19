@@ -92,13 +92,18 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full relative">
             <Avatar className="h-8 w-8">
               <AvatarImage src={user?.user_metadata?.avatar_url} />
               <AvatarFallback className="text-xs">
                 {getInitials(user?.user_metadata?.display_name)}
               </AvatarFallback>
             </Avatar>
+            {isPremium && (
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center">
+                <Crown className="h-2.5 w-2.5 text-white" />
+              </div>
+            )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
@@ -133,27 +138,26 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent/50">
-        <Avatar className="h-10 w-10">
-          <AvatarImage src={user?.user_metadata?.avatar_url} />
-          <AvatarFallback>
-            {getInitials(user?.user_metadata?.display_name)}
-          </AvatarFallback>
-        </Avatar>
+        <div className="relative">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={user?.user_metadata?.avatar_url} />
+            <AvatarFallback>
+              {getInitials(user?.user_metadata?.display_name)}
+            </AvatarFallback>
+          </Avatar>
+          {isPremium && (
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+              <Crown className="h-3 w-3 text-white" />
+            </div>
+          )}
+        </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-sidebar-foreground truncate">
             {getDisplayName()}
           </p>
-          <div className="flex items-center gap-2">
-            <p className="text-xs text-sidebar-foreground/60 truncate">
-              {user?.email}
-            </p>
-            {isPremium && (
-              <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-xs">
-                <Crown className="h-3 w-3 mr-1" />
-                Premium
-              </Badge>
-            )}
-          </div>
+          <p className="text-xs text-sidebar-foreground/60 truncate">
+            {user?.email}
+          </p>
         </div>
       </div>
 
@@ -174,12 +178,19 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
           <div className="space-y-6 py-4">
             {/* Profile Photo */}
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={user?.user_metadata?.avatar_url} />
-                <AvatarFallback className="text-lg">
-                  {getInitials(user?.user_metadata?.display_name)}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={user?.user_metadata?.avatar_url} />
+                  <AvatarFallback className="text-lg">
+                    {getInitials(user?.user_metadata?.display_name)}
+                  </AvatarFallback>
+                </Avatar>
+                {isPremium && (
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                    <Crown className="h-3.5 w-3.5 text-white" />
+                  </div>
+                )}
+              </div>
               <Button variant="outline" size="sm">
                 <Camera className="h-4 w-4 mr-2" />
                 Change Photo
