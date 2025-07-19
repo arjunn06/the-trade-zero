@@ -70,6 +70,9 @@ verify_jwt = false
 [functions.send-general-notification]
 verify_jwt = false
 
+[functions.send-signup-confirmation]
+verify_jwt = false
+
 [functions.ctrader-auth]
 verify_jwt = true
 
