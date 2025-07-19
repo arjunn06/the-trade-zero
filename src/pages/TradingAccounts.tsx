@@ -326,17 +326,29 @@ const TradingAccounts = () => {
             <div className="text-center py-8">
               <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">No trading accounts yet</h3>
-              <p className="text-muted-foreground mb-4">Add your first trading account to start tracking</p>
+              <p className="text-muted-foreground mb-6">Choose how you'd like to add your first trading account</p>
               {hasExceededLimit ? (
                 <PremiumFeature
                   feature="Multiple Trading Accounts"
                   description="Upgrade to premium to track unlimited trading accounts."
                 />
               ) : (
-                <Button onClick={() => setDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Account
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-md mx-auto">
+                  <Button 
+                    onClick={() => setDialogOpen(true)}
+                    className="w-full sm:w-auto"
+                    size="lg"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Manual Account
+                  </Button>
+                  <div className="text-muted-foreground text-sm">or</div>
+                  <CTraderIntegration
+                    accountId=""
+                    accountName="First Account"
+                    isFirstAccount={true}
+                  />
+                </div>
               )}
             </div>
           </CardContent>

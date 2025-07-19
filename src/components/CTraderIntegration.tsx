@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, ExternalLink, Download } from 'lucide-react';
 import { PremiumFeature } from './PremiumFeature';
@@ -11,16 +12,20 @@ import { PremiumFeature } from './PremiumFeature';
 interface CTraderIntegrationProps {
   accountId: string;
   accountName: string;
+  isFirstAccount?: boolean;
 }
 
 export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
   accountId,
   accountName,
+  isFirstAccount = false,
 }) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [accountNumber, setAccountNumber] = useState('');
+  const [accountName_internal, setAccountName_internal] = useState('');
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleConnect = async () => {
     if (!accountNumber.trim()) {
@@ -32,13 +37,45 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
       return;
     }
 
+    if (isFirstAccount && !accountName_internal.trim()) {
+      toast({
+        title: "Account Name Required",
+        description: "Please enter a name for your trading account",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsConnecting(true);
     try {
+      let finalAccountId = accountId;
+
+      // If this is the first account, create a trading account first
+      if (isFirstAccount && user) {
+        const { data: newAccount, error: createError } = await supabase
+          .from('trading_accounts')
+          .insert({
+            name: accountName_internal.trim(),
+            account_type: 'live',
+            broker: 'cTrader',
+            initial_balance: 0,
+            current_balance: 0,
+            current_equity: 0,
+            currency: 'USD',
+            user_id: user.id,
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        finalAccountId = newAccount.id;
+      }
+
       // Call the edge function to initiate OAuth flow
       const { data, error } = await supabase.functions.invoke('ctrader-auth', {
         body: {
           accountNumber: accountNumber.trim(),
-          tradingAccountId: accountId,
+          tradingAccountId: finalAccountId,
         },
       });
 
@@ -52,6 +89,13 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
           title: "Authentication Started",
           description: "Please complete the authentication in the popup window",
         });
+
+        // If this was the first account, refresh the page after a delay to show the new account
+        if (isFirstAccount) {
+          setTimeout(() => {
+            window.location.reload();
+          }, 3000);
+        }
       }
     } catch (error) {
       console.error('Error connecting to cTrader:', error);
@@ -93,6 +137,70 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
       setIsImporting(false);
     }
   };
+
+  // For first account, render a simpler card layout
+  if (isFirstAccount) {
+    return (
+      <PremiumFeature feature="cTrader Integration">
+        <Card className="w-full sm:w-auto">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-center">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/CTrader_logo.svg/120px-CTrader_logo.svg.png" 
+                alt="cTrader" 
+                className="w-6 h-6"
+              />
+              Connect cTrader Account
+            </CardTitle>
+            <CardDescription className="text-center">
+              Import your trading account and history from cTrader
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="accountName_internal">Account Name</Label>
+              <Input
+                id="accountName_internal"
+                placeholder="e.g., My Live Account"
+                value={accountName_internal}
+                onChange={(e) => setAccountName_internal(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="accountNumber">cTrader Account Number</Label>
+              <Input
+                id="accountNumber"
+                placeholder="Enter your cTrader account number"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+              />
+            </div>
+
+            <Button 
+              onClick={handleConnect}
+              disabled={isConnecting || !accountNumber.trim() || !accountName_internal.trim()}
+              className="w-full"
+              size="lg"
+            >
+              {isConnecting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <ExternalLink className="mr-2 h-4 w-4" />
+              )}
+              Connect & Import from cTrader
+            </Button>
+
+            <div className="bg-muted p-3 rounded-lg">
+              <p className="text-sm text-muted-foreground text-center">
+                This will create your trading account and connect it to cTrader for automatic trade import
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </PremiumFeature>
+    );
+  }
 
   return (
     <PremiumFeature feature="cTrader Integration">
