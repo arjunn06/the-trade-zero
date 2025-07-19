@@ -11,6 +11,8 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumFeature } from '@/components/PremiumFeature';
 import { CsvImportSection } from '@/components/CsvImportSection';
 import { CTraderIntegration } from '@/components/CTraderIntegration';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { useUndoToast } from '@/components/UndoToast';
 import {
   Dialog,
   DialogContent,
@@ -39,11 +41,14 @@ interface TradingAccount {
 const TradingAccounts = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { showUndoToast } = useUndoToast();
   const { isPremium } = useSubscription();
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<TradingAccount | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [accountToDelete, setAccountToDelete] = useState<TradingAccount | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     account_type: '',
@@ -148,21 +153,70 @@ const TradingAccounts = () => {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteClick = (account: TradingAccount) => {
+    setAccountToDelete(account);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!accountToDelete) return;
+
+    const deletedAccount = { ...accountToDelete };
+    
     try {
       const { error } = await supabase
         .from('trading_accounts')
         .delete()
-        .eq('id', id);
+        .eq('id', accountToDelete.id);
 
       if (error) throw error;
-      toast({ title: "Success", description: "Account deleted successfully" });
+      
+      setDeleteDialogOpen(false);
+      setAccountToDelete(null);
       fetchAccounts();
+
+      // Show undo toast
+      showUndoToast({
+        message: `Account "${deletedAccount.name}" deleted`,
+        onUndo: () => handleUndoDelete(deletedAccount)
+      });
+      
     } catch (error) {
       console.error('Error deleting account:', error);
       toast({
         title: "Error",
         description: "Failed to delete account",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUndoDelete = async (account: TradingAccount) => {
+    if (!user) return;
+    
+    try {
+      const { id, created_at, ...accountData } = account;
+      const restoreData = {
+        ...accountData,
+        user_id: user.id
+      };
+      
+      const { error } = await supabase
+        .from('trading_accounts')
+        .insert([restoreData]);
+
+      if (error) throw error;
+      
+      toast({ 
+        title: "Restored", 
+        description: `Account "${account.name}" has been restored` 
+      });
+      fetchAccounts();
+    } catch (error) {
+      console.error('Error restoring account:', error);
+      toast({
+        title: "Error",
+        description: "Failed to restore account",
         variant: "destructive"
       });
     }
@@ -429,7 +483,7 @@ const TradingAccounts = () => {
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(account)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(account.id)}>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -439,6 +493,17 @@ const TradingAccounts = () => {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Trading Account"
+        description={`Are you sure you want to delete "${accountToDelete?.name}"? This action will remove the account and all associated data.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        variant="destructive"
+      />
 
       </div>
     </DashboardLayout>
