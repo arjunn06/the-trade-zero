@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
 
     // Send the email using Resend
     const { data, error } = await resend.emails.send({
-      from: 'The Trade Zero <welcome@thetradezero.com>',
+      from: 'The Trade Zero <no-reply@thetradezero.com>',
       to: [user.email],
       subject: 'Welcome to The Trade Zero - Verify your account! 🎉',
       html,
