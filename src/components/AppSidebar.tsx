@@ -64,7 +64,7 @@ export function AppSidebar() {
             </div>
             <div>
               <span className="font-bold text-lg text-sidebar-foreground">The Trade Zero</span>
-              <p className="text-xs text-sidebar-foreground/60">Trading Platform</p>
+              <p className="text-xs text-sidebar-foreground/60">Trading Journal</p>
             </div>
           </div>
         )}
