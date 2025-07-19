@@ -50,12 +50,13 @@ const Dashboard = () => {
   const [selectedAccountId, setSelectedAccountId] = useState<string>('all');
   const [primaryAccountId, setPrimaryAccountId] = useState<string | null>(null);
   const [allTrades, setAllTrades] = useState<any[]>([]);
+  const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest');
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
     }
-  }, [user, selectedAccountId]);
+  }, [user, selectedAccountId, sortOrder]); // Add sortOrder dependency
 
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -142,15 +143,22 @@ const Dashboard = () => {
         mostTradedAsset
       });
 
-      setRecentTrades(trades.slice(0, 5));
+      // Sort trades based on current sort order
+      const sortedTrades = [...trades].sort((a, b) => {
+        const dateA = new Date(a.entry_date).getTime();
+        const dateB = new Date(b.entry_date).getTime();
+        return sortOrder === 'latest' ? dateB - dateA : dateA - dateB;
+      });
+
+      setRecentTrades(sortedTrades.slice(0, 5));
       setAllTrades(trades);
 
       // Generate equity curve data showing progression to current balance
-      const sortedTrades = closedTrades.sort((a, b) => new Date(a.exit_date || a.entry_date).getTime() - new Date(b.exit_date || b.entry_date).getTime());
+      const equitySortedTrades = closedTrades.sort((a, b) => new Date(a.exit_date || a.entry_date).getTime() - new Date(b.exit_date || b.entry_date).getTime());
       let runningBalance = totalInitialBalance || 0;
       const equityCurve = [{ date: 'Start', balance: runningBalance }];
       
-      sortedTrades.forEach((trade) => {
+      equitySortedTrades.forEach((trade) => {
         runningBalance += (trade.pnl || 0);
         equityCurve.push({
           date: new Date(trade.exit_date || trade.entry_date).toLocaleDateString(),
@@ -159,7 +167,7 @@ const Dashboard = () => {
       });
 
       // Add current balance as the final point if different from calculated
-      if (sortedTrades.length > 0 && Math.abs(runningBalance - totalCurrentBalance) > 0.01) {
+      if (equitySortedTrades.length > 0 && Math.abs(runningBalance - totalCurrentBalance) > 0.01) {
         equityCurve.push({
           date: 'Current',
           balance: totalCurrentBalance
@@ -380,8 +388,13 @@ const Dashboard = () => {
                   <CardTitle className="text-lg font-semibold">Recent Trades</CardTitle>
                   <CardDescription>Your latest trading activity</CardDescription>
                 </div>
-                <Button variant="ghost" size="sm" className="text-xs">
-                  Latest
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs"
+                  onClick={() => setSortOrder(sortOrder === 'latest' ? 'oldest' : 'latest')}
+                >
+                  {sortOrder === 'latest' ? 'Latest' : 'Oldest'}
                 </Button>
               </div>
             </CardHeader>
