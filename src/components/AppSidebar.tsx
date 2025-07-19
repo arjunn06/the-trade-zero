@@ -55,12 +55,16 @@ export function AppSidebar() {
 
 
   return (
-    <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
+    <Sidebar 
+      className="hidden lg:flex"
+      collapsible="icon"
+      variant="sidebar"
+    >
       <SidebarHeader className="p-6 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-3">
-            <div className="bg-primary text-black rounded-lg p-2">
-              <TrendingUp className="h-5 w-5 text-primary-foreground" />
+            <div className="bg-primary text-primary-foreground rounded-lg p-2">
+              <TrendingUp className="h-5 w-5" />
             </div>
             <div>
               <span className="font-bold text-lg text-sidebar-foreground">The Trade Zero</span>
@@ -69,13 +73,13 @@ export function AppSidebar() {
           </div>
         )}
         {collapsed && (
-          <div className="bg-primary text-black rounded-lg p-2 mx-auto">
+          <div className="bg-primary text-primary-foreground rounded-lg p-2 mx-auto">
             <TrendingUp className="h-5 w-5" />
           </div>
         )}
       </SidebarHeader>
 
-      <SidebarContent className="px-3 py-4 focus-within:bg-sidebar-accent/50 transition-colors">
+      <SidebarContent className="px-3 py-4">
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider mb-2">
             Trading

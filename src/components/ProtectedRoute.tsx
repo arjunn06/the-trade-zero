@@ -1,7 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
+import { MobileHeader } from '@/components/MobileHeader';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -74,11 +75,19 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full">
+        {/* Desktop Sidebar */}
         <AppSidebar />
-        <div className="flex-1">
-          {children}
+        
+        <div className="flex-1 flex flex-col">
+          {/* Mobile Header */}
+          <MobileHeader />
+          
+          {/* Main Content */}
+          <main className="flex-1 p-4 lg:p-6">
+            {children}
+          </main>
         </div>
       </div>
     </SidebarProvider>
