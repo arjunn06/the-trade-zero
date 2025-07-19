@@ -136,16 +136,6 @@ export function TradeCard({ trade, onClose, onDelete, onViewScreenshots }: Trade
         )}
 
         <div className="flex gap-2 pt-3 border-t">
-          {trade.status === 'open' && onClose && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={(e) => handleActionClick(e, () => onClose(trade))}
-              className="flex-1"
-            >
-              Close Trade
-            </Button>
-          )}
           <Button
             size="sm"
             variant="outline"
