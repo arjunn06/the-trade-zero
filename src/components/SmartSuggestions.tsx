@@ -299,7 +299,6 @@ export function SmartSuggestions({ trades }: SmartSuggestionsProps) {
               <CardTitle className="text-lg font-semibold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
                 AI Insights
               </CardTitle>
-              <Star className="h-4 w-4 text-primary/60" />
             </div>
           </div>
           <CardDescription className="ml-12">AI-powered suggestions based on your trading patterns</CardDescription>
