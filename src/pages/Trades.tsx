@@ -47,6 +47,13 @@ interface Trade {
   exit_date?: string;
   notes?: string;
   screenshots?: string[];
+  trading_account_id: string;
+  strategy_id?: string;
+  stop_loss?: number;
+  take_profit?: number;
+  commission?: number;
+  swap?: number;
+  risk_amount?: number;
   trading_accounts: {
     name: string;
     currency: string;
@@ -199,7 +206,6 @@ const Trades = () => {
     try {
       // Create a clean trade object without the nested trading_accounts and strategies
       const cleanTradeData = {
-        id: trade.id,
         symbol: trade.symbol,
         trade_type: trade.trade_type,
         entry_price: trade.entry_price,
@@ -212,8 +218,13 @@ const Trades = () => {
         notes: trade.notes,
         screenshots: trade.screenshots,
         user_id: user?.id,
-        // You'll need to store the trading_account_id when deleting if you want to restore properly
-        trading_account_id: trade.id // This is a placeholder - you'd need to get the actual trading_account_id
+        trading_account_id: trade.trading_account_id,
+        strategy_id: trade.strategy_id,
+        stop_loss: trade.stop_loss,
+        take_profit: trade.take_profit,
+        commission: trade.commission,
+        swap: trade.swap,
+        risk_amount: trade.risk_amount
       };
 
       const { error } = await supabase
