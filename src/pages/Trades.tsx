@@ -384,17 +384,7 @@ const Trades = () => {
           />
         )}
 
-        {filteredAndSortedTrades.length === 0 && trades.length > 0 ? (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-8">
-                <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No trades match your filters</h3>
-                <p className="text-muted-foreground mb-4">Try adjusting your filter criteria</p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : trades.length === 0 ? (
+        {trades.length === 0 ? (
           <Card>
             <CardContent className="pt-6">
               <div className="text-center py-8">
@@ -412,6 +402,16 @@ const Trades = () => {
                     Add Your First Trade
                   </Button>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        ) : filteredAndSortedTrades.length === 0 ? (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8">
+                <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No trades match your filters</h3>
+                <p className="text-muted-foreground mb-4">Try adjusting your filter criteria</p>
               </div>
             </CardContent>
           </Card>
