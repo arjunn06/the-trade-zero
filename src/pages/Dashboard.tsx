@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { TrendingUp, TrendingDown, DollarSign, Target, Calendar, Plus, Activity, BarChart3 } from 'lucide-react';
@@ -44,12 +45,14 @@ const Dashboard = () => {
   const [recentTrades, setRecentTrades] = useState<any[]>([]);
   const [equityData, setEquityData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('all');
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
     }
-  }, [user]);
+  }, [user, selectedAccountId]);
 
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -72,8 +75,20 @@ const Dashboard = () => {
       if (tradesResult.error) throw tradesResult.error;
       if (accountsResult.error) throw accountsResult.error;
 
-      const trades = tradesResult.data || [];
-      const accounts = accountsResult.data || [];
+      const allTrades = tradesResult.data || [];
+      const allAccounts = accountsResult.data || [];
+      
+      setAccounts(allAccounts);
+
+      // Filter trades by selected account
+      const trades = selectedAccountId === 'all' 
+        ? allTrades 
+        : allTrades.filter(trade => trade.trading_account_id === selectedAccountId);
+
+      // Filter accounts by selected account for balance calculations
+      const accounts = selectedAccountId === 'all'
+        ? allAccounts
+        : allAccounts.filter(account => account.id === selectedAccountId);
 
       // Calculate account totals
       const totalCurrentBalance = accounts.reduce((sum, account) => sum + (account.current_balance || 0), 0);
@@ -176,16 +191,37 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* Header with Account Filter */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight">Performance Dashboard</h1>
             <p className="text-muted-foreground">Monitor your trading performance and analytics</p>
           </div>
-          <Button onClick={() => navigate('/trades/new')} className="gap-2">
-            <Plus className="h-4 w-4" />
-            New Trade Entry
-          </Button>
+          <div className="flex items-center gap-4">
+            {/* Account Selector */}
+            {accounts.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-muted-foreground">Account:</span>
+                <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                  <SelectTrigger className="w-[180px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                    <SelectValue placeholder="Select account" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border border-border shadow-lg">
+                    <SelectItem value="all" className="hover:bg-muted/50">All Accounts</SelectItem>
+                    {accounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id} className="hover:bg-muted/50">
+                        {account.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <Button onClick={() => navigate('/trades/new')} className="gap-2">
+              <Plus className="h-4 w-4" />
+              New Trade Entry
+            </Button>
+          </div>
         </div>
 
         {/* Key Metrics Grid */}

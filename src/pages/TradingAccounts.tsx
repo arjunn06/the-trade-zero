@@ -10,6 +10,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumFeature } from '@/components/PremiumFeature';
 import { TradeCsvManager } from '@/components/TradeCsvManager';
+import { CsvImportSection } from '@/components/CsvImportSection';
 import { CTraderIntegration } from '@/components/CTraderIntegration';
 import {
   Dialog,
@@ -308,9 +309,25 @@ const TradingAccounts = () => {
                     value={formData.current_equity}
                     onChange={(e) => setFormData({ ...formData, current_equity: e.target.value })}
                     required
-                  />
-                </div>
-              </div>
+                   />
+                 </div>
+               </div>
+               
+               {/* CSV Import Section - only show for existing accounts */}
+               {editingAccount && (
+                 <div className="pt-4 border-t">
+                   <CsvImportSection 
+                     accountId={editingAccount.id} 
+                     compact={true}
+                     onImportComplete={() => {
+                       toast({
+                         title: "Import complete",
+                         description: "Trades have been imported to this account"
+                       });
+                     }}
+                   />
+                 </div>
+               )}
               <Button type="submit" className="w-full">
                 {editingAccount ? 'Update' : 'Create'} Account
               </Button>
