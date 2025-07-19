@@ -13,6 +13,8 @@ import Trades from "./pages/Trades";
 import TradingAccounts from "./pages/TradingAccounts";
 import Strategies from "./pages/Strategies";
 import Notes from "./pages/Notes";
+import Calendar from "./pages/Calendar";
+import Confluence from "./pages/Confluence";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,10 +36,10 @@ const App = () => (
             } />
             <Route path="/trades" element={<ProtectedRoute><Trades /></ProtectedRoute>} />
             <Route path="/trades/new" element={<ProtectedRoute><NewTrade /></ProtectedRoute>} />
-            <Route path="/calendar" element={<ProtectedRoute><div>P&L Calendar - Coming Soon</div></ProtectedRoute>} />
+            <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
             <Route path="/accounts" element={<ProtectedRoute><TradingAccounts /></ProtectedRoute>} />
             <Route path="/strategies" element={<ProtectedRoute><Strategies /></ProtectedRoute>} />
-            <Route path="/confluence" element={<ProtectedRoute><div>Confluence - Coming Soon</div></ProtectedRoute>} />
+            <Route path="/confluence" element={<ProtectedRoute><Confluence /></ProtectedRoute>} />
             <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
