@@ -177,10 +177,19 @@ const Dashboard = () => {
     }
   };
 
-  const handleStarAccount = (accountId: string) => {
-    setPrimaryAccountId(accountId);
-    localStorage.setItem('primaryAccountId', accountId);
-    setSelectedAccountId(accountId);
+  const handleStarAccount = (accountId: string, event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const newPrimaryId = primaryAccountId === accountId ? null : accountId;
+    setPrimaryAccountId(newPrimaryId);
+    if (newPrimaryId) {
+      localStorage.setItem('primaryAccountId', newPrimaryId);
+      setSelectedAccountId(newPrimaryId);
+    } else {
+      localStorage.removeItem('primaryAccountId');
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -228,18 +237,21 @@ const Dashboard = () => {
                       <SelectItem key={account.id} value={account.id} className="hover:bg-muted/50">
                         <div className="flex items-center justify-between w-full">
                           <span>{account.name}</span>
-                          <button
-                            onClick={(e) => {
+                          <div
+                            onMouseDown={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              handleStarAccount(account.id);
+                              handleStarAccount(account.id, e);
                             }}
-                            className="ml-2 p-1 hover:bg-muted rounded"
+                            className="ml-2 p-1 hover:bg-muted rounded cursor-pointer"
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`${primaryAccountId === account.id ? 'Unstar' : 'Star'} ${account.name}`}
                           >
                             <Star 
-                              className={`h-3 w-3 ${primaryAccountId === account.id ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} 
+                              className={`h-3 w-3 ${primaryAccountId === account.id ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground hover:text-yellow-400'}`} 
                             />
-                          </button>
+                          </div>
                         </div>
                       </SelectItem>
                     ))}
