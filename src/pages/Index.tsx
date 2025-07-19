@@ -134,7 +134,7 @@ const Index = () => {
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-green-500" />
-                  <span>Up to 100 trades per month</span>
+                  <span>Up to 50 trades per month</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-green-500" />
@@ -171,7 +171,7 @@ const Index = () => {
               <div className="text-center">
                 <h3 className="text-2xl font-bold mb-4">Professional</h3>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold">$29</span>
+                  <span className="text-4xl font-bold">$10</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 <p className="text-muted-foreground mb-8">Advanced features for serious traders</p>
@@ -210,7 +210,7 @@ const Index = () => {
               
               <Button 
                 className="w-full" 
-                onClick={() => handlePayment('professional', 29)}
+                onClick={() => handlePayment('professional', 10)}
               >
                 Start Professional Plan
               </Button>
