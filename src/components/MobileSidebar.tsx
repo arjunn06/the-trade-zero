@@ -49,8 +49,8 @@ export function MobileSidebar({ children, open, onOpenChange }: MobileSidebarPro
 
   const getNavCls = (isActive: boolean) =>
     isActive ? 
-      "bg-primary text-primary-foreground font-medium shadow-sm w-full justify-start" : 
-      "text-foreground hover:bg-accent hover:text-accent-foreground transition-colors w-full justify-start";
+      "bg-primary text-primary-foreground font-medium shadow-sm w-full justify-start rounded-md" : 
+      "text-foreground hover:bg-accent hover:text-accent-foreground transition-colors w-full justify-start rounded-md";
 
   // Close mobile sidebar when route changes
   useEffect(() => {

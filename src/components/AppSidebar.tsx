@@ -50,8 +50,8 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive ? 
-      "bg-primary text-black font-medium shadow-sm" : 
-      "text-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors";
+      "bg-primary text-primary-foreground font-medium shadow-sm rounded-md" : 
+      "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors rounded-md";
 
 
   return (

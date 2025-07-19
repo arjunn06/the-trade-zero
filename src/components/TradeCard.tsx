@@ -65,7 +65,7 @@ export function TradeCard({ trade, onClose, onDelete, onViewScreenshots }: Trade
         <div className="flex justify-between items-start mb-3">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-lg">{trade.symbol}</h3>
-            <Badge variant={trade.trade_type === 'long' ? 'default' : 'secondary'}>
+            <Badge variant={trade.trade_type === 'long' ? 'default' : 'short'}>
               {trade.trade_type === 'long' ? (
                 <TrendingUp className="h-3 w-3 mr-1" />
               ) : (
