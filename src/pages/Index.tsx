@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { RazorpayPayment } from '@/components/RazorpayPayment';
 import { TrendingUp, BarChart3, Shield, Calendar, Check, Star } from 'lucide-react';
 
 const Index = () => {
@@ -208,12 +209,25 @@ const Index = () => {
                 </li>
               </ul>
               
-              <Button 
-                className="w-full" 
-                onClick={() => handlePayment('professional', 10)}
+              <RazorpayPayment 
+                plan="professional" 
+                amount={10}
+                onSuccess={() => {
+                  toast({
+                    title: "Payment Successful!",
+                    description: "Welcome to Professional plan! Redirecting to dashboard...",
+                  });
+                  // Small delay to show the success message
+                  setTimeout(() => {
+                    window.location.href = '/dashboard';
+                  }, 2000);
+                }}
+                onError={(error) => {
+                  console.error('Payment error:', error);
+                }}
               >
                 Start Professional Plan
-              </Button>
+              </RazorpayPayment>
             </div>
           </div>
         </div>
