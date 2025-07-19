@@ -50,8 +50,18 @@ const NewTrade = () => {
     strategy_id: '',
     notes: '',
     risk_amount: '',
-    risk_reward_ratio: ''
+    risk_reward_ratio: '',
+    // Advanced cTrader fields
+    order_type: '',
+    execution_price: '',
+    slippage_points: '',
+    spread: '',
+    commission: '',
+    swap: '',
+    margin_rate: '',
+    filled_volume: ''
   });
+  const [showAdvancedFields, setShowAdvancedFields] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -185,7 +195,17 @@ const NewTrade = () => {
         risk_reward_ratio: calculateRiskReward() || null,
         status: 'open',
         user_id: user.id,
-        screenshots: screenshotUrls.length > 0 ? screenshotUrls : null
+        screenshots: screenshotUrls.length > 0 ? screenshotUrls : null,
+        // Advanced fields
+        order_type: formData.order_type || null,
+        execution_price: formData.execution_price ? parseFloat(formData.execution_price) : null,
+        slippage_points: formData.slippage_points ? parseFloat(formData.slippage_points) : null,
+        spread: formData.spread ? parseFloat(formData.spread) : null,
+        commission: formData.commission ? parseFloat(formData.commission) : null,
+        swap: formData.swap ? parseFloat(formData.swap) : null,
+        margin_rate: formData.margin_rate ? parseFloat(formData.margin_rate) : null,
+        filled_volume: formData.filled_volume ? parseFloat(formData.filled_volume) : null,
+        source: 'manual'
       };
 
       const { error } = await supabase
@@ -391,6 +411,142 @@ const NewTrade = () => {
                 <p className="text-sm text-muted-foreground">
                   Risk/Reward Ratio: <span className="font-medium">{calculateRiskReward().toFixed(2)}:1</span>
                 </p>
+              </div>
+            )}
+
+            {/* Advanced Fields Toggle */}
+            <div className="border-t pt-6">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setShowAdvancedFields(!showAdvancedFields)}
+                className="flex items-center gap-2"
+              >
+                {showAdvancedFields ? 'Hide' : 'Show'} Advanced Fields
+                <span className="text-xs text-muted-foreground">
+                  (Order type, execution details, spreads, etc.)
+                </span>
+              </Button>
+            </div>
+
+            {/* Advanced Fields Section */}
+            {showAdvancedFields && (
+              <div className="border rounded-lg p-6 bg-muted/30">
+                <h3 className="text-lg font-medium mb-4">Advanced Trade Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="order_type">Order Type</Label>
+                    <Select value={formData.order_type} onValueChange={(value) => setFormData({ ...formData, order_type: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select order type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="MARKET">Market Order</SelectItem>
+                        <SelectItem value="LIMIT">Limit Order</SelectItem>
+                        <SelectItem value="STOP">Stop Order</SelectItem>
+                        <SelectItem value="STOP_LIMIT">Stop Limit</SelectItem>
+                        <SelectItem value="MARKET_RANGE">Market Range</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="execution_price">Execution Price</Label>
+                    <Input
+                      id="execution_price"
+                      type="number"
+                      step="any"
+                      placeholder="Actual execution price"
+                      value={formData.execution_price}
+                      onChange={(e) => setFormData({ ...formData, execution_price: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      If different from entry price (for market orders with slippage)
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="slippage_points">Slippage (Points)</Label>
+                    <Input
+                      id="slippage_points"
+                      type="number"
+                      step="0.1"
+                      placeholder="Price slippage in points"
+                      value={formData.slippage_points}
+                      onChange={(e) => setFormData({ ...formData, slippage_points: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="spread">Spread (Points)</Label>
+                    <Input
+                      id="spread"
+                      type="number"
+                      step="0.1"
+                      placeholder="Bid-ask spread"
+                      value={formData.spread}
+                      onChange={(e) => setFormData({ ...formData, spread: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="commission">Commission</Label>
+                    <Input
+                      id="commission"
+                      type="number"
+                      step="0.01"
+                      placeholder="Commission paid"
+                      value={formData.commission}
+                      onChange={(e) => setFormData({ ...formData, commission: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="swap">Swap/Rollover</Label>
+                    <Input
+                      id="swap"
+                      type="number"
+                      step="0.01"
+                      placeholder="Overnight swap fees"
+                      value={formData.swap}
+                      onChange={(e) => setFormData({ ...formData, swap: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="margin_rate">Margin Rate (%)</Label>
+                    <Input
+                      id="margin_rate"
+                      type="number"
+                      step="0.01"
+                      placeholder="Required margin percentage"
+                      value={formData.margin_rate}
+                      onChange={(e) => setFormData({ ...formData, margin_rate: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="filled_volume">Filled Volume</Label>
+                    <Input
+                      id="filled_volume"
+                      type="number"
+                      step="any"
+                      placeholder="Actually filled amount"
+                      value={formData.filled_volume}
+                      onChange={(e) => setFormData({ ...formData, filled_volume: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      For partial fills, enter the actual filled amount
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>Note:</strong> These advanced fields are automatically populated when importing from cTrader. 
+                    Manual entry is optional but provides more detailed trade analysis.
+                  </p>
+                </div>
               </div>
             )}
 

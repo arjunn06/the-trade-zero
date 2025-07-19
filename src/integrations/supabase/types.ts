@@ -310,22 +310,39 @@ export type Database = {
       }
       trades: {
         Row: {
+          base_to_usd_rate: number | null
           commission: number | null
           confluence_score: number | null
+          create_timestamp: string | null
           created_at: string
+          deal_id: string | null
+          deal_status: string | null
           entry_date: string
           entry_price: number
+          execution_price: number | null
+          execution_time: string | null
           exit_date: string | null
           exit_price: number | null
           external_id: string | null
+          filled_volume: number | null
+          gross_profit: number | null
           id: string
+          margin_rate: number | null
+          market_price_at_entry: number | null
+          market_price_at_exit: number | null
           notes: string | null
+          order_id: string | null
+          order_type: string | null
           pnl: number | null
+          position_id: string | null
           quantity: number
+          quote_to_deposit_rate: number | null
           risk_amount: number | null
           risk_reward_ratio: number | null
           screenshots: string[] | null
+          slippage_points: number | null
           source: string | null
+          spread: number | null
           status: string
           stop_loss: number | null
           strategy_id: string | null
@@ -338,22 +355,39 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          base_to_usd_rate?: number | null
           commission?: number | null
           confluence_score?: number | null
+          create_timestamp?: string | null
           created_at?: string
+          deal_id?: string | null
+          deal_status?: string | null
           entry_date: string
           entry_price: number
+          execution_price?: number | null
+          execution_time?: string | null
           exit_date?: string | null
           exit_price?: number | null
           external_id?: string | null
+          filled_volume?: number | null
+          gross_profit?: number | null
           id?: string
+          margin_rate?: number | null
+          market_price_at_entry?: number | null
+          market_price_at_exit?: number | null
           notes?: string | null
+          order_id?: string | null
+          order_type?: string | null
           pnl?: number | null
+          position_id?: string | null
           quantity: number
+          quote_to_deposit_rate?: number | null
           risk_amount?: number | null
           risk_reward_ratio?: number | null
           screenshots?: string[] | null
+          slippage_points?: number | null
           source?: string | null
+          spread?: number | null
           status?: string
           stop_loss?: number | null
           strategy_id?: string | null
@@ -366,22 +400,39 @@ export type Database = {
           user_id: string
         }
         Update: {
+          base_to_usd_rate?: number | null
           commission?: number | null
           confluence_score?: number | null
+          create_timestamp?: string | null
           created_at?: string
+          deal_id?: string | null
+          deal_status?: string | null
           entry_date?: string
           entry_price?: number
+          execution_price?: number | null
+          execution_time?: string | null
           exit_date?: string | null
           exit_price?: number | null
           external_id?: string | null
+          filled_volume?: number | null
+          gross_profit?: number | null
           id?: string
+          margin_rate?: number | null
+          market_price_at_entry?: number | null
+          market_price_at_exit?: number | null
           notes?: string | null
+          order_id?: string | null
+          order_type?: string | null
           pnl?: number | null
+          position_id?: string | null
           quantity?: number
+          quote_to_deposit_rate?: number | null
           risk_amount?: number | null
           risk_reward_ratio?: number | null
           screenshots?: string[] | null
+          slippage_points?: number | null
           source?: string | null
+          spread?: number | null
           status?: string
           stop_loss?: number | null
           strategy_id?: string | null

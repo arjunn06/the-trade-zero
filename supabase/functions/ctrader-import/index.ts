@@ -27,6 +27,15 @@ interface CTraderDeal {
   swap: number;
   pnl: number;
   comment?: string;
+  // Additional fields from cTrader API
+  grossProfit?: number;
+  dealStatus?: string;
+  orderType?: string;
+  baseToUsdConversionRate?: number;
+  quoteToDepositConversionRate?: number;
+  marketPrice?: number;
+  slippageInPoints?: number;
+  marginRate?: number;
 }
 
 serve(async (req) => {
@@ -190,7 +199,12 @@ async function convertDealToTrade(
     return null;
   }
 
-  // Convert cTrader deal to trade format
+  // Calculate slippage if execution price differs from market price
+  const slippagePoints = deal.executionPrice && deal.marketPrice 
+    ? Math.abs(deal.executionPrice - deal.marketPrice) 
+    : null;
+
+  // Convert cTrader deal to trade format with all available fields
   const tradeData = {
     user_id: userId,
     trading_account_id: tradingAccountId,
@@ -198,14 +212,35 @@ async function convertDealToTrade(
     symbol: deal.symbolName,
     trade_type: deal.dealType === 0 ? 'long' : 'short',
     quantity: deal.volume / 100000, // Convert from lots to standard units
-    entry_price: deal.executionPrice,
+    entry_price: deal.executionPrice || 0,
+    execution_price: deal.executionPrice,
     entry_date: new Date(deal.executionTimestamp).toISOString(),
+    execution_time: new Date(deal.executionTimestamp).toISOString(),
+    create_timestamp: new Date(deal.createTimestamp).toISOString(),
     commission: deal.commission || 0,
     swap: deal.swap || 0,
     pnl: deal.pnl || 0,
+    gross_profit: deal.grossProfit || deal.pnl || 0,
     status: 'closed',
     notes: deal.comment || `Imported from cTrader (Deal ID: ${deal.dealId})`,
     source: 'ctrader',
+    
+    // cTrader specific fields
+    deal_id: deal.dealId,
+    order_id: deal.orderId,
+    position_id: deal.positionId,
+    filled_volume: deal.filledVolume ? deal.filledVolume / 100000 : null,
+    deal_status: deal.dealStatus || 'FILLED',
+    order_type: deal.orderType || 'MARKET',
+    slippage_points: slippagePoints,
+    base_to_usd_rate: deal.baseToUsdConversionRate,
+    quote_to_deposit_rate: deal.quoteToDepositConversionRate,
+    
+    // Fields that would need additional API calls to get
+    spread: null, // Would need to get from symbol info
+    margin_rate: null, // Would need to get from account settings
+    market_price_at_entry: null, // Would need historical data
+    market_price_at_exit: null, // Would need historical data
   };
 
   // Insert trade
@@ -219,6 +254,6 @@ async function convertDealToTrade(
     throw error;
   }
 
-  console.log(`Imported trade: ${deal.symbolName} - ${deal.dealType === 0 ? 'BUY' : 'SELL'}`);
+  console.log(`Imported trade: ${deal.symbolName} - ${deal.dealType === 0 ? 'BUY' : 'SELL'} - ${deal.executionPrice}`);
   return insertedTrade;
 }
