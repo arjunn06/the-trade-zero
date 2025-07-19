@@ -248,7 +248,7 @@ const TradingAccounts = () => {
                   <SelectContent>
                     <SelectItem value="demo">Demo</SelectItem>
                     <SelectItem value="live">Live</SelectItem>
-                    <SelectItem value="prop">Prop Firm</SelectItem>
+                    <SelectItem value="paper">Paper Trading</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
