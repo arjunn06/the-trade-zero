@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, Settings, LogOut, Crown, Mail, Lock, Camera } from 'lucide-react';
+import { User, Settings, LogOut, Crown, Mail, Lock, Camera, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useToast } from '@/hooks/use-toast';
@@ -246,19 +246,14 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
               <Button variant="outline" onClick={() => setProfileDialogOpen(false)}>
                 Cancel
               </Button>
+              <Button variant="ghost" onClick={handleSignOut} size="sm">
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Button 
-        variant="ghost" 
-        onClick={handleSignOut}
-        className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
-      >
-        <LogOut className="h-4 w-4 mr-3" />
-        Sign Out
-      </Button>
     </div>
   );
 }
