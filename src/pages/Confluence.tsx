@@ -6,15 +6,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { AppSidebar } from '@/components/AppSidebar';
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Settings, CheckCircle, XCircle, Target, TrendingUp, AlertTriangle, ArrowRight, RotateCcw } from 'lucide-react';
+import { DashboardLayout } from '@/components/DashboardLayout';
 
 interface ConfluenceItem {
   id: string;
@@ -27,6 +28,13 @@ interface ConfluenceItem {
   updated_at: string;
 }
 
+interface ChecklistSession {
+  checkedItems: Set<string>;
+  timestamp: Date;
+  symbol?: string;
+  direction?: 'long' | 'short';
+}
+
 const categories = [
   'Technical Analysis',
   'Fundamental Analysis',
@@ -37,11 +45,37 @@ const categories = [
   'Other'
 ];
 
+const DEFAULT_CONFLUENCE_ITEMS = [
+  { name: 'Price at Key Support/Resistance', category: 'Technical Analysis', weight: 2.0, description: 'Price is at a significant support or resistance level' },
+  { name: 'Trend Confirmation', category: 'Technical Analysis', weight: 1.5, description: 'Trade direction aligns with the higher timeframe trend' },
+  { name: 'RSI Signal', category: 'Technical Analysis', weight: 1.0, description: 'RSI showing oversold/overbought in favorable condition' },
+  { name: 'Volume Confirmation', category: 'Technical Analysis', weight: 1.5, description: 'Volume supports the expected price movement' },
+  { name: 'Risk-Reward Ratio', category: 'Risk Management', weight: 2.5, description: 'Risk-reward ratio is at least 1:2 or better' },
+  { name: 'Stop Loss Defined', category: 'Risk Management', weight: 2.0, description: 'Clear stop loss level identified and acceptable' },
+  { name: 'Position Size Calculated', category: 'Risk Management', weight: 2.0, description: 'Position size calculated based on risk percentage' },
+  { name: 'Market Structure', category: 'Market Structure', weight: 1.5, description: 'Market structure supports the trade direction' },
+  { name: 'News/Events Check', category: 'Fundamental Analysis', weight: 1.5, description: 'No conflicting news or events scheduled' },
+  { name: 'Market Session Timing', category: 'Time-based', weight: 1.0, description: 'Trading during active market hours' }
+];
+
 export default function Confluence() {
   const [confluenceItems, setConfluenceItems] = useState<ConfluenceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ConfluenceItem | null>(null);
+  const [currentSession, setCurrentSession] = useState<ChecklistSession>({
+    checkedItems: new Set(),
+    timestamp: new Date()
+  });
+  const [tradeSetup, setTradeSetup] = useState({
+    symbol: '',
+    direction: '',
+    entry: '',
+    stopLoss: '',
+    takeProfit: '',
+    notes: ''
+  });
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -51,6 +85,7 @@ export default function Confluence() {
   });
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -64,11 +99,17 @@ export default function Confluence() {
         .from('confluence_items')
         .select('*')
         .eq('user_id', user?.id)
+        .eq('is_active', true)
         .order('category', { ascending: true })
-        .order('name', { ascending: true });
+        .order('weight', { ascending: false });
 
       if (error) throw error;
-      setConfluenceItems(data || []);
+      
+      if (!data || data.length === 0) {
+        await createDefaultItems();
+      } else {
+        setConfluenceItems(data || []);
+      }
     } catch (error) {
       console.error('Error fetching confluence items:', error);
       toast({
@@ -81,12 +122,35 @@ export default function Confluence() {
     }
   };
 
+  const createDefaultItems = async () => {
+    try {
+      const defaultItems = DEFAULT_CONFLUENCE_ITEMS.map(item => ({
+        ...item,
+        user_id: user?.id,
+        is_active: true
+      }));
+
+      const { error } = await supabase
+        .from('confluence_items')
+        .insert(defaultItems);
+
+      if (error) throw error;
+      
+      fetchConfluenceItems();
+      toast({
+        title: "Welcome!",
+        description: "Default confluence items have been created for you",
+      });
+    } catch (error) {
+      console.error('Error creating default items:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       if (editingItem) {
-        // Update existing item
         const { error } = await supabase
           .from('confluence_items')
           .update({
@@ -100,13 +164,8 @@ export default function Confluence() {
           .eq('user_id', user?.id);
 
         if (error) throw error;
-        
-        toast({
-          title: "Success",
-          description: "Confluence item updated successfully"
-        });
+        toast({ title: "Success", description: "Confluence item updated" });
       } else {
-        // Create new item
         const { error } = await supabase
           .from('confluence_items')
           .insert({
@@ -119,21 +178,10 @@ export default function Confluence() {
           });
 
         if (error) throw error;
-        
-        toast({
-          title: "Success",
-          description: "Confluence item created successfully"
-        });
+        toast({ title: "Success", description: "Confluence item created" });
       }
 
-      // Reset form and close dialog
-      setFormData({
-        name: '',
-        category: '',
-        description: '',
-        weight: 1.0,
-        is_active: true
-      });
+      setFormData({ name: '', category: '', description: '', weight: 1.0, is_active: true });
       setEditingItem(null);
       setIsDialogOpen(false);
       fetchConfluenceItems();
@@ -170,11 +218,7 @@ export default function Confluence() {
         .eq('user_id', user?.id);
 
       if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: "Confluence item deleted successfully"
-      });
+      toast({ title: "Success", description: "Confluence item deleted" });
       fetchConfluenceItems();
     } catch (error) {
       console.error('Error deleting confluence item:', error);
@@ -186,24 +230,60 @@ export default function Confluence() {
     }
   };
 
-  const toggleActive = async (itemId: string, isActive: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('confluence_items')
-        .update({ is_active: !isActive })
-        .eq('id', itemId)
-        .eq('user_id', user?.id);
+  const handleItemCheck = (itemId: string, checked: boolean) => {
+    const newCheckedItems = new Set(currentSession.checkedItems);
+    if (checked) {
+      newCheckedItems.add(itemId);
+    } else {
+      newCheckedItems.delete(itemId);
+    }
+    
+    setCurrentSession({
+      ...currentSession,
+      checkedItems: newCheckedItems,
+      timestamp: new Date()
+    });
+  };
 
-      if (error) throw error;
-      fetchConfluenceItems();
-    } catch (error) {
-      console.error('Error updating confluence item:', error);
+  const resetChecklist = () => {
+    setCurrentSession({
+      checkedItems: new Set(),
+      timestamp: new Date(),
+      symbol: tradeSetup.symbol,
+      direction: tradeSetup.direction as 'long' | 'short'
+    });
+    setTradeSetup({
+      symbol: '',
+      direction: '',
+      entry: '',
+      stopLoss: '',
+      takeProfit: '',
+      notes: ''
+    });
+  };
+
+  const proceedToTrade = () => {
+    const checkedWeight = confluenceItems
+      .filter(item => currentSession.checkedItems.has(item.id))
+      .reduce((sum, item) => sum + Number(item.weight), 0);
+    
+    if (checkedWeight < 5) {
       toast({
-        title: "Error",
-        description: "Failed to update confluence item",
+        title: "Insufficient Confluence",
+        description: "You should have at least 5.0 points of confluence before trading",
         variant: "destructive"
       });
+      return;
     }
+
+    // Store confluence data in session storage for the new trade page
+    sessionStorage.setItem('confluenceData', JSON.stringify({
+      checkedItems: Array.from(currentSession.checkedItems),
+      totalWeight: checkedWeight,
+      setup: tradeSetup
+    }));
+
+    navigate('/trades/new');
   };
 
   const groupedItems = confluenceItems.reduce((acc, item) => {
@@ -215,209 +295,330 @@ export default function Confluence() {
     return acc;
   }, {} as Record<string, ConfluenceItem[]>);
 
-  const activeItems = confluenceItems.filter(item => item.is_active);
-  const totalWeight = activeItems.reduce((sum, item) => sum + Number(item.weight), 0);
+  const totalWeight = confluenceItems.reduce((sum, item) => sum + Number(item.weight), 0);
+  const checkedWeight = confluenceItems
+    .filter(item => currentSession.checkedItems.has(item.id))
+    .reduce((sum, item) => sum + Number(item.weight), 0);
+  const confluenceProgress = totalWeight > 0 ? (checkedWeight / totalWeight) * 100 : 0;
+  const checkedCount = currentSession.checkedItems.size;
+  const totalCount = confluenceItems.length;
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <AppSidebar />
-        <SidebarInset className="flex-1">
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <h1 className="text-lg font-semibold">Confluence Checklist</h1>
-          </header>
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Confluence Checklist</h1>
+            <p className="text-muted-foreground">
+              Check all confluence factors before placing your trade
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsSettingsOpen(true)}>
+              <Settings className="h-4 w-4 mr-2" />
+              Manage Items
+            </Button>
+            <Button variant="outline" onClick={resetChecklist}>
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset
+            </Button>
+          </div>
+        </div>
 
-          <div className="flex-1 space-y-4 p-4 pt-6">
-            <div className="flex justify-between items-center">
+        {/* Trade Setup */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Trade Setup
+            </CardTitle>
+            <CardDescription>
+              Enter your trade details to get started
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <h2 className="text-2xl font-bold">Confluence Items</h2>
-                <p className="text-muted-foreground">
-                  Manage your trading confluence checklist items. Total active weight: {totalWeight.toFixed(1)}
-                </p>
+                <Label htmlFor="symbol">Symbol</Label>
+                <Input
+                  id="symbol"
+                  placeholder="e.g., EURUSD"
+                  value={tradeSetup.symbol}
+                  onChange={(e) => setTradeSetup({ ...tradeSetup, symbol: e.target.value.toUpperCase() })}
+                />
               </div>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={() => {
-                    setEditingItem(null);
-                    setFormData({
-                      name: '',
-                      category: '',
-                      description: '',
-                      weight: 1.0,
-                      is_active: true
-                    });
-                  }}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Item
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingItem ? 'Edit Confluence Item' : 'Add New Confluence Item'}
-                    </DialogTitle>
-                    <DialogDescription>
-                      Create confluence factors to check before entering trades.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleSubmit}>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="name">Name *</Label>
-                        <Input
-                          id="name"
-                          value={formData.name}
-                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                          placeholder="e.g., RSI Oversold"
-                          required
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="category">Category</Label>
-                        <Select
-                          value={formData.category}
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category} value={category}>
-                                {category}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                          id="description"
-                          value={formData.description}
-                          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                          placeholder="Describe this confluence factor..."
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="weight">Weight</Label>
-                        <Input
-                          id="weight"
-                          type="number"
-                          step="0.1"
-                          min="0.1"
-                          max="10"
-                          value={formData.weight}
-                          onChange={(e) => setFormData(prev => ({ ...prev, weight: parseFloat(e.target.value) || 1.0 }))}
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="is_active"
-                          checked={formData.is_active}
-                          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
-                        />
-                        <Label htmlFor="is_active">Active</Label>
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button type="submit">
-                        {editingItem ? 'Update' : 'Create'}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              <div>
+                <Label htmlFor="direction">Direction</Label>
+                <Select 
+                  value={tradeSetup.direction} 
+                  onValueChange={(value) => setTradeSetup({ ...tradeSetup, direction: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select direction" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="long">Long (Buy)</SelectItem>
+                    <SelectItem value="short">Short (Sell)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="entry">Entry Price</Label>
+                <Input
+                  id="entry"
+                  type="number"
+                  step="any"
+                  placeholder="0.00000"
+                  value={tradeSetup.entry}
+                  onChange={(e) => setTradeSetup({ ...tradeSetup, entry: e.target.value })}
+                />
+              </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {loading ? (
-              <div>Loading...</div>
-            ) : (
-              <div className="space-y-6">
-                {Object.entries(groupedItems).map(([category, items]) => (
-                  <Card key={category}>
-                    <CardHeader>
-                      <CardTitle className="text-lg">{category}</CardTitle>
-                      <CardDescription>
-                        {items.filter(item => item.is_active).length} active items
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {items.map((item) => (
-                          <div
-                            key={item.id}
-                            className={`flex items-center justify-between p-3 border rounded-lg ${item.is_active ? '' : 'opacity-50'}`}
-                          >
-                            <div className="flex items-center gap-3">
-                              {item.is_active ? (
-                                <CheckCircle className="h-5 w-5 text-green-500" />
-                              ) : (
-                                <XCircle className="h-5 w-5 text-muted-foreground" />
-                              )}
-                              <div>
-                                <div className="font-medium">{item.name}</div>
-                                {item.description && (
-                                  <div className="text-sm text-muted-foreground">{item.description}</div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <Badge variant="outline">Weight: {Number(item.weight).toFixed(1)}</Badge>
-                              <div className="flex items-center gap-1">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => toggleActive(item.id, item.is_active)}
-                                >
-                                  {item.is_active ? 'Deactivate' : 'Activate'}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleEdit(item)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleDelete(item.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-
-                {confluenceItems.length === 0 && (
-                  <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                      <div className="text-center">
-                        <h3 className="text-lg font-medium">No confluence items yet</h3>
-                        <p className="text-muted-foreground mb-4">
-                          Start building your trading confluence checklist
-                        </p>
-                        <Button onClick={() => setIsDialogOpen(true)}>
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Your First Item
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+        {/* Confluence Progress */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5" />
+                Confluence Score
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold">
+                  {checkedWeight.toFixed(1)} / {totalWeight.toFixed(1)}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {checkedCount} of {totalCount} items
+                </div>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Progress value={confluenceProgress} className="h-3" />
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Progress</span>
+              <span className="font-medium">{confluenceProgress.toFixed(1)}%</span>
+            </div>
+            
+            {checkedWeight >= 7 && (
+              <div className="flex items-center gap-2 text-profit text-sm">
+                <CheckCircle className="h-4 w-4" />
+                Excellent confluence! Strong setup detected.
               </div>
             )}
-          </div>
-        </SidebarInset>
+            {checkedWeight >= 5 && checkedWeight < 7 && (
+              <div className="flex items-center gap-2 text-yellow-600 text-sm">
+                <Target className="h-4 w-4" />
+                Good confluence. Consider the trade carefully.
+              </div>
+            )}
+            {checkedWeight < 5 && checkedWeight > 0 && (
+              <div className="flex items-center gap-2 text-loss text-sm">
+                <AlertTriangle className="h-4 w-4" />
+                Low confluence. Consider waiting for a better setup.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Confluence Checklist */}
+        <div className="grid gap-6">
+          {Object.entries(groupedItems).map(([category, items]) => (
+            <Card key={category}>
+              <CardHeader>
+                <CardTitle className="text-lg">{category}</CardTitle>
+                <CardDescription>
+                  {items.filter(item => currentSession.checkedItems.has(item.id)).length} of {items.length} checked
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-start gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <Checkbox
+                        checked={currentSession.checkedItems.has(item.id)}
+                        onCheckedChange={(checked) => handleItemCheck(item.id, checked as boolean)}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <div className="font-medium">{item.name}</div>
+                          <Badge variant="outline" className="ml-2">
+                            {Number(item.weight).toFixed(1)}
+                          </Badge>
+                        </div>
+                        {item.description && (
+                          <div className="text-sm text-muted-foreground mt-1">
+                            {item.description}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Action Buttons */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                {checkedWeight >= 5 ? (
+                  <span className="text-profit">✓ Sufficient confluence to proceed with trade</span>
+                ) : (
+                  <span className="text-loss">⚠ Need at least 5.0 points to proceed</span>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={resetChecklist}
+                >
+                  Reset Checklist
+                </Button>
+                <Button 
+                  onClick={proceedToTrade}
+                  disabled={checkedWeight < 5 || !tradeSetup.symbol || !tradeSetup.direction}
+                  className="gap-2"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  Proceed to Trade
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Settings Dialog */}
+        <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Manage Confluence Items</DialogTitle>
+              <DialogDescription>
+                Add, edit, or remove confluence factors for your checklist
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Current Items</h3>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => {
+                      setEditingItem(null);
+                      setFormData({ name: '', category: '', description: '', weight: 1.0, is_active: true });
+                    }}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Item
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingItem ? 'Edit' : 'Add'} Confluence Item
+                      </DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit}>
+                      <div className="grid gap-4 py-4">
+                        <div>
+                          <Label htmlFor="name">Name *</Label>
+                          <Input
+                            id="name"
+                            value={formData.name}
+                            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="category">Category</Label>
+                          <Select
+                            value={formData.category}
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map((category) => (
+                                <SelectItem key={category} value={category}>
+                                  {category}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="description">Description</Label>
+                          <Textarea
+                            id="description"
+                            value={formData.description}
+                            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="weight">Weight (0.1 - 10.0)</Label>
+                          <Input
+                            id="weight"
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                            max="10"
+                            value={formData.weight}
+                            onChange={(e) => setFormData(prev => ({ ...prev, weight: parseFloat(e.target.value) || 1.0 }))}
+                          />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.is_active}
+                            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                          />
+                          <Label>Active</Label>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit">
+                          {editingItem ? 'Update' : 'Create'}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {confluenceItems.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <div className="font-medium">{item.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {item.category} • Weight: {Number(item.weight).toFixed(1)}
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
+                        Edit
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleDelete(item.id)}>
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
-    </SidebarProvider>
+    </DashboardLayout>
   );
 }
