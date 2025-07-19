@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, Edit, Trash2, TrendingUp, TrendingDown, ImageIcon, Eye, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -39,6 +39,7 @@ interface Trade {
   entry_date: string;
   exit_date?: string;
   notes?: string;
+  screenshots?: string[];
   trading_accounts: {
     name: string;
     currency: string;
@@ -56,6 +57,8 @@ const Trades = () => {
   const [loading, setLoading] = useState(true);
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [screenshotDialog, setScreenshotDialog] = useState(false);
+  const [selectedScreenshots, setSelectedScreenshots] = useState<string[]>([]);
   const [closeFormData, setCloseFormData] = useState({
     exit_price: '',
     exit_date: '',
@@ -185,6 +188,11 @@ const Trades = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const openScreenshotDialog = (screenshots: string[]) => {
+    setSelectedScreenshots(screenshots);
+    setScreenshotDialog(true);
+  };
+
   if (loading) {
     return <div>Loading trades...</div>;
   }
@@ -222,25 +230,26 @@ const Trades = () => {
             <CardTitle>All Trades</CardTitle>
             <CardDescription>Complete history of your trading activity</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Symbol</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Entry</TableHead>
-                  <TableHead>Exit</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>P&L</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {trades.map((trade) => (
-                  <TableRow key={trade.id}>
-                    <TableCell className="font-medium">{trade.symbol}</TableCell>
+           <CardContent>
+             <Table>
+               <TableHeader>
+                 <TableRow>
+                   <TableHead>Symbol</TableHead>
+                   <TableHead>Type</TableHead>
+                   <TableHead>Entry</TableHead>
+                   <TableHead>Exit</TableHead>
+                   <TableHead>Quantity</TableHead>
+                   <TableHead>P&L</TableHead>
+                   <TableHead>Status</TableHead>
+                   <TableHead>Charts</TableHead>
+                   <TableHead>Date</TableHead>
+                   <TableHead>Actions</TableHead>
+                 </TableRow>
+               </TableHeader>
+               <TableBody>
+                 {trades.map((trade) => (
+                   <TableRow key={trade.id}>
+                     <TableCell className="font-medium">{trade.symbol}</TableCell>
                     <TableCell>
                       <Badge variant={trade.trade_type === 'long' ? 'default' : 'secondary'}>
                         {trade.trade_type === 'long' ? (
@@ -268,9 +277,23 @@ const Trades = () => {
                                   trade.status === 'closed' && trade.pnl && trade.pnl < 0 ? 'bg-loss text-destructive-foreground' : ''}
                       >
                         {trade.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{formatDate(trade.entry_date)}</TableCell>
+                       </Badge>
+                     </TableCell>
+                     <TableCell>
+                       {trade.screenshots && trade.screenshots.length > 0 ? (
+                         <Button
+                           size="sm"
+                           variant="outline"
+                           onClick={() => openScreenshotDialog(trade.screenshots!)}
+                         >
+                           <ImageIcon className="h-4 w-4 mr-1" />
+                           {trade.screenshots.length}
+                         </Button>
+                       ) : (
+                         <span className="text-muted-foreground">-</span>
+                       )}
+                     </TableCell>
+                     <TableCell>{formatDate(trade.entry_date)}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
                         {trade.status === 'open' && (
@@ -366,9 +389,43 @@ const Trades = () => {
               Close Trade
             </Button>
           </form>
-        </DialogContent>
-      </Dialog>
-    </div>
+         </DialogContent>
+       </Dialog>
+
+       {/* Screenshot Gallery Dialog */}
+       <Dialog open={screenshotDialog} onOpenChange={setScreenshotDialog}>
+         <DialogContent className="max-w-4xl">
+           <DialogHeader>
+             <DialogTitle>Chart Screenshots</DialogTitle>
+             <DialogDescription>
+               View trading chart screenshots for this trade
+             </DialogDescription>
+           </DialogHeader>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+             {selectedScreenshots.map((screenshot, index) => (
+               <div key={index} className="relative group">
+                 <img
+                   src={screenshot}
+                   alt={`Screenshot ${index + 1}`}
+                   className="w-full h-auto rounded-lg border"
+                 />
+                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                   <Button
+                     size="sm"
+                     variant="secondary"
+                     asChild
+                   >
+                     <a href={screenshot} target="_blank" rel="noopener noreferrer">
+                       <Eye className="h-4 w-4" />
+                     </a>
+                   </Button>
+                 </div>
+               </div>
+             ))}
+           </div>
+         </DialogContent>
+       </Dialog>
+     </div>
   );
 };
 

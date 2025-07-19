@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Upload, X, ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TradingAccount {
@@ -33,6 +33,8 @@ const NewTrade = () => {
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [entryDate, setEntryDate] = useState<Date | undefined>(new Date());
+  const [screenshots, setScreenshots] = useState<File[]>([]);
+  const [uploadingScreenshots, setUploadingScreenshots] = useState(false);
   const [formData, setFormData] = useState({
     symbol: '',
     trade_type: '',
@@ -101,6 +103,59 @@ const NewTrade = () => {
     return 0;
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length + screenshots.length > 5) {
+      toast({
+        title: "Too many files",
+        description: "You can upload a maximum of 5 screenshots",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setScreenshots(prev => [...prev, ...imageFiles]);
+  };
+
+  const removeScreenshot = (index: number) => {
+    setScreenshots(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadScreenshots = async (): Promise<string[]> => {
+    if (screenshots.length === 0) return [];
+    
+    setUploadingScreenshots(true);
+    const uploadedUrls: string[] = [];
+    
+    try {
+      for (const file of screenshots) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user!.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        
+        const { error } = await supabase.storage
+          .from('trade-screenshots')
+          .upload(fileName, file);
+          
+        if (error) throw error;
+        
+        const { data } = supabase.storage
+          .from('trade-screenshots')
+          .getPublicUrl(fileName);
+          
+        uploadedUrls.push(data.publicUrl);
+      }
+    } catch (error) {
+      console.error('Error uploading screenshots:', error);
+      throw error;
+    } finally {
+      setUploadingScreenshots(false);
+    }
+    
+    return uploadedUrls;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !entryDate) return;
@@ -108,6 +163,9 @@ const NewTrade = () => {
     setLoading(true);
 
     try {
+      // Upload screenshots first
+      const screenshotUrls = await uploadScreenshots();
+      
       const tradeData = {
         symbol: formData.symbol.toUpperCase(),
         trade_type: formData.trade_type,
@@ -122,7 +180,8 @@ const NewTrade = () => {
         risk_amount: formData.risk_amount ? parseFloat(formData.risk_amount) : null,
         risk_reward_ratio: calculateRiskReward() || null,
         status: 'open',
-        user_id: user.id
+        user_id: user.id,
+        screenshots: screenshotUrls.length > 0 ? screenshotUrls : null
       };
 
       const { error } = await supabase
@@ -339,9 +398,60 @@ const NewTrade = () => {
               />
             </div>
 
+            <div>
+              <Label htmlFor="screenshots">Chart Screenshots (Optional)</Label>
+              <div className="space-y-4">
+                <div className="flex items-center justify-center w-full">
+                  <label htmlFor="screenshot-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" />
+                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold">Click to upload</span> chart screenshots
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG, GIF up to 5 files</p>
+                    </div>
+                    <input
+                      id="screenshot-upload"
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                </div>
+                
+                {screenshots.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {screenshots.map((file, index) => (
+                      <div key={index} className="relative group">
+                        <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`Screenshot ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeScreenshot(index)}
+                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                          {file.name.length > 15 ? file.name.substring(0, 15) + '...' : file.name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="flex space-x-4">
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Creating...' : 'Create Trade'}
+              <Button type="submit" disabled={loading || uploadingScreenshots}>
+                {loading ? (uploadingScreenshots ? 'Uploading Screenshots...' : 'Creating...') : 'Create Trade'}
               </Button>
               <Button type="button" variant="outline" onClick={() => navigate('/trades')}>
                 Cancel
