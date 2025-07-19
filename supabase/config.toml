@@ -69,3 +69,12 @@ verify_jwt = false
 
 [functions.send-general-notification]
 verify_jwt = false
+
+[functions.ctrader-auth]
+verify_jwt = true
+
+[functions.ctrader-callback]
+verify_jwt = false
+
+[functions.ctrader-import]
+verify_jwt = true

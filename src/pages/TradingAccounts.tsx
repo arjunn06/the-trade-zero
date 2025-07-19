@@ -10,6 +10,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumFeature } from '@/components/PremiumFeature';
 import { TradeCsvManager } from '@/components/TradeCsvManager';
+import { CTraderIntegration } from '@/components/CTraderIntegration';
 import {
   Dialog,
   DialogContent,
@@ -402,17 +403,22 @@ const TradingAccounts = () => {
         </div>
       )}
 
-      {/* CSV Import/Export Section - Premium Feature */}
+      {/* CSV Import/Export and cTrader Integration Section - Premium Features */}
       {accounts.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Trade Management</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {accounts.map((account) => (
-              <TradeCsvManager
-                key={`csv-${account.id}`}
-                accountId={account.id}
-                accountName={account.name}
-              />
+              <div key={account.id} className="space-y-4">
+                <TradeCsvManager
+                  accountId={account.id}
+                  accountName={account.name}
+                />
+                <CTraderIntegration
+                  accountId={account.id}
+                  accountName={account.name}
+                />
+              </div>
             ))}
           </div>
         </div>

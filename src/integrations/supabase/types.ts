@@ -50,6 +50,75 @@ export type Database = {
         }
         Relationships: []
       }
+      ctrader_auth_states: {
+        Row: {
+          account_number: string
+          created_at: string
+          expires_at: string
+          id: string
+          state: string
+          trading_account_id: string
+          user_id: string
+        }
+        Insert: {
+          account_number: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          state: string
+          trading_account_id: string
+          user_id: string
+        }
+        Update: {
+          account_number?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          state?: string
+          trading_account_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ctrader_connections: {
+        Row: {
+          access_token: string
+          account_number: string
+          connected_at: string
+          created_at: string
+          expires_at: string
+          id: string
+          refresh_token: string
+          trading_account_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          account_number: string
+          connected_at?: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          refresh_token: string
+          trading_account_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          account_number?: string
+          connected_at?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string
+          trading_account_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           category: string | null
@@ -248,6 +317,7 @@ export type Database = {
           entry_price: number
           exit_date: string | null
           exit_price: number | null
+          external_id: string | null
           id: string
           notes: string | null
           pnl: number | null
@@ -255,6 +325,7 @@ export type Database = {
           risk_amount: number | null
           risk_reward_ratio: number | null
           screenshots: string[] | null
+          source: string | null
           status: string
           stop_loss: number | null
           strategy_id: string | null
@@ -274,6 +345,7 @@ export type Database = {
           entry_price: number
           exit_date?: string | null
           exit_price?: number | null
+          external_id?: string | null
           id?: string
           notes?: string | null
           pnl?: number | null
@@ -281,6 +353,7 @@ export type Database = {
           risk_amount?: number | null
           risk_reward_ratio?: number | null
           screenshots?: string[] | null
+          source?: string | null
           status?: string
           stop_loss?: number | null
           strategy_id?: string | null
@@ -300,6 +373,7 @@ export type Database = {
           entry_price?: number
           exit_date?: string | null
           exit_price?: number | null
+          external_id?: string | null
           id?: string
           notes?: string | null
           pnl?: number | null
@@ -307,6 +381,7 @@ export type Database = {
           risk_amount?: number | null
           risk_reward_ratio?: number | null
           screenshots?: string[] | null
+          source?: string | null
           status?: string
           stop_loss?: number | null
           strategy_id?: string | null
@@ -385,7 +460,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_auth_states: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
