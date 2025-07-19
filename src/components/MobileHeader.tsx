@@ -33,28 +33,15 @@ export function MobileHeader() {
     }
   };
 
-  const showBackButton = location.pathname !== '/dashboard';
-
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:hidden">
       <div className="flex h-14 items-center px-4">
         <div className="flex items-center gap-2 flex-1">
-          {showBackButton ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="h-8 w-8 p-0"
-            >
-              <ArrowLeft className="h-4 w-4" />
+          <MobileSidebar open={sidebarOpen} onOpenChange={setSidebarOpen}>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Menu className="h-4 w-4" />
             </Button>
-          ) : (
-            <MobileSidebar open={sidebarOpen} onOpenChange={setSidebarOpen}>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Menu className="h-4 w-4" />
-              </Button>
-            </MobileSidebar>
-          )}
+          </MobileSidebar>
           
           <div className="flex items-center gap-2 flex-1">
             <div className="bg-primary text-primary-foreground rounded-lg p-1.5">
