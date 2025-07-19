@@ -4,6 +4,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,17 +13,42 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
-  const [checkingWelcome, setCheckingWelcome] = useState(true);
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
   useEffect(() => {
-    // Small delay to let auth state settle
-    const timer = setTimeout(() => {
-      setCheckingWelcome(false);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
+    const checkOnboardingStatus = async () => {
+      if (!user) {
+        setCheckingOnboarding(false);
+        return;
+      }
 
-  if (loading || checkingWelcome) {
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('has_completed_onboarding')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching profile:', error);
+          // If no profile exists, user hasn't completed onboarding
+          setHasCompletedOnboarding(false);
+        } else {
+          setHasCompletedOnboarding(profile?.has_completed_onboarding || false);
+        }
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+        setHasCompletedOnboarding(false);
+      } finally {
+        setCheckingOnboarding(false);
+      }
+    };
+
+    checkOnboardingStatus();
+  }, [user]);
+
+  if (loading || checkingOnboarding) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -35,11 +61,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // Check if user should see welcome screen
-  const hasCompletedWelcome = localStorage.getItem('welcome-completed') === 'true';
   const isOnWelcomePage = location.pathname === '/welcome';
   
   // Redirect new users to welcome screen (unless they're already there)
-  if (!hasCompletedWelcome && !isOnWelcomePage) {
+  if (!hasCompletedOnboarding && !isOnWelcomePage) {
     return <Navigate to="/welcome" replace />;
   }
 

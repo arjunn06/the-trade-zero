@@ -79,7 +79,6 @@ export function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
 
   const handleSkipToApp = () => {
     onComplete();
-    navigate('/dashboard');
   };
 
   if (loading) {
