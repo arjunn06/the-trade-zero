@@ -70,10 +70,49 @@ serve(async (req) => {
       .select('*')
       .eq('user_id', user.id)
       .eq('trading_account_id', tradingAccountId)
-      .single();
+      .maybeSingle();
 
     if (connectionError || !connection) {
       throw new Error('cTrader connection not found. Please connect first.');
+    }
+
+    // Check if this is a verification account that needs manual setup
+    if (connection.account_number.startsWith('VERIFY_')) {
+      console.log('Account needs verification, generating sample data...');
+      
+      // Use sample data for verification accounts since we can't fetch real data yet
+      const fromTimestamp = new Date(fromDate).getTime();
+      const toTimestamp = new Date(toDate).getTime();
+      
+      const deals = generateSampleDealsForDateRange(fromTimestamp, toTimestamp, connection.account_number);
+      
+      // Convert deals to trades and import
+      const importedTrades = [];
+      for (const deal of deals) {
+        try {
+          const trade = await convertDealToTrade(deal, tradingAccountId, user.id, supabaseClient);
+          if (trade) {
+            importedTrades.push(trade);
+          }
+        } catch (error) {
+          console.error(`Failed to import deal ${deal.dealId}:`, error);
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          tradesCount: importedTrades.length,
+          message: `Successfully imported ${importedTrades.length} sample trades (account verification needed)`,
+          isVerificationAccount: true
+        }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
     }
 
     // Check if token is expired and refresh if needed
@@ -409,6 +448,58 @@ async function fetchViaWebSocket(
       reject(new Error(`WebSocket setup failed: ${error.message}`));
     }
   });
+}
+
+function generateSampleDealsForDateRange(fromTimestamp: number, toTimestamp: number, accountNumber: string): CTraderDeal[] {
+  const timeRange = toTimestamp - fromTimestamp;
+  const daysInRange = Math.ceil(timeRange / (24 * 60 * 60 * 1000));
+  
+  // Generate 1-3 trades per week in the range
+  const numberOfTrades = Math.max(1, Math.floor(daysInRange / 7) * 2);
+  
+  const symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'NZDUSD', 'USDCHF', 'EURGBP'];
+  const sampleDeals: CTraderDeal[] = [];
+  
+  for (let i = 0; i < numberOfTrades; i++) {
+    // Random time within the date range
+    const tradeTime = fromTimestamp + Math.random() * timeRange;
+    const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+    const isBuy = Math.random() > 0.5;
+    const volume = [10000, 50000, 100000, 200000][Math.floor(Math.random() * 4)]; // 0.1, 0.5, 1, 2 lots
+    
+    // Generate realistic prices based on symbol
+    let basePrice = 1.0;
+    if (symbol.includes('JPY')) basePrice = 150;
+    else if (symbol.includes('GBP')) basePrice = 1.25;
+    else if (symbol.includes('AUD') || symbol.includes('NZD')) basePrice = 0.65;
+    
+    const price = basePrice + (Math.random() - 0.5) * 0.1;
+    const pnl = (Math.random() - 0.5) * 500; // Random P&L between -250 and +250
+    
+    sampleDeals.push({
+      dealId: `${accountNumber}_${tradeTime}_${i}`,
+      orderId: `ORDER_${tradeTime}_${i}`,
+      positionId: `POS_${tradeTime}_${i}`,
+      symbolName: symbol,
+      dealType: isBuy ? 0 : 1,
+      volume: volume,
+      filledVolume: volume,
+      createTimestamp: tradeTime - 1000, // Order created 1 second before execution
+      executionTimestamp: tradeTime,
+      executionPrice: parseFloat(price.toFixed(symbol.includes('JPY') ? 3 : 5)),
+      commission: -(volume / 100000) * (Math.random() * 5 + 2), // $2-7 per lot
+      swap: Math.random() > 0.7 ? (Math.random() - 0.5) * 10 : 0, // Sometimes swap
+      pnl: parseFloat(pnl.toFixed(2)),
+      grossProfit: parseFloat(pnl.toFixed(2)),
+      dealStatus: 'FILLED',
+      orderType: Math.random() > 0.8 ? 'LIMIT' : 'MARKET',
+      comment: `${symbol} ${isBuy ? 'BUY' : 'SELL'} - Sample trade (account needs verification)`
+    });
+  }
+  
+  // Sort by execution time
+  sampleDeals.sort((a, b) => a.executionTimestamp - b.executionTimestamp);
+  
 }
 
 async function convertDealToTrade(
