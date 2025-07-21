@@ -141,22 +141,28 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
     }
   };
 
-  const handleImportTrades = async () => {
+  const handleImportTrades = async (customFromDate?: string, customToDate?: string) => {
     setIsImporting(true);
     try {
+      // Use custom dates if provided, otherwise default to last 30 days
+      const fromDate = customFromDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const toDate = customToDate || new Date().toISOString();
+      
       const { data, error } = await supabase.functions.invoke('ctrader-import', {
         body: {
           tradingAccountId: accountId,
-          fromDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // Last 30 days
-          toDate: new Date().toISOString(),
+          fromDate,
+          toDate,
         },
       });
 
       if (error) throw error;
 
+      const daysImported = Math.ceil((new Date(toDate).getTime() - new Date(fromDate).getTime()) / (24 * 60 * 60 * 1000));
+      
       toast({
         title: "Import Successful",
-        description: `Imported ${data?.tradesCount || 0} trades from cTrader`,
+        description: `Imported ${data?.tradesCount || 0} trades from cTrader (${daysImported} days)`,
       });
 
       // Update last sync time
@@ -171,6 +177,18 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
     } finally {
       setIsImporting(false);
     }
+  };
+
+  const handleImportLatestTrades = async () => {
+    await handleImportTrades(); // Use default 30 days
+  };
+
+  const handleImportAllTrades = async () => {
+    // Import trades from the past year
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    
+    await handleImportTrades(oneYearAgo.toISOString(), new Date().toISOString());
   };
 
   const handleDisconnect = async () => {
@@ -302,9 +320,9 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
               )}
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-col sm:flex-row">
               <Button 
-                onClick={handleImportTrades}
+                onClick={handleImportLatestTrades}
                 disabled={isImporting}
                 className="flex-1"
               >
@@ -313,13 +331,29 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
                 ) : (
                   <Download className="mr-2 h-4 w-4" />
                 )}
-                Import Latest Trades
+                Import Latest (30 days)
               </Button>
 
               <Button 
-                onClick={handleDisconnect}
+                onClick={handleImportAllTrades}
+                disabled={isImporting}
                 variant="outline"
                 className="flex-1"
+              >
+                {isImporting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="mr-2 h-4 w-4" />
+                )}
+                Import All (1 year)
+              </Button>
+            </div>
+
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleDisconnect}
+                variant="outline"
+                className="w-full"
               >
                 Disconnect
               </Button>
