@@ -234,17 +234,9 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
 
           <div className="flex gap-3">
             <Button 
-               onClick={() => {
-                 window.location.href =
-                    "https://connect.spotware.com/apps/auth?" +
-                   new URLSearchParams({
-                     client_id: "16201_rnkQHrJBaM07MDEzuuCrTBsvPEQm2iUzPX0uPuKk0ZmQ4zeJax",
-                     redirect_uri: "https://thetradezero.com/auth/ctrader/callback",
-                     response_type: "code",
-                      scope: "accounts",
-                      }).toString();
-               }}
-              
+              onClick={handleConnect}
+              disabled={isConnecting || !accountNumber.trim()}
+              className="flex-1"
             >
               {isConnecting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
