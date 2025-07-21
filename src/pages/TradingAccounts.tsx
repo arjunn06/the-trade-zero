@@ -36,6 +36,7 @@ interface TradingAccount {
   currency: string;
   is_active: boolean;
   created_at: string;
+  equity_goal?: number;
 }
 
 const TradingAccounts = () => {
@@ -56,7 +57,8 @@ const TradingAccounts = () => {
     initial_balance: '',
     current_balance: '',
     current_equity: '',
-    currency: 'USD'
+    currency: 'USD',
+    equity_goal: ''
   });
 
   // Premium limits for basic users
@@ -105,6 +107,7 @@ const TradingAccounts = () => {
         current_balance: parseFloat(formData.current_balance),
         current_equity: parseFloat(formData.current_equity),
         currency: formData.currency,
+        equity_goal: formData.equity_goal ? parseFloat(formData.equity_goal) : null,
         user_id: user.id
       };
 
@@ -148,7 +151,8 @@ const TradingAccounts = () => {
       initial_balance: account.initial_balance.toString(),
       current_balance: account.current_balance.toString(),
       current_equity: account.current_equity.toString(),
-      currency: account.currency
+      currency: account.currency,
+      equity_goal: (account as any).equity_goal?.toString() || ''
     });
     setDialogOpen(true);
   };
@@ -230,7 +234,8 @@ const TradingAccounts = () => {
       initial_balance: '',
       current_balance: '',
       current_equity: '',
-      currency: 'USD'
+      currency: 'USD',
+      equity_goal: ''
     });
   };
 
@@ -344,6 +349,21 @@ const TradingAccounts = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="equity_goal">Equity Goal (Optional)</Label>
+                  <Input
+                    id="equity_goal"
+                    type="number"
+                    step="0.01"
+                    placeholder="Target equity goal"
+                    value={formData.equity_goal}
+                    onChange={(e) => setFormData({ ...formData, equity_goal: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Set a target equity goal to track your progress
+                  </p>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

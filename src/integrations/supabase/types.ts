@@ -119,6 +119,30 @@ export type Database = {
         }
         Relationships: []
       }
+      ctrader_tokens: {
+        Row: {
+          access_token: string | null
+          expires_at: string | null
+          id: string
+          refresh_token: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          expires_at?: string | null
+          id?: string
+          refresh_token?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          expires_at?: string | null
+          id?: string
+          refresh_token?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           category: string | null
@@ -314,6 +338,7 @@ export type Database = {
           created_at: string
           deal_id: string | null
           deal_status: string | null
+          emotions: string | null
           entry_date: string
           entry_price: number
           execution_price: number | null
@@ -359,6 +384,7 @@ export type Database = {
           created_at?: string
           deal_id?: string | null
           deal_status?: string | null
+          emotions?: string | null
           entry_date: string
           entry_price: number
           execution_price?: number | null
@@ -404,6 +430,7 @@ export type Database = {
           created_at?: string
           deal_id?: string | null
           deal_status?: string | null
+          emotions?: string | null
           entry_date?: string
           entry_price?: number
           execution_price?: number | null
@@ -466,6 +493,7 @@ export type Database = {
           currency: string
           current_balance: number
           current_equity: number
+          equity_goal: number | null
           id: string
           initial_balance: number
           is_active: boolean
@@ -480,6 +508,7 @@ export type Database = {
           currency?: string
           current_balance?: number
           current_equity?: number
+          equity_goal?: number | null
           id?: string
           initial_balance?: number
           is_active?: boolean
@@ -494,6 +523,7 @@ export type Database = {
           currency?: string
           current_balance?: number
           current_equity?: number
+          equity_goal?: number | null
           id?: string
           initial_balance?: number
           is_active?: boolean
