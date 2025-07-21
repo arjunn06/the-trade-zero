@@ -83,6 +83,9 @@ serve(async (req) => {
     authUrl.searchParams.set('state', state);
     authUrl.searchParams.set('response_type', 'code');
 
+    console.log('Generated OAuth URL:', authUrl.toString());
+    console.log('Redirect URI being used:', REDIRECT_URI);
+
     return new Response(
       JSON.stringify({ 
         authUrl: authUrl.toString(),
