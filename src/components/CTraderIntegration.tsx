@@ -360,19 +360,17 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <Button 
-            onClick={() => {
-              window.location.href =
-                "https://connect.spotware.com/apps/auth?" +
-           new URLSearchParams({
-        client_id: "16201_rnkQHrJBaM07MDEzuuCrTBsvPEQm2iUzPX0uPuKk0ZmQ4zeJax",
-        redirect_uri: "https://dynibyqrcbxneiwjyahn.supabase.co/functions/v1/ctrader-callback", // update this if needed
-        response_type: "code",
-        scope: "accounts",
-      }).toString();
-  }}
->
-  Connect cTrader
-</Button>
+            onClick={handleOneClickConnect}
+            disabled={isConnecting}
+            className="w-full"
+          >
+            {isConnecting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <ExternalLink className="mr-2 h-4 w-4" />
+            )}
+            Connect to cTrader
+          </Button>
 
           <div className="bg-muted p-4 rounded-lg">
             <h4 className="font-medium mb-2">✨ Simple One-Click Process:</h4>
