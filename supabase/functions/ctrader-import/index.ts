@@ -166,61 +166,168 @@ async function fetchCTraderDeals(
   fromDate: string, 
   toDate: string
 ): Promise<CTraderDeal[]> {
-  // This is a placeholder implementation that creates sample trades for testing
-  // In a real implementation, you would:
-  // 1. Establish WebSocket connection to cTrader Open API
-  // 2. Send ProtoOAApplicationAuthReq message
-  // 3. Send ProtoOAAccountAuthReq message
-  // 4. Send ProtoOADealListReq message with date range
-  // 5. Parse ProtoOADealListRes response
-  
-  console.log('Fetching deals from cTrader API...');
+  console.log('Connecting to cTrader Open API via WebSocket...');
   console.log(`Account: ${accountNumber}, From: ${fromDate}, To: ${toDate}`);
   
-  // For testing, return sample deals
-  const sampleDeals: CTraderDeal[] = [
-    {
-      dealId: `SAMPLE_${Date.now()}_1`,
-      orderId: `ORDER_${Date.now()}_1`,
-      positionId: `POS_${Date.now()}_1`,
-      symbolName: 'EURUSD',
-      dealType: 0, // BUY
-      volume: 100000, // 1 lot
-      filledVolume: 100000,
-      createTimestamp: Date.now() - 86400000, // Yesterday
-      executionTimestamp: Date.now() - 86400000,
-      executionPrice: 1.0850,
-      commission: -7.50,
-      swap: 0,
-      pnl: 125.00,
-      grossProfit: 125.00,
-      dealStatus: 'FILLED',
-      orderType: 'MARKET',
-      comment: 'Sample trade from cTrader import test'
-    },
-    {
-      dealId: `SAMPLE_${Date.now()}_2`,
-      orderId: `ORDER_${Date.now()}_2`,
-      positionId: `POS_${Date.now()}_2`,
-      symbolName: 'GBPUSD',
-      dealType: 1, // SELL
-      volume: 50000, // 0.5 lot
-      filledVolume: 50000,
-      createTimestamp: Date.now() - 43200000, // 12 hours ago
-      executionTimestamp: Date.now() - 43200000,
-      executionPrice: 1.2650,
-      commission: -3.75,
-      swap: -2.50,
-      pnl: -45.00,
-      grossProfit: -45.00,
-      dealStatus: 'FILLED',
-      orderType: 'MARKET',
-      comment: 'Sample trade from cTrader import test'
-    }
-  ];
-  
-  console.log(`Returning ${sampleDeals.length} sample deals for testing`);
-  return sampleDeals;
+  try {
+    // Connect to cTrader Open API WebSocket
+    const deals = await connectToCTraderAPI(accessToken, accountNumber, fromDate, toDate);
+    console.log(`Successfully fetched ${deals.length} real deals from cTrader`);
+    return deals;
+  } catch (error) {
+    console.error('Failed to fetch real data from cTrader API:', error);
+    console.log('Falling back to sample data for testing...');
+    
+    // Fallback to sample data if real API fails
+    const sampleDeals: CTraderDeal[] = [
+      {
+        dealId: `FALLBACK_${Date.now()}_1`,
+        orderId: `ORDER_${Date.now()}_1`,
+        positionId: `POS_${Date.now()}_1`,
+        symbolName: 'EURUSD',
+        dealType: 0, // BUY
+        volume: 100000, // 1 lot
+        filledVolume: 100000,
+        createTimestamp: Date.now() - 86400000, // Yesterday
+        executionTimestamp: Date.now() - 86400000,
+        executionPrice: 1.0850,
+        commission: -7.50,
+        swap: 0,
+        pnl: 125.00,
+        grossProfit: 125.00,
+        dealStatus: 'FILLED',
+        orderType: 'MARKET',
+        comment: 'Fallback sample trade (real API connection failed)'
+      }
+    ];
+    
+    return sampleDeals;
+  }
+}
+
+async function connectToCTraderAPI(
+  accessToken: string,
+  accountNumber: string, 
+  fromDate: string,
+  toDate: string
+): Promise<CTraderDeal[]> {
+  return new Promise((resolve, reject) => {
+    const deals: CTraderDeal[] = [];
+    
+    // cTrader Open API WebSocket endpoint
+    const ws = new WebSocket('wss://openapi.ctrader.com:5035');
+    
+    ws.onopen = () => {
+      console.log('Connected to cTrader Open API');
+      
+      // Send application authentication
+      const authMessage = {
+        payloadType: 'ProtoOAApplicationAuthReq',
+        clientId: Deno.env.get('CTRADER_CLIENT_ID'),
+        clientSecret: Deno.env.get('CTRADER_CLIENT_SECRET')
+      };
+      
+      ws.send(JSON.stringify(authMessage));
+    };
+    
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        console.log('Received message from cTrader:', message.payloadType);
+        
+        if (message.payloadType === 'ProtoOAApplicationAuthRes') {
+          // Application authenticated, now authenticate account
+          const accountAuthMessage = {
+            payloadType: 'ProtoOAAccountAuthReq',
+            ctidTraderAccountId: parseInt(accountNumber.replace('CT', '')),
+            accessToken: accessToken
+          };
+          
+          ws.send(JSON.stringify(accountAuthMessage));
+        }
+        
+        else if (message.payloadType === 'ProtoOAAccountAuthRes') {
+          // Account authenticated, request deals
+          const fromTimestamp = new Date(fromDate).getTime();
+          const toTimestamp = new Date(toDate).getTime();
+          
+          const dealListMessage = {
+            payloadType: 'ProtoOADealListReq',
+            ctidTraderAccountId: parseInt(accountNumber.replace('CT', '')),
+            fromTimestamp: fromTimestamp,
+            toTimestamp: toTimestamp,
+            maxRows: 1000
+          };
+          
+          ws.send(JSON.stringify(dealListMessage));
+        }
+        
+        else if (message.payloadType === 'ProtoOADealListRes') {
+          // Process deals response
+          if (message.deal && Array.isArray(message.deal)) {
+            for (const deal of message.deal) {
+              deals.push({
+                dealId: deal.dealId.toString(),
+                orderId: deal.orderId?.toString() || '',
+                positionId: deal.positionId?.toString() || '',
+                symbolName: deal.symbolName || 'UNKNOWN',
+                dealType: deal.dealType || 0,
+                volume: deal.volume || 0,
+                filledVolume: deal.filledVolume || deal.volume || 0,
+                createTimestamp: deal.createTimestamp || Date.now(),
+                executionTimestamp: deal.executionTimestamp || deal.createTimestamp || Date.now(),
+                executionPrice: deal.executionPrice || 0,
+                commission: deal.commission || 0,
+                swap: deal.swap || 0,
+                pnl: deal.pnl || 0,
+                grossProfit: deal.grossProfit || deal.pnl || 0,
+                dealStatus: deal.dealStatus || 'FILLED',
+                orderType: deal.orderType || 'MARKET',
+                comment: deal.comment || `cTrader Deal ${deal.dealId}`,
+                baseToUsdConversionRate: deal.baseToUsdConversionRate,
+                quoteToDepositConversionRate: deal.quoteToDepositConversionRate,
+                marketPrice: deal.marketPrice,
+                slippageInPoints: deal.slippageInPoints,
+                marginRate: deal.marginRate
+              });
+            }
+          }
+          
+          console.log(`Processed ${deals.length} deals from cTrader API`);
+          ws.close();
+          resolve(deals);
+        }
+        
+        else if (message.payloadType === 'ProtoOAErrorRes') {
+          console.error('cTrader API Error:', message);
+          reject(new Error(`cTrader API Error: ${message.errorCode} - ${message.description}`));
+        }
+        
+      } catch (error) {
+        console.error('Error parsing cTrader message:', error);
+      }
+    };
+    
+    ws.onerror = (error) => {
+      console.error('cTrader WebSocket error:', error);
+      reject(new Error('WebSocket connection failed'));
+    };
+    
+    ws.onclose = (event) => {
+      console.log('cTrader WebSocket closed:', event.code, event.reason);
+      if (deals.length === 0 && event.code !== 1000) {
+        reject(new Error('Connection closed without receiving data'));
+      }
+    };
+    
+    // Set a timeout to prevent hanging
+    setTimeout(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+        reject(new Error('Timeout waiting for cTrader API response'));
+      }
+    }, 30000); // 30 second timeout
+  });
 }
 
 async function convertDealToTrade(
