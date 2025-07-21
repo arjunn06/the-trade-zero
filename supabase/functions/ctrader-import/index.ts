@@ -471,42 +471,102 @@ async function fetchViaWebSocket(
 async function getRealAccountInfoSimple(accessToken: string) {
   console.log('Attempting to get real account info with access token...');
   
-  // Try the correct cTrader API v2 endpoint
-  try {
-    const response = await fetch('https://openapi.ctrader.com/v2/accounts', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    });
+  return new Promise((resolve, reject) => {
+    let ws: WebSocket;
     
-    console.log('Account API response status:', response.status);
+    const timeout = setTimeout(() => {
+      if (ws) ws.close();
+      reject(new Error('WebSocket timeout'));
+    }, 15000);
     
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Account API response:', JSON.stringify(data, null, 2));
+    try {
+      // Try live endpoint first, then demo
+      const wsUrl = 'wss://live.ctraderapi.com:5036'; // JSON port for live
       
-      // cTrader v2 API returns { data: [accounts] }
-      if (data.data && Array.isArray(data.data) && data.data.length > 0) {
-        const account = data.data[0];
-        return {
-          accountNumber: account.ctidTraderAccountId?.toString() || account.login?.toString(),
-          accountName: account.name || account.displayName || 'Live Account',
-          currency: account.depositCurrency || 'USD'
+      console.log(`Connecting to cTrader Open API: ${wsUrl}`);
+      ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        console.log(`WebSocket connected to ${wsUrl}`);
+        
+        // Step 1: Application authorization
+        const appAuthMessage = {
+          payloadType: "ProtoOAApplicationAuthReq",
+          clientId: Deno.env.get('CTRADER_CLIENT_ID'),
+          clientSecret: Deno.env.get('CTRADER_CLIENT_SECRET')
         };
-      }
-    } else {
-      const errorText = await response.text();
-      console.log('Account API error response:', errorText);
+        
+        ws.send(JSON.stringify(appAuthMessage));
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          console.log('cTrader Open API response:', message.payloadType);
+          
+          if (message.payloadType === 'ProtoOAApplicationAuthRes') {
+            // Step 2: Account authorization with access token
+            const accountAuthMessage = {
+              payloadType: "ProtoOAAccountAuthReq",
+              accessToken: accessToken
+            };
+            
+            ws.send(JSON.stringify(accountAuthMessage));
+            
+          } else if (message.payloadType === 'ProtoOAAccountAuthRes') {
+            // Step 3: Get account list  
+            const accountListMessage = {
+              payloadType: "ProtoOAGetAccountListByAccessTokenReq"
+            };
+            
+            ws.send(JSON.stringify(accountListMessage));
+            
+          } else if (message.payloadType === 'ProtoOAGetAccountListByAccessTokenRes') {
+            clearTimeout(timeout);
+            
+            const accounts = message.ctidTraderAccount || [];
+            
+            if (accounts.length > 0) {
+              const account = accounts[0];
+              ws.close();
+              resolve({
+                accountNumber: account.ctidTraderAccountId?.toString(),
+                accountName: account.traderLogin?.toString() || 'Live Account',
+                currency: account.depositCurrency || 'USD'
+              });
+            } else {
+              ws.close();
+              reject(new Error('No accounts found'));
+            }
+            
+          } else if (message.payloadType && message.payloadType.includes('Error')) {
+            clearTimeout(timeout);
+            ws.close();
+            reject(new Error(`cTrader API Error: ${message.description || message.errorCode}`));
+          }
+          
+        } catch (parseError) {
+          console.log('Error parsing WebSocket message:', parseError);
+        }
+      };
+      
+      ws.onerror = (error) => {
+        clearTimeout(timeout);
+        reject(new Error(`WebSocket error: ${error}`));
+      };
+      
+      ws.onclose = (event) => {
+        clearTimeout(timeout);
+        if (event.code !== 1000) {
+          reject(new Error(`WebSocket closed: ${event.code} ${event.reason}`));
+        }
+      };
+      
+    } catch (error) {
+      clearTimeout(timeout);
+      reject(new Error(`WebSocket setup failed: ${error.message}`));
     }
-    
-    throw new Error(`API response: ${response.status} ${response.statusText}`);
-  } catch (error) {
-    console.error('HTTP account fetch failed:', error);
-    throw new Error(`Unable to fetch account info: ${error.message}`);
-  }
+  });
 }
 
 async function fetchRealTradingData(accessToken: string, accountNumber: string, fromDate: string, toDate: string) {
