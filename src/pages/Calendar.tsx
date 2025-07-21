@@ -82,7 +82,9 @@ export default function CalendarPage() {
 
       if (error) throw error;
 
-      const pnlByDate = trades.reduce((acc: Record<string, { pnl: number; trades: any[] }>, trade) => {
+      type PnLAccumulator = Record<string, { pnl: number; trades: any[] }>;
+
+        const pnlByDate: PnLAccumulator = trades.reduce((acc, trade) => {
         if (trade.exit_date && trade.pnl !== null) {
           const dateKey = format(new Date(trade.exit_date), 'yyyy-MM-dd');
           if (!acc[dateKey]) {
