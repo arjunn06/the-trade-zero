@@ -48,6 +48,7 @@ const NewTrade = () => {
   const [isClosedTrade, setIsClosedTrade] = useState(false);
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [uploadingScreenshots, setUploadingScreenshots] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [formData, setFormData] = useState({
     symbol: '',
     trade_type: '',
@@ -266,6 +267,10 @@ const NewTrade = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    addFiles(files);
+  };
+
+  const addFiles = (files: File[]) => {
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
     
     if (imageFiles.length + screenshots.length > 5) {
@@ -278,6 +283,24 @@ const NewTrade = () => {
     }
     
     setScreenshots(prev => [...prev, ...imageFiles]);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    addFiles(files);
   };
 
   const removeScreenshot = (index: number) => {
@@ -462,152 +485,129 @@ const NewTrade = () => {
           <CardTitle>Trade Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              <div>
-                <Label htmlFor="symbol" className="flex items-center gap-1">
-                  Symbol <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="symbol"
-                  placeholder="e.g., EURUSD, AAPL"
-                  value={formData.symbol}
-                  onChange={(e) => {
-                    setFormData({ ...formData, symbol: e.target.value });
-                    if (formErrors.symbol) {
-                      setFormErrors({ ...formErrors, symbol: '' });
-                    }
-                  }}
-                  className={formErrors.symbol ? 'border-destructive focus-visible:ring-destructive' : ''}
-                  required
-                />
-                {formErrors.symbol && (
-                  <p className="text-sm text-destructive mt-1">{formErrors.symbol}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="trade_type" className="flex items-center gap-1">
-                  Trade Type <span className="text-destructive">*</span>
-                </Label>
-                <Select 
-                  value={formData.trade_type} 
-                  onValueChange={(value) => {
-                    setFormData({ ...formData, trade_type: value });
-                    if (formErrors.trade_type) {
-                      setFormErrors({ ...formErrors, trade_type: '' });
-                    }
-                  }}
-                >
-                  <SelectTrigger className={formErrors.trade_type ? 'border-destructive focus:ring-destructive' : ''}>
-                    <SelectValue placeholder="Select trade type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="long">Long (Buy)</SelectItem>
-                    <SelectItem value="short">Short (Sell)</SelectItem>
-                  </SelectContent>
-                </Select>
-                {formErrors.trade_type && (
-                  <p className="text-sm text-destructive mt-1">{formErrors.trade_type}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="entry_price" className="flex items-center gap-1">
-                  Entry Price <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="entry_price"
-                  type="number"
-                  step="any"
-                  value={formData.entry_price}
-                  onChange={(e) => {
-                    setFormData({ ...formData, entry_price: e.target.value });
-                    if (formErrors.entry_price) {
-                      setFormErrors({ ...formErrors, entry_price: '' });
-                    }
-                  }}
-                  className={formErrors.entry_price ? 'border-destructive focus-visible:ring-destructive' : ''}
-                  required
-                />
-                {formErrors.entry_price && (
-                  <p className="text-sm text-destructive mt-1">{formErrors.entry_price}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="quantity" className="flex items-center gap-1">
-                  Quantity/Lot Size <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  step="any"
-                  value={formData.quantity}
-                  onChange={(e) => {
-                    setFormData({ ...formData, quantity: e.target.value });
-                    if (formErrors.quantity) {
-                      setFormErrors({ ...formErrors, quantity: '' });
-                    }
-                  }}
-                  className={formErrors.quantity ? 'border-destructive focus-visible:ring-destructive' : ''}
-                  required
-                />
-                {formErrors.quantity && (
-                  <p className="text-sm text-destructive mt-1">{formErrors.quantity}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="stop_loss">Stop Loss</Label>
-                <Input
-                  id="stop_loss"
-                  type="number"
-                  step="any"
-                  value={formData.stop_loss}
-                  onChange={(e) => setFormData({ ...formData, stop_loss: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="take_profit">Take Profit</Label>
-                <Input
-                  id="take_profit"
-                  type="number"
-                  step="any"
-                  value={formData.take_profit}
-                  onChange={(e) => setFormData({ ...formData, take_profit: e.target.value })}
-                />
-              </div>
-
-                <div>
-                <Label>Entry Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal text-sm"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
-                      <span className="truncate">
-                        {entryDate ? format(entryDate, "PPP") : "Pick a date"}
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={entryDate}
-                        onSelect={setEntryDate}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Basic Trade Information */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold border-b pb-2">Basic Trade Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="symbol" className="flex items-center gap-1 text-sm font-medium">
+                    Symbol <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="symbol"
+                    placeholder="e.g., EURUSD, AAPL"
+                    value={formData.symbol}
+                    onChange={(e) => {
+                      setFormData({ ...formData, symbol: e.target.value });
+                      if (formErrors.symbol) {
+                        setFormErrors({ ...formErrors, symbol: '' });
+                      }
+                    }}
+                    className={formErrors.symbol ? 'border-destructive focus-visible:ring-destructive' : ''}
+                    required
+                  />
+                  {formErrors.symbol && (
+                    <p className="text-sm text-destructive mt-1">{formErrors.symbol}</p>
+                  )}
                 </div>
 
-                <div>
-                  <Label htmlFor="trading_account" className="flex items-center gap-1">
+                <div className="space-y-2">
+                  <Label htmlFor="trade_type" className="flex items-center gap-1 text-sm font-medium">
+                    Trade Type <span className="text-destructive">*</span>
+                  </Label>
+                  <Select 
+                    value={formData.trade_type} 
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, trade_type: value });
+                      if (formErrors.trade_type) {
+                        setFormErrors({ ...formErrors, trade_type: '' });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className={formErrors.trade_type ? 'border-destructive focus:ring-destructive' : ''}>
+                      <SelectValue placeholder="Select trade type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="long">Long (Buy)</SelectItem>
+                      <SelectItem value="short">Short (Sell)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {formErrors.trade_type && (
+                    <p className="text-sm text-destructive mt-1">{formErrors.trade_type}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="entry_price" className="flex items-center gap-1 text-sm font-medium">
+                    Entry Price <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="entry_price"
+                    type="number"
+                    step="any"
+                    value={formData.entry_price}
+                    onChange={(e) => {
+                      setFormData({ ...formData, entry_price: e.target.value });
+                      if (formErrors.entry_price) {
+                        setFormErrors({ ...formErrors, entry_price: '' });
+                      }
+                    }}
+                    className={formErrors.entry_price ? 'border-destructive focus-visible:ring-destructive' : ''}
+                    required
+                  />
+                  {formErrors.entry_price && (
+                    <p className="text-sm text-destructive mt-1">{formErrors.entry_price}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quantity" className="flex items-center gap-1 text-sm font-medium">
+                    Quantity/Lot Size <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    step="any"
+                    value={formData.quantity}
+                    onChange={(e) => {
+                      setFormData({ ...formData, quantity: e.target.value });
+                      if (formErrors.quantity) {
+                        setFormErrors({ ...formErrors, quantity: '' });
+                      }
+                    }}
+                    className={formErrors.quantity ? 'border-destructive focus-visible:ring-destructive' : ''}
+                    required
+                  />
+                  {formErrors.quantity && (
+                    <p className="text-sm text-destructive mt-1">{formErrors.quantity}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="stop_loss" className="text-sm font-medium">Stop Loss</Label>
+                  <Input
+                    id="stop_loss"
+                    type="number"
+                    step="any"
+                    value={formData.stop_loss}
+                    onChange={(e) => setFormData({ ...formData, stop_loss: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="take_profit" className="text-sm font-medium">Take Profit</Label>
+                  <Input
+                    id="take_profit"
+                    type="number"
+                    step="any"
+                    value={formData.take_profit}
+                    onChange={(e) => setFormData({ ...formData, take_profit: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="trading_account" className="flex items-center gap-1 text-sm font-medium">
                     Trading Account <span className="text-destructive">*</span>
                   </Label>
                   <Select 
@@ -635,32 +635,88 @@ const NewTrade = () => {
                   )}
                 </div>
 
-              <div>
-                <Label htmlFor="strategy">Strategy (Optional)</Label>
-                <Select value={formData.strategy_id} onValueChange={(value) => setFormData({ ...formData, strategy_id: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select strategy" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {strategies.map((strategy) => (
-                      <SelectItem key={strategy.id} value={strategy.id}>
-                        {strategy.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="strategy" className="text-sm font-medium">Strategy (Optional)</Label>
+                  <Select value={formData.strategy_id} onValueChange={(value) => setFormData({ ...formData, strategy_id: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select strategy" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {strategies.map((strategy) => (
+                        <SelectItem key={strategy.id} value={strategy.id}>
+                          {strategy.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div>
-                <Label htmlFor="risk_amount">Risk Amount</Label>
-                <Input
-                  id="risk_amount"
-                  type="number"
-                  step="0.01"
-                  placeholder="Amount at risk"
-                  value={formData.risk_amount}
-                  onChange={(e) => setFormData({ ...formData, risk_amount: e.target.value })}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="risk_amount" className="text-sm font-medium">Risk Amount</Label>
+                  <Input
+                    id="risk_amount"
+                    type="number"
+                    step="0.01"
+                    placeholder="Amount at risk"
+                    value={formData.risk_amount}
+                    onChange={(e) => setFormData({ ...formData, risk_amount: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Entry Details */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold border-b pb-2">Entry Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Entry Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal text-sm"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">
+                          {entryDate ? format(entryDate, "PPP") : "Pick a date"}
+                        </span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={entryDate}
+                        onSelect={setEntryDate}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="include-entry-time"
+                      checked={includeEntryTime}
+                      onCheckedChange={(checked) => setIncludeEntryTime(checked === true)}
+                    />
+                    <Label htmlFor="include-entry-time" className="flex items-center gap-2 text-sm font-medium">
+                      <Clock className="w-4 h-4" />
+                      Include specific entry time
+                    </Label>
+                  </div>
+                  
+                  {includeEntryTime && (
+                    <Input
+                      id="entry-time"
+                      type="time"
+                      value={entryTime}
+                      onChange={(e) => setEntryTime(e.target.value)}
+                    />
+                  )}
+                </div>
               </div>
             </div>
 
@@ -825,224 +881,208 @@ const NewTrade = () => {
               </div>
             )}
 
-            {/* Emotions Section */}
-            <div>
-              <Label htmlFor="emotions">Emotions (Optional)</Label>
-              <Select value={formData.emotions} onValueChange={(value) => setFormData({ ...formData, emotions: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="How did you feel during this trade?" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="confident">Confident</SelectItem>
-                  <SelectItem value="nervous">Nervous</SelectItem>
-                  <SelectItem value="excited">Excited</SelectItem>
-                  <SelectItem value="fearful">Fearful</SelectItem>
-                  <SelectItem value="greedy">Greedy</SelectItem>
-                  <SelectItem value="patient">Patient</SelectItem>
-                  <SelectItem value="impatient">Impatient</SelectItem>
-                  <SelectItem value="calm">Calm</SelectItem>
-                  <SelectItem value="stressed">Stressed</SelectItem>
-                  <SelectItem value="doubtful">Doubtful</SelectItem>
-                  <SelectItem value="focused">Focused</SelectItem>
-                  <SelectItem value="distracted">Distracted</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Entry Time Section */}
-            <div className="border rounded-lg p-4 bg-muted/20">
-              <div className="flex items-center space-x-2 mb-3">
-                <Checkbox
-                  id="include-entry-time"
-                  checked={includeEntryTime}
-                  onCheckedChange={(checked) => setIncludeEntryTime(checked === true)}
-                />
-                <Label htmlFor="include-entry-time" className="flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  Include specific entry time
-                </Label>
-              </div>
-              
-              {includeEntryTime && (
-                <div>
-                  <Label htmlFor="entry-time">Entry Time</Label>
-                  <Input
-                    id="entry-time"
-                    type="time"
-                    value={entryTime}
-                    onChange={(e) => setEntryTime(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Exit Date and Time Section - Enhanced for Closed Trades */}
-            <div className="border rounded-lg p-4 bg-muted/20">
-              <h4 className="font-medium mb-3">
-                {isClosedTrade ? 'Exit Details (Required for closed trades)' : 'Exit Details (Optional)'}
-              </h4>
-              
-              <div className="space-y-3">
-                 <div>
-                   <Label className="flex items-center gap-1">
-                     Exit Date {isClosedTrade && <span className="text-destructive">*</span>}
-                   </Label>
-                   <Popover>
-                     <PopoverTrigger asChild>
-                       <Button
-                         variant="outline"
-                         className={`w-full justify-start text-left font-normal text-sm ${formErrors.exit_date ? 'border-destructive' : ''}`}
-                       >
-                         <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
-                         <span className="truncate">
-                           {exitDate ? format(exitDate, "PPP") : 
-                             isClosedTrade ? "Pick exit date (required)" : "Pick exit date (optional)"
-                           }
-                         </span>
-                       </Button>
-                     </PopoverTrigger>
-                     <PopoverContent className="w-auto p-0" align="start">
-                       <Calendar
-                         mode="single"
-                         selected={exitDate}
-                         onSelect={(date) => {
-                           setExitDate(date);
-                           if (formErrors.exit_date) {
-                             setFormErrors({ ...formErrors, exit_date: '' });
-                           }
-                         }}
-                         initialFocus
-                         className="p-3 pointer-events-auto"
-                       />
-                     </PopoverContent>
-                   </Popover>
-                   {formErrors.exit_date && (
-                     <p className="text-sm text-destructive mt-1">{formErrors.exit_date}</p>
-                   )}
-                 </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="include-exit-time"
-                    checked={includeExitTime}
-                    onCheckedChange={(checked) => setIncludeExitTime(checked === true)}
-                  />
-                  <Label htmlFor="include-exit-time" className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    Include specific exit time
+            {/* Exit Details */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold border-b pb-2">Exit Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1 text-sm font-medium">
+                    Exit Date {isClosedTrade && <span className="text-destructive">*</span>}
                   </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={`w-full justify-start text-left font-normal text-sm ${formErrors.exit_date ? 'border-destructive' : ''}`}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">
+                          {exitDate ? format(exitDate, "PPP") : 
+                            isClosedTrade ? "Pick exit date (required)" : "Pick exit date (optional)"
+                          }
+                        </span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={exitDate}
+                        onSelect={(date) => {
+                          setExitDate(date);
+                          if (formErrors.exit_date) {
+                            setFormErrors({ ...formErrors, exit_date: '' });
+                          }
+                        }}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {formErrors.exit_date && (
+                    <p className="text-sm text-destructive mt-1">{formErrors.exit_date}</p>
+                  )}
                 </div>
-                
-                {includeExitTime && (
-                  <div>
-                    <Label htmlFor="exit-time">Exit Time</Label>
+
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="include-exit-time"
+                      checked={includeExitTime}
+                      onCheckedChange={(checked) => setIncludeExitTime(checked === true)}
+                    />
+                    <Label htmlFor="include-exit-time" className="flex items-center gap-2 text-sm font-medium">
+                      <Clock className="w-4 h-4" />
+                      Include specific exit time
+                    </Label>
+                  </div>
+                  
+                  {includeExitTime && (
                     <Input
                       id="exit-time"
                       type="time"
                       value={exitTime}
                       onChange={(e) => setExitTime(e.target.value)}
-                      className="mt-1"
                     />
-                  </div>
-                )}
+                  )}
+                </div>
 
                 {/* P&L Details for Closed Trades */}
                 {isClosedTrade && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                     <div>
-                       <Label htmlFor="exit_price" className="flex items-center gap-1">
-                         Exit Price <span className="text-destructive">*</span>
-                       </Label>
-                       <Input
-                         id="exit_price"
-                         type="number"
-                         step="any"
-                         placeholder="Exit price"
-                         value={formData.exit_price}
-                         onChange={(e) => {
-                           setFormData({ ...formData, exit_price: e.target.value });
-                           if (formErrors.exit_price) {
-                             setFormErrors({ ...formErrors, exit_price: '' });
-                           }
-                         }}
-                         className={formErrors.exit_price ? 'border-destructive focus-visible:ring-destructive' : ''}
-                         required={isClosedTrade}
-                       />
-                       {formErrors.exit_price && (
-                         <p className="text-sm text-destructive mt-1">{formErrors.exit_price}</p>
-                       )}
-                     </div>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="exit_price" className="flex items-center gap-1 text-sm font-medium">
+                        Exit Price <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="exit_price"
+                        type="number"
+                        step="any"
+                        placeholder="Exit price"
+                        value={formData.exit_price}
+                        onChange={(e) => {
+                          setFormData({ ...formData, exit_price: e.target.value });
+                          if (formErrors.exit_price) {
+                            setFormErrors({ ...formErrors, exit_price: '' });
+                          }
+                        }}
+                        className={formErrors.exit_price ? 'border-destructive focus-visible:ring-destructive' : ''}
+                        required={isClosedTrade}
+                      />
+                      {formErrors.exit_price && (
+                        <p className="text-sm text-destructive mt-1">{formErrors.exit_price}</p>
+                      )}
+                    </div>
 
-                     <div>
-                       <Label htmlFor="pnl" className="flex items-center gap-1">
-                         Profit/Loss <span className="text-destructive">*</span>
-                       </Label>
-                       <Input
-                         id="pnl"
-                         type="number"
-                         step="0.01"
-                         placeholder="P&L amount"
-                         value={formData.pnl}
-                         onChange={(e) => {
-                           setFormData({ ...formData, pnl: e.target.value });
-                           if (formErrors.pnl) {
-                             setFormErrors({ ...formErrors, pnl: '' });
-                           }
-                         }}
-                         className={formErrors.pnl ? 'border-destructive focus-visible:ring-destructive' : ''}
-                         required={isClosedTrade}
-                       />
-                       {formErrors.pnl && (
-                         <p className="text-sm text-destructive mt-1">{formErrors.pnl}</p>
-                       )}
-                       <p className="text-xs text-muted-foreground mt-1">
-                         Enter positive for profit, negative for loss
-                       </p>
-                     </div>
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pnl" className="flex items-center gap-1 text-sm font-medium">
+                        Profit/Loss <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="pnl"
+                        type="number"
+                        step="0.01"
+                        placeholder="P&L amount"
+                        value={formData.pnl}
+                        onChange={(e) => {
+                          setFormData({ ...formData, pnl: e.target.value });
+                          if (formErrors.pnl) {
+                            setFormErrors({ ...formErrors, pnl: '' });
+                          }
+                        }}
+                        className={formErrors.pnl ? 'border-destructive focus-visible:ring-destructive' : ''}
+                        required={isClosedTrade}
+                      />
+                      {formErrors.pnl && (
+                        <p className="text-sm text-destructive mt-1">{formErrors.pnl}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Enter positive for profit, negative for loss
+                      </p>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                placeholder="Trade rationale, setup details, etc."
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                rows={4}
-              />
+            {/* Trading Psychology */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold border-b pb-2">Trading Psychology</h3>
+              <div className="space-y-2">
+                <Label htmlFor="emotions" className="text-sm font-medium">Emotions (Optional)</Label>
+                <Select value={formData.emotions} onValueChange={(value) => setFormData({ ...formData, emotions: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="How did you feel during this trade?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="confident">Confident</SelectItem>
+                    <SelectItem value="nervous">Nervous</SelectItem>
+                    <SelectItem value="excited">Excited</SelectItem>
+                    <SelectItem value="fearful">Fearful</SelectItem>
+                    <SelectItem value="greedy">Greedy</SelectItem>
+                    <SelectItem value="patient">Patient</SelectItem>
+                    <SelectItem value="impatient">Impatient</SelectItem>
+                    <SelectItem value="calm">Calm</SelectItem>
+                    <SelectItem value="stressed">Stressed</SelectItem>
+                    <SelectItem value="doubtful">Doubtful</SelectItem>
+                    <SelectItem value="focused">Focused</SelectItem>
+                    <SelectItem value="distracted">Distracted</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes" className="text-sm font-medium">Notes</Label>
+                <Textarea
+                  id="notes"
+                  placeholder="Trade rationale, setup details, etc."
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  rows={4}
+                />
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="screenshots">Chart Screenshots (Optional)</Label>
-              <PremiumFeature
-                feature="Chart Screenshots"
-                description="Upload and save chart screenshots with your trades. Available in premium plan only."
-                fallback={
-                  <div className="flex items-center justify-center w-full h-32 border-2 border-dashed border-muted-foreground/30 rounded-lg bg-muted/30">
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <ImageIcon className="w-8 h-8 mb-2 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Chart screenshots available in <span className="font-semibold">Premium</span>
-                      </p>
-                      <Button size="sm" variant="outline" onClick={() => navigate('/')}>
-                        Upgrade to Premium
-                      </Button>
+            {/* Chart Screenshots */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold border-b pb-2">Chart Screenshots</h3>
+              <div className="space-y-2">
+                <Label htmlFor="screenshots" className="text-sm font-medium">Chart Screenshots (Optional)</Label>
+                <PremiumFeature
+                  feature="Chart Screenshots"
+                  description="Upload and save chart screenshots with your trades. Available in premium plan only."
+                  fallback={
+                    <div className="flex items-center justify-center w-full h-32 border-2 border-dashed border-muted-foreground/30 rounded-lg bg-muted/30">
+                      <div className="flex flex-col items-center justify-center text-center">
+                        <ImageIcon className="w-8 h-8 mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Chart screenshots available in <span className="font-semibold">Premium</span>
+                        </p>
+                        <Button size="sm" variant="outline" onClick={() => navigate('/')}>
+                          Upgrade to Premium
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                }
-              >
-                <div className="flex items-center justify-center w-full">
-                  <label htmlFor="screenshot-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" />
-                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                        <span className="font-semibold">Click to upload</span> chart screenshots
+                  }
+                >
+                  <div 
+                    className={`relative w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                      isDragging 
+                        ? 'border-primary bg-primary/10' 
+                        : 'border-muted-foreground/30 bg-muted/20 hover:bg-muted/30'
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => document.getElementById('screenshot-upload')?.click()}
+                  >
+                    <div className="flex flex-col items-center justify-center h-full">
+                      <Upload className={`w-8 h-8 mb-2 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <p className={`text-sm font-medium ${isDragging ? 'text-primary' : 'text-muted-foreground'}`}>
+                        {isDragging ? 'Drop files here' : 'Drag & drop or click to upload'}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG, GIF up to 5 files</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        PNG, JPG, GIF up to 5 files
+                      </p>
                     </div>
                     <input
                       id="screenshot-upload"
@@ -1052,35 +1092,40 @@ const NewTrade = () => {
                       accept="image/*"
                       onChange={handleFileChange}
                     />
-                  </label>
-                </div>
-                
-                {screenshots.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {screenshots.map((file, index) => (
-                      <div key={index} className="relative group">
-                        <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={`Screenshot ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeScreenshot(index)}
-                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                        <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                          {file.name.length > 15 ? file.name.substring(0, 15) + '...' : file.name}
-                        </div>
-                      </div>
-                    ))}
                   </div>
-                )}
-              </PremiumFeature>
+                  
+                  {screenshots.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {screenshots.length} file{screenshots.length > 1 ? 's' : ''} selected
+                      </p>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {screenshots.map((file, index) => (
+                          <div key={index} className="relative group">
+                            <div className="aspect-square bg-muted rounded-lg overflow-hidden border">
+                              <img
+                                src={URL.createObjectURL(file)}
+                                alt={`Screenshot ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeScreenshot(index)}
+                              className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                            <div className="absolute bottom-2 left-2 bg-background/90 text-foreground text-xs px-2 py-1 rounded backdrop-blur-sm">
+                              {file.name.length > 15 ? file.name.substring(0, 15) + '...' : file.name}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </PremiumFeature>
+              </div>
             </div>
 
             <div className="flex space-x-4">
