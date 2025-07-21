@@ -385,6 +385,54 @@ const Dashboard = () => {
           />
         </div>
 
+        {/* Account Progress Indicators */}
+        {accounts.filter(acc => acc.equity_goal && acc.equity_goal > 0).length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Target className="h-5 w-5 mr-2" />
+                Equity Goals Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {accounts
+                .filter(acc => acc.equity_goal && acc.equity_goal > 0)
+                .map((account) => {
+                  const progress = (account.current_equity / account.equity_goal!) * 100;
+                  const progressClamped = Math.min(Math.max(progress, 0), 100);
+                  const isGoalAchieved = progress >= 100;
+                  
+                  return (
+                    <div key={account.id} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">{account.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {formatCurrency(account.current_equity, account.currency)} / {formatCurrency(account.equity_goal!, account.currency)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`font-medium ${isGoalAchieved ? 'text-green-600' : ''}`}>
+                            {progressClamped.toFixed(1)}%
+                          </p>
+                          {isGoalAchieved && (
+                            <Badge variant="default" className="text-xs">
+                              Goal Achieved! 🎉
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <Progress 
+                        value={progressClamped} 
+                        className="h-2"
+                      />
+                    </div>
+                  );
+                })}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Charts and Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
           {/* Equity Curve */}
@@ -440,54 +488,6 @@ const Dashboard = () => {
               )}
             </CardContent>
           </Card>
-
-          {/* Account Progress Indicators */}
-          {accounts.filter(acc => acc.equity_goal && acc.equity_goal > 0).length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Target className="h-5 w-5 mr-2" />
-                  Equity Goals Progress
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {accounts
-                  .filter(acc => acc.equity_goal && acc.equity_goal > 0)
-                  .map((account) => {
-                    const progress = (account.current_equity / account.equity_goal!) * 100;
-                    const progressClamped = Math.min(Math.max(progress, 0), 100);
-                    const isGoalAchieved = progress >= 100;
-                    
-                    return (
-                      <div key={account.id} className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium">{account.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {formatCurrency(account.current_equity, account.currency)} / {formatCurrency(account.equity_goal!, account.currency)}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className={`font-medium ${isGoalAchieved ? 'text-green-600' : ''}`}>
-                              {progressClamped.toFixed(1)}%
-                            </p>
-                            {isGoalAchieved && (
-                              <Badge variant="default" className="text-xs">
-                                Goal Achieved! 🎉
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        <Progress 
-                          value={progressClamped} 
-                          className="h-2"
-                        />
-                      </div>
-                    );
-                  })}
-              </CardContent>
-            </Card>
-          )}
 
           {/* Recent Trades */}
           <Card className="metric-card">
