@@ -125,6 +125,7 @@ export type Database = {
           content: string | null
           created_at: string
           id: string
+          images: string[] | null
           is_favorite: boolean
           tags: string[] | null
           title: string
@@ -136,6 +137,7 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
+          images?: string[] | null
           is_favorite?: boolean
           tags?: string[] | null
           title: string
@@ -147,6 +149,7 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
+          images?: string[] | null
           is_favorite?: boolean
           tags?: string[] | null
           title?: string
@@ -237,8 +240,6 @@ export type Database = {
           subscription_tier: string | null
           updated_at: string
           user_id: string | null
-          zoho_customer_id: string | null
-          zoho_subscription_id: string | null
         }
         Insert: {
           created_at?: string
@@ -249,8 +250,6 @@ export type Database = {
           subscription_tier?: string | null
           updated_at?: string
           user_id?: string | null
-          zoho_customer_id?: string | null
-          zoho_subscription_id?: string | null
         }
         Update: {
           created_at?: string
@@ -261,8 +260,6 @@ export type Database = {
           subscription_tier?: string | null
           updated_at?: string
           user_id?: string | null
-          zoho_customer_id?: string | null
-          zoho_subscription_id?: string | null
         }
         Relationships: []
       }

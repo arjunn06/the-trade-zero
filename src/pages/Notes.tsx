@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, StickyNote, Edit, Trash2, Star, StarOff, Search } from 'lucide-react';
+import { Plus, StickyNote, Edit, Trash2, Star, StarOff, Search, Upload, X, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +26,7 @@ interface Note {
   content: string;
   category: string;
   tags: string[];
+  images: string[];
   is_favorite: boolean;
   created_at: string;
   updated_at: string;
@@ -41,6 +42,11 @@ const Notes = () => {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [viewImageDialog, setViewImageDialog] = useState(false);
+  const [selectedViewImage, setSelectedViewImage] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -106,16 +112,57 @@ const Notes = () => {
     setFilteredNotes(filtered);
   };
 
+  const uploadImages = async () => {
+    if (selectedImages.length === 0) return [];
+    
+    setUploading(true);
+    const uploadedUrls: string[] = [];
+
+    try {
+      for (const image of selectedImages) {
+        const fileExt = image.name.split('.').pop();
+        const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('trade-screenshots')
+          .upload(fileName, image);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('trade-screenshots')
+          .getPublicUrl(fileName);
+
+        uploadedUrls.push(publicUrl);
+      }
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload some images",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
+
+    return uploadedUrls;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
     try {
+      const uploadedImageUrls = await uploadImages();
+      const finalImageUrls = [...imageUrls, ...uploadedImageUrls];
+
       const noteData = {
         title: formData.title,
         content: formData.content,
         category: formData.category,
         tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
+        images: finalImageUrls,
         user_id: user.id
       };
 
@@ -158,6 +205,8 @@ const Notes = () => {
       category: note.category || '',
       tags: note.tags?.join(', ') || ''
     });
+    setImageUrls(note.images || []);
+    setSelectedImages([]);
     setDialogOpen(true);
   };
 
@@ -207,6 +256,26 @@ const Notes = () => {
       category: '',
       tags: ''
     });
+    setSelectedImages([]);
+    setImageUrls([]);
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedImages(prev => [...prev, ...files]);
+  };
+
+  const removeSelectedImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingImage = (index: number) => {
+    setImageUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const viewImage = (imageUrl: string) => {
+    setSelectedViewImage(imageUrl);
+    setViewImageDialog(true);
   };
 
   const formatDate = (dateString: string) => {
@@ -280,11 +349,86 @@ const Notes = () => {
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                   rows={8}
-                  required
+                required
                 />
               </div>
-              <Button type="submit" className="w-full">
-                {editingNote ? 'Update' : 'Create'} Note
+              
+              {/* Image Upload Section */}
+              <div>
+                <Label htmlFor="images">Images</Label>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      id="images"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('images')?.click()}
+                      className="flex items-center gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Add Images
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      {selectedImages.length + imageUrls.length} image(s)
+                    </span>
+                  </div>
+                  
+                  {/* Display existing images */}
+                  {imageUrls.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {imageUrls.map((url, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={url}
+                            alt={`Note image ${index + 1}`}
+                            className="w-full h-20 object-cover rounded border cursor-pointer"
+                            onClick={() => viewImage(url)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeExistingImage(index)}
+                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Display selected new images */}
+                  {selectedImages.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {selectedImages.map((file, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`Selected ${index + 1}`}
+                            className="w-full h-20 object-cover rounded border"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeSelectedImage(index)}
+                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={uploading}>
+                {uploading ? 'Uploading...' : editingNote ? 'Update' : 'Create'} Note
               </Button>
             </form>
           </DialogContent>
@@ -381,6 +525,41 @@ const Notes = () => {
                 <p className="text-sm text-muted-foreground line-clamp-4 mb-3">
                   {note.content}
                 </p>
+                
+                {/* Display note images */}
+                {note.images && note.images.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    {note.images.slice(0, 4).map((image, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={image}
+                          alt={`Note image ${index + 1}`}
+                          className="w-full h-24 object-cover rounded border cursor-pointer"
+                          onClick={() => viewImage(image)}
+                        />
+                        {note.images.length > 4 && index === 3 && (
+                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded text-white text-sm">
+                            +{note.images.length - 4} more
+                          </div>
+                        )}
+                        <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 bg-white/80 hover:bg-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              viewImage(image);
+                            }}
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
                 {note.tags && note.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {note.tags.map((tag, index) => (
@@ -395,6 +574,22 @@ const Notes = () => {
           ))}
         </div>
       )}
+      
+      {/* Image View Dialog */}
+      <Dialog open={viewImageDialog} onOpenChange={setViewImageDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>View Image</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <img
+              src={selectedViewImage}
+              alt="Note image"
+              className="max-w-full max-h-[70vh] object-contain rounded"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
     </DashboardLayout>
   );
