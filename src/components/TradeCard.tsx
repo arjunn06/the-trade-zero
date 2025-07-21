@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, ImageIcon, Edit, Trash2, Eye } from 'lucide-react';
+import { TrendingUp, TrendingDown, ImageIcon, Edit, Trash2, Eye, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Trade {
@@ -143,6 +143,15 @@ export function TradeCard({ trade, onClose, onDelete, onViewScreenshots }: Trade
             <Eye className="h-4 w-4 mr-1" />
             View
           </Button>
+          {trade.status === 'open' && onClose && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => handleActionClick(e, () => onClose(trade))}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
           {onDelete && (
             <Button
               size="sm"

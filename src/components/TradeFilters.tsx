@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
 
 interface TradeFiltersProps {
   onFiltersChange: (filters: TradeFilters) => void;
   symbolOptions: string[];
+  accountOptions: { id: string; name: string; }[];
 }
 
 export interface TradeFilters {
   searchTerm: string;
   tradeType: string;
   status: string;
+  accountId: string;
   sortBy: string;
   sortDirection: 'asc' | 'desc';
 }
@@ -19,11 +22,12 @@ const initialFilters: TradeFilters = {
   searchTerm: '',
   tradeType: '',
   status: '',
+  accountId: '',
   sortBy: 'entry_date',
   sortDirection: 'desc'
 };
 
-export function TradeFilters({ onFiltersChange }: TradeFiltersProps) {
+export function TradeFilters({ onFiltersChange, accountOptions }: TradeFiltersProps) {
   const [filters, setFilters] = useState<TradeFilters>(initialFilters);
 
   const updateFilters = (newFilters: Partial<TradeFilters>) => {
@@ -33,7 +37,7 @@ export function TradeFilters({ onFiltersChange }: TradeFiltersProps) {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full space-y-4">
       {/* Search Input */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -43,6 +47,54 @@ export function TradeFilters({ onFiltersChange }: TradeFiltersProps) {
           onChange={(e) => updateFilters({ searchTerm: e.target.value })}
           className="pl-10 w-full"
         />
+      </div>
+
+      {/* Filters Row */}
+      <div className="flex flex-wrap gap-4">
+        {/* Account Filter */}
+        <div className="min-w-[200px]">
+          <Select value={filters.accountId} onValueChange={(value) => updateFilters({ accountId: value })}>
+            <SelectTrigger>
+              <SelectValue placeholder="All accounts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All accounts</SelectItem>
+              {accountOptions.map((account) => (
+                <SelectItem key={account.id} value={account.id}>
+                  {account.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Status Filter */}
+        <div className="min-w-[150px]">
+          <Select value={filters.status} onValueChange={(value) => updateFilters({ status: value })}>
+            <SelectTrigger>
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All statuses</SelectItem>
+              <SelectItem value="open">Open</SelectItem>
+              <SelectItem value="closed">Closed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Trade Type Filter */}
+        <div className="min-w-[150px]">
+          <Select value={filters.tradeType} onValueChange={(value) => updateFilters({ tradeType: value })}>
+            <SelectTrigger>
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All types</SelectItem>
+              <SelectItem value="long">Long</SelectItem>
+              <SelectItem value="short">Short</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
     </div>
   );

@@ -70,6 +70,7 @@ const Trades = () => {
   const { isPremium } = useSubscription();
   const { showUndoToast } = useUndoToast();
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [tradingAccounts, setTradingAccounts] = useState<{ id: string; name: string; }[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -79,6 +80,7 @@ const Trades = () => {
     searchTerm: '',
     tradeType: '',
     status: '',
+    accountId: '',
     sortBy: 'entry_date',
     sortDirection: 'desc'
   });
@@ -102,6 +104,7 @@ const Trades = () => {
   useEffect(() => {
     if (user) {
       fetchTrades();
+      fetchTradingAccounts();
     }
   }, [user]);
 
@@ -130,6 +133,24 @@ const Trades = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTradingAccounts = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('trading_accounts')
+        .select('id, name')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setTradingAccounts(data || []);
+    } catch (error) {
+      console.error('Error fetching trading accounts:', error);
     }
   };
 
@@ -304,6 +325,21 @@ const Trades = () => {
           return false;
         }
       }
+
+      // Account filter
+      if (filters.accountId && trade.trading_account_id !== filters.accountId) {
+        return false;
+      }
+
+      // Status filter
+      if (filters.status && trade.status !== filters.status) {
+        return false;
+      }
+
+      // Trade type filter
+      if (filters.tradeType && trade.trade_type !== filters.tradeType) {
+        return false;
+      }
       
       return true;
     });
@@ -363,6 +399,7 @@ const Trades = () => {
           <TradeFilters
             onFiltersChange={setFilters}
             symbolOptions={symbolOptions}
+            accountOptions={tradingAccounts}
           />
         )}
 

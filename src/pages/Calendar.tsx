@@ -37,30 +37,63 @@ export default function CalendarPage() {
   const [dayPnLData, setDayPnLData] = useState<DayPnL[]>([]);
   const [periodMetrics, setPeriodMetrics] = useState<PeriodMetrics | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month'>('week');
+  const [selectedAccount, setSelectedAccount] = useState<string>('');
+  const [tradingAccounts, setTradingAccounts] = useState<{ id: string; name: string; }[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
   useEffect(() => {
     if (user) {
       fetchPnLData();
+      fetchTradingAccounts();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchPnLData();
+    }
+  }, [user, selectedAccount]);
 
   useEffect(() => {
     if (date && user) {
       fetchTradesForDate(date);
       calculatePeriodMetrics();
     }
-  }, [date, user, selectedPeriod, dayPnLData]);
+  }, [date, user, selectedPeriod, dayPnLData, selectedAccount]);
+
+  const fetchTradingAccounts = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('trading_accounts')
+        .select('id, name')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setTradingAccounts(data || []);
+    } catch (error) {
+      console.error('Error fetching trading accounts:', error);
+    }
+  };
 
   const fetchPnLData = async () => {
     try {
-      const { data: trades, error } = await supabase
+      let query = supabase
         .from('trades')
-        .select('exit_date, entry_date, pnl, symbol, trade_type')
+        .select('exit_date, entry_date, pnl, symbol, trade_type, trading_account_id')
         .eq('user_id', user?.id)
         .eq('status', 'closed')
         .not('pnl', 'is', null);
+
+      if (selectedAccount) {
+        query = query.eq('trading_account_id', selectedAccount);
+      }
+
+      const { data: trades, error } = await query;
 
       if (error) throw error;
 
@@ -103,7 +136,7 @@ export default function CalendarPage() {
 
   const fetchTradesForDate = async (selectedDate: Date) => {
     try {
-      const { data: trades, error } = await supabase
+      let query = supabase
         .from('trades')
         .select(`
           *,
@@ -114,6 +147,12 @@ export default function CalendarPage() {
         .gte('exit_date', startOfDay(selectedDate).toISOString())
         .lte('exit_date', endOfDay(selectedDate).toISOString())
         .eq('status', 'closed');
+
+      if (selectedAccount) {
+        query = query.eq('trading_account_id', selectedAccount);
+      }
+
+      const { data: trades, error } = await query;
 
       if (error) throw error;
       setSelectedDateTrades(trades || []);
@@ -233,9 +272,26 @@ export default function CalendarPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">P&L Calendar</h1>
-          <p className="text-muted-foreground">Track your daily trading performance</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">P&L Calendar</h1>
+            <p className="text-muted-foreground">Track your daily trading performance</p>
+          </div>
+          <div className="min-w-[200px]">
+            <Select value={selectedAccount} onValueChange={setSelectedAccount}>
+              <SelectTrigger>
+                <SelectValue placeholder="All accounts" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All accounts</SelectItem>
+                {tradingAccounts.map((account) => (
+                  <SelectItem key={account.id} value={account.id}>
+                    {account.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
