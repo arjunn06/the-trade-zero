@@ -42,29 +42,6 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (user) {
-      fetchAccounts();
-      fetchPnLData();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (date && user) {
-      fetchTradesForDate(date);
-      calculatePeriodMetrics();
-    }
-  }, [date, user, selectedPeriod, dayPnLData, selectedAccount]);
-
-  const fetchAccounts = async () => {
-    const { data, error } = await supabase
-      .from('trading_accounts')
-      .select('*')
-      .eq('user_id', user?.id);
-
-    if (!error) setAccounts(data || []);
-  };
-
   const fetchPnLData = async () => {
   try {
     const { data: trades, error } = await supabase
@@ -85,9 +62,8 @@ export default function CalendarPage() {
 
     type PnLAccumulator = Record<string, { pnl: number; trades: Trade[] }>;
 
-    function groupPnLByDate(trades: Trade[]): PnLAccumulator {
+    const groupPnLByDate = (trades: Trade[]): PnLAccumulator => {
       const acc: PnLAccumulator = {};
-
       for (const trade of trades) {
         const dateKey = format(new Date(trade.exit_date), 'yyyy-MM-dd');
         if (!acc[dateKey]) {
@@ -96,9 +72,8 @@ export default function CalendarPage() {
         acc[dateKey].pnl += Number(trade.pnl);
         acc[dateKey].trades.push(trade);
       }
-
       return acc;
-    }
+    };
 
     const pnlByDate = groupPnLByDate(trades);
 
@@ -126,6 +101,42 @@ export default function CalendarPage() {
     setLoading(false);
   }
 };
+  
+  useEffect(() => {
+    if (user) {
+      fetchAccounts();
+      fetchPnLData();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (date && user) {
+      fetchTradesForDate(date);
+      calculatePeriodMetrics();
+    }
+  }, [date, user, selectedPeriod, dayPnLData, selectedAccount]);
+
+  const fetchAccounts = async () => {
+    const { data, error } = await supabase
+      .from('trading_accounts')
+      .select('*')
+      .eq('user_id', user?.id);
+
+    if (!error) setAccounts(data || []);
+  };
+
+  const fetchPnLData = async () => {
+    try {
+      let query = supabase
+        .from('trades')
+        .select('exit_date, entry_date, pnl, symbol, trade_type')
+        .eq('user_id', user?.id)
+        .eq('status', 'closed')
+        .not('pnl', 'is', null);
+
+      if (selectedAccount) {
+        query = query.eq('account_id', selectedAccount);
+      }
 
       const { data: trades, error } = await query;
 
@@ -133,7 +144,7 @@ export default function CalendarPage() {
 
       type PnLAccumulator = Record<string, { pnl: number; trades: any[] }>;
 
-       const pnlByDate: PnLAccumulator = trades.reduce((acc, trade) => {
+      const pnlByDate: PnLAccumulator = trades.reduce((acc, trade) => {
         if (trade.exit_date && trade.pnl !== null) {
           const dateKey = format(new Date(trade.exit_date), 'yyyy-MM-dd');
           if (!acc[dateKey]) {
