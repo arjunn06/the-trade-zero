@@ -355,10 +355,10 @@ async function fetchAccountViaWebSocket(accessToken: string, endpoint: string) {
               reject(new Error('No accounts found'));
             }
             
-          } else if (message.payloadType && message.payloadType.includes('Error')) {
+          } else if (message.payloadType === 2142 || (message.payload && message.payload.errorCode)) {
             clearTimeout(timeout);
             ws.close();
-            reject(new Error(`cTrader API Error: ${message.description || message.errorCode}`));
+            reject(new Error(`cTrader API Error: ${message.payload?.description || message.payload?.errorCode || 'Unknown error'}`));
           }
           
         } catch (parseError) {
