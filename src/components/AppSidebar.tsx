@@ -28,7 +28,6 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { UserProfileManager } from '@/components/UserProfileManager';
-import { useSubscription } from '@/hooks/useSubscription';
 
 const menuItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
@@ -50,7 +49,6 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const collapsed = state === 'collapsed';
-  const { isPremium } = useSubscription();
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = (isActive: boolean) =>
@@ -114,26 +112,19 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <div className="space-y-1">
-              {systemItems.map((item) => {
-                // Hide upgrade button for premium users
-                if (item.title === 'Upgrade' && isPremium) {
-                  return null;
-                }
-                
-                return (
-                  <Button
-                    key={item.title}
-                    variant="ghost"
-                    asChild
-                    className={getNavCls(currentPath === item.url)}
-                  >
-                    <NavLink to={item.url} end>
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span className="ml-3">{item.title}</span>}
-                    </NavLink>
-                  </Button>
-                );
-              })}
+              {systemItems.map((item) => (
+                <Button
+                  key={item.title}
+                  variant="ghost"
+                  asChild
+                  className={getNavCls(currentPath === item.url)}
+                >
+                  <NavLink to={item.url} end>
+                    <item.icon className="h-4 w-4" />
+                    {!collapsed && <span className="ml-3">{item.title}</span>}
+                  </NavLink>
+                </Button>
+              ))}
             </div>
           </SidebarGroupContent>
         </SidebarGroup>

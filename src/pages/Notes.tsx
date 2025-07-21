@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, StickyNote, Edit, Trash2, Star, StarOff, Search, Upload, X, Eye, Maximize2 } from 'lucide-react';
+import { Plus, StickyNote, Edit, Trash2, Star, StarOff, Search, Upload, X, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -19,7 +19,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NoteFullScreenView } from '@/components/NoteFullScreenView';
 
 interface Note {
   id: string;
@@ -48,8 +47,6 @@ const Notes = () => {
   const [uploading, setUploading] = useState(false);
   const [viewImageDialog, setViewImageDialog] = useState(false);
   const [selectedViewImage, setSelectedViewImage] = useState('');
-  const [fullScreenNote, setFullScreenNote] = useState<Note | null>(null);
-  const [fullScreenOpen, setFullScreenOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -281,21 +278,6 @@ const Notes = () => {
     setViewImageDialog(true);
   };
 
-  const openFullScreen = (note: Note) => {
-    setFullScreenNote(note);
-    setFullScreenOpen(true);
-  };
-
-  const handleFullScreenEdit = (note: Note) => {
-    setFullScreenOpen(false);
-    handleEdit(note);
-  };
-
-  const handleFullScreenDelete = (id: string) => {
-    setFullScreenOpen(false);
-    handleDelete(id);
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -522,14 +504,6 @@ const Notes = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => openFullScreen(note)}
-                      title="View full screen"
-                    >
-                      <Maximize2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
                       onClick={() => toggleFavorite(note)}
                     >
                       {note.is_favorite ? (
@@ -616,17 +590,6 @@ const Notes = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Full Screen Note View */}
-      <NoteFullScreenView
-        note={fullScreenNote}
-        open={fullScreenOpen}
-        onOpenChange={setFullScreenOpen}
-        onEdit={handleFullScreenEdit}
-        onDelete={handleFullScreenDelete}
-        onToggleFavorite={toggleFavorite}
-        onImageClick={viewImage}
-      />
       </div>
     </DashboardLayout>
   );
