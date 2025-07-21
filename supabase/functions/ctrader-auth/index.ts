@@ -85,7 +85,8 @@ serve(async (req) => {
 
     console.log('Generated OAuth URL:', authUrl.toString());
     console.log('Redirect URI being used:', REDIRECT_URI);
-
+    console.log('Client ID being used:', CTRADER_CLIENT_ID);
+    
     return new Response(
       JSON.stringify({ 
         authUrl: authUrl.toString(),
