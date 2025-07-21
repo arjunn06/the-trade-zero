@@ -78,7 +78,7 @@ serve(async (req) => {
         user_id: user.id,
         account_number: '', // Will be filled during callback when user selects account
         trading_account_id: tradingAccountId,
-        expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
+        expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
       });
 
     // Build OAuth URL
