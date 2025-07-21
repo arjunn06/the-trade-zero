@@ -66,17 +66,66 @@ export default function CalendarPage() {
   };
 
   const fetchPnLData = async () => {
-    try {
-      let query = supabase
-        .from('trades')
-        .select('exit_date, entry_date, pnl, symbol, trade_type')
-        .eq('user_id', user?.id)
-        .eq('status', 'closed')
-        .not('pnl', 'is', null);
+  try {
+    const { data: trades, error } = await supabase
+      .from('trades')
+      .select('exit_date, entry_date, pnl, symbol, trade_type')
+      .eq('user_id', user?.id)
+      .eq('status', 'closed')
+      .not('pnl', 'is', null);
 
-      if (selectedAccount) {
-        query = query.eq('account_id', selectedAccount);
+    if (error) throw error;
+
+    type Trade = {
+      exit_date: string;
+      pnl: number;
+      symbol: string;
+      trade_type: string;
+    };
+
+    type PnLAccumulator = Record<string, { pnl: number; trades: Trade[] }>;
+
+    function groupPnLByDate(trades: Trade[]): PnLAccumulator {
+      const acc: PnLAccumulator = {};
+
+      for (const trade of trades) {
+        const dateKey = format(new Date(trade.exit_date), 'yyyy-MM-dd');
+        if (!acc[dateKey]) {
+          acc[dateKey] = { pnl: 0, trades: [] };
+        }
+        acc[dateKey].pnl += Number(trade.pnl);
+        acc[dateKey].trades.push(trade);
       }
+
+      return acc;
+    }
+
+    const pnlByDate = groupPnLByDate(trades);
+
+    const dayPnLArray: DayPnL[] = Object.entries(pnlByDate).map(([date, data]) => {
+      const winningTrades = data.trades.filter(t => Number(t.pnl) > 0);
+      const losingTrades = data.trades.filter(t => Number(t.pnl) < 0);
+      const winRate = data.trades.length > 0 ? (winningTrades.length / data.trades.length) * 100 : 0;
+      const bestTrade = data.trades.length > 0 ? Math.max(...data.trades.map(t => Number(t.pnl))) : 0;
+      const worstTrade = data.trades.length > 0 ? Math.min(...data.trades.map(t => Number(t.pnl))) : 0;
+
+      return {
+        date,
+        pnl: data.pnl,
+        trades: data.trades.length,
+        winRate,
+        bestTrade,
+        worstTrade,
+      };
+    });
+
+    setDayPnLData(dayPnLArray);
+  } catch (error) {
+    console.error('Error fetching P&L data:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
       const { data: trades, error } = await query;
 
@@ -84,7 +133,7 @@ export default function CalendarPage() {
 
       type PnLAccumulator = Record<string, { pnl: number; trades: any[] }>;
 
-        const pnlByDate: PnLAccumulator = trades.reduce((acc, trade) => {
+       const pnlByDate: PnLAccumulator = trades.reduce((acc, trade) => {
         if (trade.exit_date && trade.pnl !== null) {
           const dateKey = format(new Date(trade.exit_date), 'yyyy-MM-dd');
           if (!acc[dateKey]) {
