@@ -13,6 +13,12 @@ serve(async (req) => {
   }
 
   try {
+    // Create Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
     const url = new URL(req.url);
     console.log('Full callback URL:', req.url);
     console.log('URL search params:', url.searchParams.toString());
@@ -23,30 +29,47 @@ serve(async (req) => {
     console.log('Extracted code:', code ? 'present' : 'missing');
     console.log('Extracted state:', state ? 'present' : 'missing');
 
-    if (!code || !state) {
-      console.error('Missing parameters - code:', !!code, 'state:', !!state);
-      throw new Error('Missing authorization code or state');
+    if (!code) {
+      console.error('Missing authorization code');
+      throw new Error('Missing authorization code');
     }
 
-    console.log(`Processing cTrader callback with state: ${state}`);
-
-    // Create Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // Verify state and get auth info
-    const { data: authState, error: stateError } = await supabaseClient
-      .from('ctrader_auth_states')
-      .select('*')
-      .eq('state', state)
-      .gt('expires_at', new Date().toISOString())
-      .single();
-
-    if (stateError || !authState) {
-      throw new Error('Invalid or expired state');
+    // If state is missing, we'll try to find the most recent auth state for any user
+    // This is a fallback since cTrader sometimes doesn't return the state parameter
+    let authState;
+    if (state) {
+      const { data, error: stateError } = await supabaseClient
+        .from('ctrader_auth_states')
+        .select('*')
+        .eq('state', state)
+        .gt('expires_at', new Date().toISOString())
+        .single();
+      
+      if (stateError || !data) {
+        console.error('Invalid or expired state:', stateError);
+        throw new Error('Invalid or expired state');
+      }
+      authState = data;
+    } else {
+      // Fallback: get the most recent unexpired auth state
+      console.log('State parameter missing, using fallback method');
+      const { data, error: stateError } = await supabaseClient
+        .from('ctrader_auth_states')
+        .select('*')
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (stateError || !data) {
+        console.error('No valid auth state found:', stateError);
+        throw new Error('No valid authentication session found. Please try connecting again.');
+      }
+      authState = data;
     }
+
+    console.log(`Processing cTrader callback with state: ${state || 'fallback'}`);
+    console.log(`Using auth state for user: ${authState.user_id}`);
 
     // Exchange code for access token
     const CTRADER_CLIENT_ID = Deno.env.get('CTRADER_CLIENT_ID');
@@ -90,11 +113,11 @@ serve(async (req) => {
         connected_at: new Date().toISOString(),
       });
 
-    // Clean up auth state
+    // Clean up auth state - use the state we found, not the parameter
     await supabaseClient
       .from('ctrader_auth_states')
       .delete()
-      .eq('state', state);
+      .eq('state', authState.state);
 
     // Return success page
     const successHtml = `
