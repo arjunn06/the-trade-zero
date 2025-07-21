@@ -13,63 +13,102 @@ serve(async (req) => {
   }
 
   try {
-    // Create Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
     const url = new URL(req.url);
     console.log('Full callback URL:', req.url);
     console.log('URL search params:', url.searchParams.toString());
     
     const code = url.searchParams.get('code');
     const state = url.searchParams.get('state');
+    const error = url.searchParams.get('error');
+    const errorDescription = url.searchParams.get('error_description');
     
     console.log('Extracted code:', code ? 'present' : 'missing');
     console.log('Extracted state:', state ? 'present' : 'missing');
+    console.log('OAuth error:', error);
+    console.log('OAuth error description:', errorDescription);
 
-    if (!code) {
-      console.error('Missing authorization code');
-      throw new Error('Missing authorization code');
+    // Check for OAuth errors first
+    if (error) {
+      console.error('OAuth error received:', error, errorDescription);
+      throw new Error(`OAuth error: ${error} - ${errorDescription}`);
     }
 
-    // If state is missing, we'll try to find the most recent auth state for any user
-    // This is a fallback since cTrader sometimes doesn't return the state parameter
-    let authState;
+    if (!code) {
+      console.error('Missing authorization code from cTrader');
+      throw new Error('Missing authorization code from cTrader OAuth flow');
+    }
+
+    // Create Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    console.log('Looking for auth states...');
+    
+    // Get all current auth states for debugging
+    const { data: allStates } = await supabaseClient
+      .from('ctrader_auth_states')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    console.log('All auth states in DB:', allStates?.length || 0);
+    console.log('Auth states:', allStates?.map(s => ({
+      state: s.state.substring(0, 8) + '...',
+      expires_at: s.expires_at,
+      is_expired: new Date(s.expires_at) < new Date(),
+      created_at: s.created_at
+    })));
+
+    // Try to find auth state by state parameter first
+    let authState = null;
     if (state) {
+      console.log('Searching for state:', state.substring(0, 8) + '...');
       const { data, error: stateError } = await supabaseClient
         .from('ctrader_auth_states')
         .select('*')
         .eq('state', state)
         .gt('expires_at', new Date().toISOString())
-        .single();
+        .maybeSingle();
       
-      if (stateError || !data) {
-        console.error('Invalid or expired state:', stateError);
-        throw new Error('Invalid or expired state');
+      if (data) {
+        authState = data;
+        console.log('Found auth state by state parameter');
+      } else {
+        console.log('State not found or expired:', stateError?.message);
       }
-      authState = data;
-    } else {
-      // Fallback: get the most recent unexpired auth state
-      console.log('State parameter missing, using fallback method');
-      const { data, error: stateError } = await supabaseClient
+    }
+
+    // If no state found by parameter, try fallback to most recent valid state
+    if (!authState) {
+      console.log('Using fallback: searching for most recent valid auth state');
+      const { data, error: fallbackError } = await supabaseClient
         .from('ctrader_auth_states')
         .select('*')
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
       
-      if (stateError || !data) {
-        console.error('No valid auth state found:', stateError);
-        throw new Error('No valid authentication session found. Please try connecting again.');
+      if (data) {
+        authState = data;
+        console.log('Found auth state via fallback method');
+      } else {
+        console.log('No valid auth state found via fallback:', fallbackError?.message);
       }
-      authState = data;
     }
 
-    console.log(`Processing cTrader callback with state: ${state || 'fallback'}`);
-    console.log(`Using auth state for user: ${authState.user_id}`);
+    if (!authState) {
+      console.error('No valid authentication session found');
+      console.log('Current time:', new Date().toISOString());
+      console.log('Recent auth states:');
+      allStates?.slice(0, 3).forEach(s => {
+        console.log(`- State: ${s.state.substring(0, 8)}..., expires: ${s.expires_at}, expired: ${new Date(s.expires_at) < new Date()}`);
+      });
+      throw new Error('No valid authentication session found. Please try connecting again from the Trading Accounts page.');
+    }
+
+    console.log(`Processing cTrader callback for user: ${authState.user_id}`);
 
     // Exchange code for access token
     const CTRADER_CLIENT_ID = Deno.env.get('CTRADER_CLIENT_ID');
