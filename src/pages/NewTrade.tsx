@@ -14,7 +14,8 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumFeature } from '@/components/PremiumFeature';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Upload, X, ImageIcon } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CalendarIcon, Upload, X, ImageIcon, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TradingAccount {
@@ -39,6 +40,11 @@ const NewTrade = () => {
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [entryDate, setEntryDate] = useState<Date | undefined>(new Date());
+  const [exitDate, setExitDate] = useState<Date | undefined>();
+  const [entryTime, setEntryTime] = useState<string>('');
+  const [exitTime, setExitTime] = useState<string>('');
+  const [includeEntryTime, setIncludeEntryTime] = useState(false);
+  const [includeExitTime, setIncludeExitTime] = useState(false);
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [uploadingScreenshots, setUploadingScreenshots] = useState(false);
   const [formData, setFormData] = useState({
@@ -51,6 +57,7 @@ const NewTrade = () => {
     trading_account_id: '',
     strategy_id: '',
     notes: '',
+    emotions: '',
     risk_amount: '',
     risk_reward_ratio: '',
     // Advanced cTrader fields
@@ -99,6 +106,7 @@ const NewTrade = () => {
         trading_account_id: data.trading_account_id || '',
         strategy_id: data.strategy_id || '',
         notes: data.notes || '',
+        emotions: (data as any).emotions || '',
         risk_amount: data.risk_amount?.toString() || '',
         risk_reward_ratio: data.risk_reward_ratio?.toString() || '',
         order_type: data.order_type || '',
@@ -113,6 +121,20 @@ const NewTrade = () => {
 
       if (data.entry_date) {
         setEntryDate(new Date(data.entry_date));
+        const entryDateObj = new Date(data.entry_date);
+        const entryHours = entryDateObj.getHours().toString().padStart(2, '0');
+        const entryMinutes = entryDateObj.getMinutes().toString().padStart(2, '0');
+        setEntryTime(`${entryHours}:${entryMinutes}`);
+        setIncludeEntryTime(true);
+      }
+      
+      if (data.exit_date) {
+        setExitDate(new Date(data.exit_date));
+        const exitDateObj = new Date(data.exit_date);
+        const exitHours = exitDateObj.getHours().toString().padStart(2, '0');
+        const exitMinutes = exitDateObj.getMinutes().toString().padStart(2, '0');
+        setExitTime(`${exitHours}:${exitMinutes}`);
+        setIncludeExitTime(true);
       }
     } catch (error) {
       console.error('Error fetching trade:', error);
@@ -235,6 +257,25 @@ const NewTrade = () => {
       // Upload screenshots first
       const screenshotUrls = await uploadScreenshots();
       
+      // Prepare entry date with optional time
+      let entryDateWithTime = entryDate;
+      if (includeEntryTime && entryTime) {
+        const [hours, minutes] = entryTime.split(':');
+        entryDateWithTime = new Date(entryDate);
+        entryDateWithTime.setHours(parseInt(hours), parseInt(minutes));
+      }
+
+      // Prepare exit date with optional time
+      let exitDateWithTime = null;
+      if (exitDate) {
+        exitDateWithTime = exitDate;
+        if (includeExitTime && exitTime) {
+          const [hours, minutes] = exitTime.split(':');
+          exitDateWithTime = new Date(exitDate);
+          exitDateWithTime.setHours(parseInt(hours), parseInt(minutes));
+        }
+      }
+
       const tradeData = {
         symbol: formData.symbol.toUpperCase(),
         trade_type: formData.trade_type,
@@ -242,10 +283,12 @@ const NewTrade = () => {
         quantity: parseFloat(formData.quantity),
         stop_loss: formData.stop_loss ? parseFloat(formData.stop_loss) : null,
         take_profit: formData.take_profit ? parseFloat(formData.take_profit) : null,
-        entry_date: entryDate.toISOString(),
+        entry_date: entryDateWithTime.toISOString(),
+        exit_date: exitDateWithTime ? exitDateWithTime.toISOString() : null,
         trading_account_id: formData.trading_account_id,
         strategy_id: formData.strategy_id || null,
         notes: formData.notes,
+        emotions: formData.emotions || null,
         risk_amount: formData.risk_amount ? parseFloat(formData.risk_amount) : null,
         risk_reward_ratio: calculateRiskReward() || null,
         status: 'open',
@@ -624,6 +667,116 @@ const NewTrade = () => {
                 </div>
               </div>
             )}
+
+            {/* Emotions Section */}
+            <div>
+              <Label htmlFor="emotions">Emotions (Optional)</Label>
+              <Select value={formData.emotions} onValueChange={(value) => setFormData({ ...formData, emotions: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="How did you feel during this trade?" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="confident">Confident</SelectItem>
+                  <SelectItem value="nervous">Nervous</SelectItem>
+                  <SelectItem value="excited">Excited</SelectItem>
+                  <SelectItem value="fearful">Fearful</SelectItem>
+                  <SelectItem value="greedy">Greedy</SelectItem>
+                  <SelectItem value="patient">Patient</SelectItem>
+                  <SelectItem value="impatient">Impatient</SelectItem>
+                  <SelectItem value="calm">Calm</SelectItem>
+                  <SelectItem value="stressed">Stressed</SelectItem>
+                  <SelectItem value="doubtful">Doubtful</SelectItem>
+                  <SelectItem value="focused">Focused</SelectItem>
+                  <SelectItem value="distracted">Distracted</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Entry Time Section */}
+            <div className="border rounded-lg p-4 bg-muted/20">
+              <div className="flex items-center space-x-2 mb-3">
+                <Checkbox
+                  id="include-entry-time"
+                  checked={includeEntryTime}
+                  onCheckedChange={(checked) => setIncludeEntryTime(checked === true)}
+                />
+                <Label htmlFor="include-entry-time" className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Include specific entry time
+                </Label>
+              </div>
+              
+              {includeEntryTime && (
+                <div>
+                  <Label htmlFor="entry-time">Entry Time</Label>
+                  <Input
+                    id="entry-time"
+                    type="time"
+                    value={entryTime}
+                    onChange={(e) => setEntryTime(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Exit Date and Time Section */}
+            <div className="border rounded-lg p-4 bg-muted/20">
+              <h4 className="font-medium mb-3">Exit Details (Optional)</h4>
+              
+              <div className="space-y-3">
+                <div>
+                  <Label>Exit Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal text-sm"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">
+                          {exitDate ? format(exitDate, "PPP") : "Pick exit date (optional)"}
+                        </span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 max-w-[280px]" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={exitDate}
+                        onSelect={setExitDate}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="include-exit-time"
+                    checked={includeExitTime}
+                    onCheckedChange={(checked) => setIncludeExitTime(checked === true)}
+                  />
+                  <Label htmlFor="include-exit-time" className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Include specific exit time
+                  </Label>
+                </div>
+                
+                {includeExitTime && (
+                  <div>
+                    <Label htmlFor="exit-time">Exit Time</Label>
+                    <Input
+                      id="exit-time"
+                      type="time"
+                      value={exitTime}
+                      onChange={(e) => setExitTime(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
 
             <div>
               <Label htmlFor="notes">Notes</Label>
