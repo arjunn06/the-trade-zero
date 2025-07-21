@@ -46,7 +46,7 @@ serve(async (req) => {
     const CTRADER_CLIENT_SECRET = Deno.env.get('CTRADER_CLIENT_SECRET');
     const REDIRECT_URI = `${Deno.env.get('SUPABASE_URL')}/functions/v1/ctrader-callback`;
 
-    const tokenResponse = await fetch('https://openapi.ctrader.com/apps/token', {
+    const tokenResponse = await fetch('https://connect.spotware.com/apps/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
