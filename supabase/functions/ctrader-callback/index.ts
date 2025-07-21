@@ -51,7 +51,7 @@ serve(async (req) => {
     // Exchange code for access token
     const CTRADER_CLIENT_ID = Deno.env.get('CTRADER_CLIENT_ID');
     const CTRADER_CLIENT_SECRET = Deno.env.get('CTRADER_CLIENT_SECRET');
-    const REDIRECT_URI = `${Deno.env.get('SUPABASE_URL')}/functions/v1/ctrader-callback`;
+    const REDIRECT_URI = 'https://dynibyqrcbxneiwjyahn.supabase.co/functions/v1/ctrader-callback';
 
     const tokenResponse = await fetch('https://connect.spotware.com/apps/token', {
       method: 'POST',
