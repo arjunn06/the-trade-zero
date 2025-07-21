@@ -76,10 +76,10 @@ serve(async (req) => {
       });
 
     // Build OAuth URL
-    const authUrl = new URL('https://openapi.ctrader.com/apps/oauth');
+    const authUrl = new URL('https://connect.spotware.com/apps/auth');
     authUrl.searchParams.set('client_id', CTRADER_CLIENT_ID);
     authUrl.searchParams.set('redirect_uri', REDIRECT_URI);
-    authUrl.searchParams.set('scope', 'trading');
+    authUrl.searchParams.set('scope', 'accounts');
     authUrl.searchParams.set('state', state);
     authUrl.searchParams.set('response_type', 'code');
 
