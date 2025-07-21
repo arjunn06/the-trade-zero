@@ -45,6 +45,7 @@ const NewTrade = () => {
   const [exitTime, setExitTime] = useState<string>('');
   const [includeEntryTime, setIncludeEntryTime] = useState(false);
   const [includeExitTime, setIncludeExitTime] = useState(false);
+  const [isClosedTrade, setIsClosedTrade] = useState(false);
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [uploadingScreenshots, setUploadingScreenshots] = useState(false);
   const [formData, setFormData] = useState({
@@ -68,7 +69,9 @@ const NewTrade = () => {
     commission: '',
     swap: '',
     margin_rate: '',
-    filled_volume: ''
+    filled_volume: '',
+    exit_price: '',
+    pnl: ''
   });
   const [showAdvancedFields, setShowAdvancedFields] = useState(false);
 
@@ -116,7 +119,9 @@ const NewTrade = () => {
         commission: data.commission?.toString() || '',
         swap: data.swap?.toString() || '',
         margin_rate: data.margin_rate?.toString() || '',
-        filled_volume: data.filled_volume?.toString() || ''
+        filled_volume: data.filled_volume?.toString() || '',
+        exit_price: data.exit_price?.toString() || '',
+        pnl: data.pnl?.toString() || ''
       });
 
       if (data.entry_date) {
@@ -135,6 +140,12 @@ const NewTrade = () => {
         const exitMinutes = exitDateObj.getMinutes().toString().padStart(2, '0');
         setExitTime(`${exitHours}:${exitMinutes}`);
         setIncludeExitTime(true);
+        setIsClosedTrade(true);
+      }
+      
+      // Set closed trade status
+      if (data.status === 'closed') {
+        setIsClosedTrade(true);
       }
     } catch (error) {
       console.error('Error fetching trade:', error);
@@ -291,7 +302,7 @@ const NewTrade = () => {
         emotions: formData.emotions || null,
         risk_amount: formData.risk_amount ? parseFloat(formData.risk_amount) : null,
         risk_reward_ratio: calculateRiskReward() || null,
-        status: 'open',
+        status: isClosedTrade ? 'closed' : 'open',
         user_id: user.id,
         screenshots: screenshotUrls.length > 0 ? screenshotUrls : null,
         // Advanced fields
@@ -303,6 +314,8 @@ const NewTrade = () => {
         swap: formData.swap ? parseFloat(formData.swap) : null,
         margin_rate: formData.margin_rate ? parseFloat(formData.margin_rate) : null,
         filled_volume: formData.filled_volume ? parseFloat(formData.filled_volume) : null,
+        exit_price: isClosedTrade && formData.exit_price ? parseFloat(formData.exit_price) : null,
+        pnl: isClosedTrade && formData.pnl ? parseFloat(formData.pnl) : null,
         source: 'manual'
       };
 
@@ -467,33 +480,33 @@ const NewTrade = () => {
                       </span>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 max-w-[280px]" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={entryDate}
-                      onSelect={setEntryDate}
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+                    <PopoverContent className="w-auto p-0 max-w-[280px]" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={entryDate}
+                        onSelect={setEntryDate}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-              <div>
-                <Label htmlFor="trading_account">Trading Account</Label>
-                <Select value={formData.trading_account_id} onValueChange={(value) => setFormData({ ...formData, trading_account_id: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accounts.map((account) => (
-                      <SelectItem key={account.id} value={account.id}>
-                        {account.name} ({account.currency})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <div>
+                  <Label htmlFor="trading_account">Trading Account</Label>
+                  <Select value={formData.trading_account_id} onValueChange={(value) => setFormData({ ...formData, trading_account_id: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.name} ({account.currency})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
               <div>
                 <Label htmlFor="strategy">Strategy (Optional)</Label>
@@ -522,6 +535,23 @@ const NewTrade = () => {
                   onChange={(e) => setFormData({ ...formData, risk_amount: e.target.value })}
                 />
               </div>
+            </div>
+
+            {/* Trade Status Section */}
+            <div className="border rounded-lg p-4 bg-muted/20">
+              <div className="flex items-center space-x-2 mb-3">
+                <Checkbox
+                  id="is-closed-trade"
+                  checked={isClosedTrade}
+                  onCheckedChange={(checked) => setIsClosedTrade(checked === true)}
+                />
+                <Label htmlFor="is-closed-trade" className="font-medium">
+                  This trade is closed
+                </Label>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Check this if you want to record a completed trade with P&L details
+              </p>
             </div>
 
             {calculateRiskReward() > 0 && (
@@ -720,13 +750,15 @@ const NewTrade = () => {
               )}
             </div>
 
-            {/* Exit Date and Time Section */}
+            {/* Exit Date and Time Section - Enhanced for Closed Trades */}
             <div className="border rounded-lg p-4 bg-muted/20">
-              <h4 className="font-medium mb-3">Exit Details (Optional)</h4>
+              <h4 className="font-medium mb-3">
+                {isClosedTrade ? 'Exit Details (Required for closed trades)' : 'Exit Details (Optional)'}
+              </h4>
               
               <div className="space-y-3">
                 <div>
-                  <Label>Exit Date</Label>
+                  <Label>Exit Date {isClosedTrade && <span className="text-red-500">*</span>}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -735,7 +767,9 @@ const NewTrade = () => {
                       >
                         <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
                         <span className="truncate">
-                          {exitDate ? format(exitDate, "PPP") : "Pick exit date (optional)"}
+                          {exitDate ? format(exitDate, "PPP") : 
+                            isClosedTrade ? "Pick exit date (required)" : "Pick exit date (optional)"
+                          }
                         </span>
                       </Button>
                     </PopoverTrigger>
@@ -773,6 +807,40 @@ const NewTrade = () => {
                       onChange={(e) => setExitTime(e.target.value)}
                       className="mt-1"
                     />
+                  </div>
+                )}
+
+                {/* P&L Details for Closed Trades */}
+                {isClosedTrade && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                    <div>
+                      <Label htmlFor="exit_price">Exit Price <span className="text-red-500">*</span></Label>
+                      <Input
+                        id="exit_price"
+                        type="number"
+                        step="any"
+                        placeholder="Exit price"
+                        value={formData.exit_price}
+                        onChange={(e) => setFormData({ ...formData, exit_price: e.target.value })}
+                        required={isClosedTrade}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="pnl">Profit/Loss <span className="text-red-500">*</span></Label>
+                      <Input
+                        id="pnl"
+                        type="number"
+                        step="0.01"
+                        placeholder="P&L amount"
+                        value={formData.pnl}
+                        onChange={(e) => setFormData({ ...formData, pnl: e.target.value })}
+                        required={isClosedTrade}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Enter positive for profit, negative for loss
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
