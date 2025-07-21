@@ -276,124 +276,136 @@ const TradingAccounts = () => {
                   Add Account
                 </Button>
               </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingAccount ? 'Edit' : 'Add'} Trading Account</DialogTitle>
               <DialogDescription>
                 {editingAccount ? 'Update' : 'Create'} your trading account details
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Account Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="account_type">Account Type</Label>
-                <Select value={formData.account_type} onValueChange={(value) => setFormData({ ...formData, account_type: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="demo">Demo</SelectItem>
-                    <SelectItem value="live">Live</SelectItem>
-                    <SelectItem value="prop firm">Prop Firm</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="broker">Broker</Label>
-                <Input
-                  id="broker"
-                  value={formData.broker}
-                  onChange={(e) => setFormData({ ...formData, broker: e.target.value })}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="max-h-[calc(90vh-8rem)] overflow-y-auto pr-2">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="initial_balance">Initial Balance</Label>
+                  <Label htmlFor="name">Account Name</Label>
                   <Input
-                    id="initial_balance"
-                    type="number"
-                    step="0.01"
-                    value={formData.initial_balance}
-                    onChange={(e) => setFormData({ ...formData, initial_balance: e.target.value })}
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
                   />
                 </div>
+                
                 <div>
-                  <Label htmlFor="currency">Currency</Label>
-                  <Select value={formData.currency} onValueChange={(value) => setFormData({ ...formData, currency: value })}>
+                  <Label htmlFor="account_type">Account Type</Label>
+                  <Select value={formData.account_type} onValueChange={(value) => setFormData({ ...formData, account_type: value })}>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Select account type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="EUR">EUR</SelectItem>
-                      <SelectItem value="GBP">GBP</SelectItem>
-                      <SelectItem value="JPY">JPY</SelectItem>
+                      <SelectItem value="demo">Demo</SelectItem>
+                      <SelectItem value="live">Live</SelectItem>
+                      <SelectItem value="prop firm">Prop Firm</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+                
                 <div>
-                  <Label htmlFor="current_balance">Current Balance</Label>
+                  <Label htmlFor="broker">Broker</Label>
                   <Input
-                    id="current_balance"
-                    type="number"
-                    step="0.01"
-                    value={formData.current_balance}
-                    onChange={(e) => setFormData({ ...formData, current_balance: e.target.value })}
-                    required
+                    id="broker"
+                    value={formData.broker}
+                    onChange={(e) => setFormData({ ...formData, broker: e.target.value })}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="current_equity">Current Equity</Label>
-                  <Input
-                    id="current_equity"
-                    type="number"
-                    step="0.01"
-                    value={formData.current_equity}
-                    onChange={(e) => setFormData({ ...formData, current_equity: e.target.value })}
-                    required
-                   />
-                 </div>
-               </div>
-               
-                {/* CSV Import Section - only show for existing accounts */}
-                {editingAccount && (
-                  <div className="pt-4 border-t space-y-4">
-                    <CsvImportSection 
-                      accountId={editingAccount.id} 
-                      compact={true}
-                      onImportComplete={() => {
-                        toast({
-                          title: "Import complete",
-                          description: "Trades have been imported to this account"
-                        });
-                      }}
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="initial_balance">Initial Balance</Label>
+                    <Input
+                      id="initial_balance"
+                      type="number"
+                      step="0.01"
+                      value={formData.initial_balance}
+                      onChange={(e) => setFormData({ ...formData, initial_balance: e.target.value })}
+                      required
                     />
-                    
-                    {/* cTrader Integration for existing account */}
-                    <div className="border-t pt-4">
-                      <h3 className="text-sm font-medium mb-3">cTrader Integration</h3>
-                      <CTraderIntegration
-                        accountId={editingAccount.id}
-                        accountName={editingAccount.name}
-                      />
-                    </div>
                   </div>
-                )}
-              <Button type="submit" className="w-full">
-                {editingAccount ? 'Update' : 'Create'} Account
-              </Button>
-            </form>
+                  <div>
+                    <Label htmlFor="currency">Currency</Label>
+                    <Select value={formData.currency} onValueChange={(value) => setFormData({ ...formData, currency: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                        <SelectItem value="GBP">GBP</SelectItem>
+                        <SelectItem value="JPY">JPY</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="current_balance">Current Balance</Label>
+                    <Input
+                      id="current_balance"
+                      type="number"
+                      step="0.01"
+                      value={formData.current_balance}
+                      onChange={(e) => setFormData({ ...formData, current_balance: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="current_equity">Current Equity</Label>
+                    <Input
+                      id="current_equity"
+                      type="number"
+                      step="0.01"
+                      value={formData.current_equity}
+                      onChange={(e) => setFormData({ ...formData, current_equity: e.target.value })}
+                      required
+                     />
+                   </div>
+                 </div>
+                 
+                  {/* CSV Import Section - only show for existing accounts */}
+                  {editingAccount && (
+                    <div className="pt-4 border-t space-y-4">
+                      <div>
+                        <h3 className="text-sm font-medium mb-3">CSV Import</h3>
+                        <CsvImportSection 
+                          accountId={editingAccount.id} 
+                          compact={true}
+                          onImportComplete={() => {
+                            toast({
+                              title: "Import complete",
+                              description: "Trades have been imported to this account"
+                            });
+                          }}
+                        />
+                      </div>
+                      
+                      {/* cTrader Integration for existing account */}
+                      <div className="border-t pt-4">
+                        <h3 className="text-sm font-medium mb-3">cTrader Integration</h3>
+                        <CTraderIntegration
+                          accountId={editingAccount.id}
+                          accountName={editingAccount.name}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                <div className="sticky bottom-0 bg-background pt-4 border-t mt-6">
+                  <Button type="submit" className="w-full">
+                    {editingAccount ? 'Update' : 'Create'} Account
+                  </Button>
+                </div>
+              </form>
+            </div>
             </DialogContent>
           </Dialog>
           )}
