@@ -14,10 +14,17 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
+    console.log('Full callback URL:', req.url);
+    console.log('URL search params:', url.searchParams.toString());
+    
     const code = url.searchParams.get('code');
     const state = url.searchParams.get('state');
+    
+    console.log('Extracted code:', code ? 'present' : 'missing');
+    console.log('Extracted state:', state ? 'present' : 'missing');
 
     if (!code || !state) {
+      console.error('Missing parameters - code:', !!code, 'state:', !!state);
       throw new Error('Missing authorization code or state');
     }
 
