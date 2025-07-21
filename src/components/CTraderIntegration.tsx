@@ -365,7 +365,7 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
                 "https://connect.spotware.com/apps/auth?" +
            new URLSearchParams({
         client_id: "16201_rnkQHrJBaM07MDEzuuCrTBsvPEQm2iUzPX0uPuKk0ZmQ4zeJax",
-        redirect_uri: "https://thetradezero.com/auth/ctrader/callback", // update this if needed
+        redirect_uri: "https://dynibyqrcbxneiwjyahn.supabase.co/functions/v1/ctrader-callback", // update this if needed
         response_type: "code",
         scope: "accounts",
       }).toString();
