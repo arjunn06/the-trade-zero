@@ -53,12 +53,12 @@ export function TradeFilters({ onFiltersChange, accountOptions }: TradeFiltersPr
       <div className="flex flex-wrap gap-4">
         {/* Account Filter */}
         <div className="min-w-[200px]">
-          <Select value={filters.accountId} onValueChange={(value) => updateFilters({ accountId: value })}>
+          <Select value={filters.accountId || 'all'} onValueChange={(value) => updateFilters({ accountId: value === 'all' ? '' : value })}>
             <SelectTrigger>
               <SelectValue placeholder="All accounts" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All accounts</SelectItem>
+              <SelectItem value="all">All accounts</SelectItem>
               {accountOptions.map((account) => (
                 <SelectItem key={account.id} value={account.id}>
                   {account.name}
@@ -70,12 +70,12 @@ export function TradeFilters({ onFiltersChange, accountOptions }: TradeFiltersPr
 
         {/* Status Filter */}
         <div className="min-w-[150px]">
-          <Select value={filters.status} onValueChange={(value) => updateFilters({ status: value })}>
+          <Select value={filters.status || 'all'} onValueChange={(value) => updateFilters({ status: value === 'all' ? '' : value })}>
             <SelectTrigger>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All statuses</SelectItem>
+              <SelectItem value="all">All statuses</SelectItem>
               <SelectItem value="open">Open</SelectItem>
               <SelectItem value="closed">Closed</SelectItem>
             </SelectContent>
@@ -84,12 +84,12 @@ export function TradeFilters({ onFiltersChange, accountOptions }: TradeFiltersPr
 
         {/* Trade Type Filter */}
         <div className="min-w-[150px]">
-          <Select value={filters.tradeType} onValueChange={(value) => updateFilters({ tradeType: value })}>
+          <Select value={filters.tradeType || 'all'} onValueChange={(value) => updateFilters({ tradeType: value === 'all' ? '' : value })}>
             <SelectTrigger>
               <SelectValue placeholder="All types" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All types</SelectItem>
+              <SelectItem value="all">All types</SelectItem>
               <SelectItem value="long">Long</SelectItem>
               <SelectItem value="short">Short</SelectItem>
             </SelectContent>

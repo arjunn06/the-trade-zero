@@ -278,12 +278,12 @@ export default function CalendarPage() {
             <p className="text-muted-foreground">Track your daily trading performance</p>
           </div>
           <div className="min-w-[200px]">
-            <Select value={selectedAccount} onValueChange={setSelectedAccount}>
+            <Select value={selectedAccount || 'all'} onValueChange={(value) => setSelectedAccount(value === 'all' ? '' : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="All accounts" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All accounts</SelectItem>
+                <SelectItem value="all">All accounts</SelectItem>
                 {tradingAccounts.map((account) => (
                   <SelectItem key={account.id} value={account.id}>
                     {account.name}
