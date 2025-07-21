@@ -50,7 +50,7 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
         .select('*')
         .eq('user_id', user.id)
         .eq('trading_account_id', accountId)
-        .single();
+        .maybeSingle();
 
       if (!error && data) {
         setConnection(data);
