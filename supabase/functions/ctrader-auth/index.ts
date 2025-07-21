@@ -61,6 +61,12 @@ serve(async (req) => {
       );
     }
 
+    // Clean up expired auth states first
+    await supabaseClient
+      .from('ctrader_auth_states')
+      .delete()
+      .lt('expires_at', new Date().toISOString());
+
     // Generate state parameter for security
     const state = crypto.randomUUID();
     
@@ -72,7 +78,7 @@ serve(async (req) => {
         user_id: user.id,
         account_number: '', // Will be filled during callback when user selects account
         trading_account_id: tradingAccountId,
-        expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
+        expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
       });
 
     // Build OAuth URL
