@@ -87,9 +87,104 @@ serve(async (req) => {
     }
 
     console.log(`Found connection: ${connection.account_number}`);
+    console.log(`Access token available: ${!!connection.access_token}`);
 
-    // For now, let's always generate sample data since the real API isn't working
-    console.log('Generating sample data for testing...');
+    // First, try to get your real account information using the access token
+    let realAccountNumber = connection.account_number;
+    
+    if (connection.account_number.startsWith('VERIFY_')) {
+      console.log('Verification account detected, attempting to get real account info...');
+      
+      try {
+        const realAccountInfo = await getRealAccountInfoSimple(connection.access_token);
+        console.log('Successfully fetched real account info:', realAccountInfo);
+        
+        // Update the connection with real account number
+        realAccountNumber = realAccountInfo.accountNumber;
+        
+        await supabaseClient
+          .from('ctrader_connections')
+          .update({
+            account_number: realAccountNumber
+          })
+          .eq('id', connection.id);
+          
+        console.log(`Updated account number to: ${realAccountNumber}`);
+        
+      } catch (accountError) {
+        console.error('Failed to get real account info:', accountError);
+        console.log('Will proceed with sample data for now...');
+      }
+    }
+
+    // Try to fetch real trading data
+    console.log('Attempting to fetch real trading data...');
+    
+    try {
+      const realDeals = await fetchRealTradingData(connection.access_token, realAccountNumber, fromDate, toDate);
+      
+      if (realDeals && realDeals.length > 0) {
+        console.log(`Got ${realDeals.length} real deals from cTrader!`);
+        
+        // Import real trades
+        const importedTrades = [];
+        for (const deal of realDeals) {
+          try {
+            const tradeData = {
+              user_id: user.id,
+              trading_account_id: tradingAccountId,
+              external_id: deal.dealId || `REAL_${Date.now()}_${importedTrades.length}`,
+              symbol: deal.symbolName || 'UNKNOWN',
+              trade_type: deal.dealType === 0 ? 'long' : 'short',
+              quantity: (deal.volume || 0) / 100000,
+              entry_price: deal.executionPrice || 0,
+              entry_date: new Date(deal.executionTimestamp || Date.now()).toISOString(),
+              commission: deal.commission || 0,
+              swap: deal.swap || 0,
+              pnl: deal.pnl || 0,
+              status: 'closed',
+              notes: `Real trade from cTrader: ${deal.comment || ''}`,
+              source: 'ctrader',
+              deal_id: deal.dealId || null,
+            };
+
+            const { data: insertedTrade, error: insertError } = await supabaseClient
+              .from('trades')
+              .upsert(tradeData, { onConflict: 'external_id' })
+              .select()
+              .single();
+
+            if (!insertError && insertedTrade) {
+              importedTrades.push(insertedTrade);
+              console.log(`Imported REAL trade: ${tradeData.symbol} - ${tradeData.trade_type}`);
+            }
+          } catch (tradeError) {
+            console.error('Error importing real trade:', tradeError);
+          }
+        }
+        
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            tradesCount: importedTrades.length,
+            message: `Successfully imported ${importedTrades.length} REAL trades from your cTrader account!`,
+            isRealData: true
+          }),
+          { 
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json' 
+            } 
+          }
+        );
+      }
+    } catch (realDataError) {
+      console.error('Real data fetch failed:', realDataError);
+      console.log('Falling back to sample data...');
+    }
+
+    // Fallback to sample data if real data fetch fails
+    console.log('Generating sample data as fallback...');
     
     const fromTimestamp = new Date(fromDate).getTime();
     const toTimestamp = new Date(toDate).getTime();
@@ -442,6 +537,76 @@ async function fetchViaWebSocket(
       reject(new Error(`WebSocket setup failed: ${error.message}`));
     }
   });
+}
+
+async function getRealAccountInfoSimple(accessToken: string) {
+  console.log('Attempting to get real account info with access token...');
+  
+  // Try a simple HTTP request to cTrader's account endpoint
+  try {
+    const response = await fetch('https://openapi.ctrader.com/v1/accounts', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Account API response status:', response.status);
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Account API response:', data);
+      
+      if (data.accounts && data.accounts.length > 0) {
+        const account = data.accounts[0];
+        return {
+          accountNumber: account.accountId || account.accountNumber || account.login,
+          accountName: account.name || account.displayName || 'Live Account',
+          currency: account.currency || 'USD'
+        };
+      }
+    }
+    
+    throw new Error(`API response: ${response.status} ${response.statusText}`);
+  } catch (error) {
+    console.error('HTTP account fetch failed:', error);
+    throw new Error(`Unable to fetch account info: ${error.message}`);
+  }
+}
+
+async function fetchRealTradingData(accessToken: string, accountNumber: string, fromDate: string, toDate: string) {
+  console.log('Attempting to fetch real trading data...');
+  console.log(`Using access token: ${accessToken.substring(0, 10)}...`);
+  console.log(`Account: ${accountNumber}, Date range: ${fromDate} to ${toDate}`);
+  
+  // Try multiple approaches to get real data
+  const errors = [];
+  
+  // Method 1: Direct HTTP API call
+  try {
+    const deals = await fetchRealCTraderData(accessToken, accountNumber, fromDate, toDate);
+    if (deals && deals.length > 0) {
+      return deals;
+    }
+  } catch (error) {
+    console.log('HTTP API method failed:', error.message);
+    errors.push(`HTTP: ${error.message}`);
+  }
+  
+  // Method 2: WebSocket approach
+  try {
+    const deals = await fetchViaWebSocket(accessToken, accountNumber, fromDate, toDate);
+    if (deals && deals.length > 0) {
+      return deals;
+    }
+  } catch (error) {
+    console.log('WebSocket method failed:', error.message);
+    errors.push(`WebSocket: ${error.message}`);
+  }
+  
+  // If both methods fail, throw error
+  throw new Error(`All real data fetch methods failed: ${errors.join('; ')}`);
 }
 
 function generateSampleDealsForDateRange(fromTimestamp: number, toTimestamp: number, accountNumber: string): CTraderDeal[] {
