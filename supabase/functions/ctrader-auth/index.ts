@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 interface AuthRequest {
-  accountNumber: string;
   tradingAccountId: string;
 }
 
@@ -18,9 +17,9 @@ serve(async (req) => {
   }
 
   try {
-    const { accountNumber, tradingAccountId }: AuthRequest = await req.json();
+    const { tradingAccountId }: AuthRequest = await req.json();
     
-    console.log(`Initiating cTrader auth for account: ${accountNumber}`);
+    console.log(`Initiating cTrader OAuth for trading account: ${tradingAccountId}`);
 
     // Create Supabase client
     const supabaseClient = createClient(
@@ -71,7 +70,7 @@ serve(async (req) => {
       .insert({
         state,
         user_id: user.id,
-        account_number: accountNumber,
+        account_number: '', // Will be filled during callback when user selects account
         trading_account_id: tradingAccountId,
         expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
       });

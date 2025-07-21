@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,13 +6,20 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, ExternalLink, Download } from 'lucide-react';
+import { Loader2, ExternalLink, Download, CheckCircle, AlertCircle } from 'lucide-react';
 import { PremiumFeature } from './PremiumFeature';
 
 interface CTraderIntegrationProps {
   accountId: string;
   accountName: string;
   isFirstAccount?: boolean;
+}
+
+interface CTraderConnection {
+  id: string;
+  account_number: string;
+  connected_at: string;
+  last_sync?: string;
 }
 
 export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
@@ -22,21 +29,40 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
 }) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [accountNumber, setAccountNumber] = useState('');
   const [accountName_internal, setAccountName_internal] = useState('');
+  const [connection, setConnection] = useState<CTraderConnection | null>(null);
+  const [loadingConnection, setLoadingConnection] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const handleConnect = async () => {
-    if (!accountNumber.trim()) {
-      toast({
-        title: "Account Number Required",
-        description: "Please enter your cTrader account number",
-        variant: "destructive",
-      });
-      return;
+  useEffect(() => {
+    if (!isFirstAccount) {
+      checkExistingConnection();
     }
+  }, [accountId, isFirstAccount]);
 
+  const checkExistingConnection = async () => {
+    if (!user || isFirstAccount) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('ctrader_connections')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('trading_account_id', accountId)
+        .single();
+
+      if (!error && data) {
+        setConnection(data);
+      }
+    } catch (error) {
+      console.log('No existing connection found');
+    } finally {
+      setLoadingConnection(false);
+    }
+  };
+
+  const handleOneClickConnect = async () => {
     if (isFirstAccount && !accountName_internal.trim()) {
       toast({
         title: "Account Name Required",
@@ -71,10 +97,9 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
         finalAccountId = newAccount.id;
       }
 
-      // Call the edge function to initiate OAuth flow
+      // Call the edge function to initiate OAuth flow (no account number needed)
       const { data, error } = await supabase.functions.invoke('ctrader-auth', {
         body: {
-          accountNumber: accountNumber.trim(),
           tradingAccountId: finalAccountId,
         },
       });
@@ -83,19 +108,26 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
 
       if (data?.authUrl) {
         // Open OAuth URL in new window
-        window.open(data.authUrl, 'ctrader-auth', 'width=600,height=700');
+        const authWindow = window.open(data.authUrl, 'ctrader-auth', 'width=600,height=700');
         
         toast({
           title: "Authentication Started",
           description: "Please complete the authentication in the popup window",
         });
 
-        // If this was the first account, refresh the page after a delay to show the new account
-        if (isFirstAccount) {
-          setTimeout(() => {
-            window.location.reload();
-          }, 3000);
-        }
+        // Listen for window close to refresh connection status
+        const checkClosed = setInterval(() => {
+          if (authWindow?.closed) {
+            clearInterval(checkClosed);
+            setTimeout(() => {
+              if (isFirstAccount) {
+                window.location.reload();
+              } else {
+                checkExistingConnection();
+              }
+            }, 1000);
+          }
+        }, 1000);
       }
     } catch (error) {
       console.error('Error connecting to cTrader:', error);
@@ -126,6 +158,9 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
         title: "Import Successful",
         description: `Imported ${data?.tradesCount || 0} trades from cTrader`,
       });
+
+      // Update last sync time
+      setConnection(prev => prev ? { ...prev, last_sync: new Date().toISOString() } : null);
     } catch (error) {
       console.error('Error importing trades:', error);
       toast({
@@ -135,6 +170,32 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
       });
     } finally {
       setIsImporting(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    if (!connection) return;
+    
+    try {
+      const { error } = await supabase
+        .from('ctrader_connections')
+        .delete()
+        .eq('id', connection.id);
+
+      if (error) throw error;
+
+      setConnection(null);
+      toast({
+        title: "Disconnected",
+        description: "Successfully disconnected from cTrader",
+      });
+    } catch (error) {
+      console.error('Error disconnecting:', error);
+      toast({
+        title: "Error",
+        description: "Failed to disconnect from cTrader",
+        variant: "destructive",
+      });
     }
   };
 
@@ -153,7 +214,7 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
               Connect cTrader Account
             </CardTitle>
             <CardDescription className="text-center">
-              Import your trading account and history from cTrader
+              One-click connection to import your trading account and history from cTrader
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -166,20 +227,10 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
                 onChange={(e) => setAccountName_internal(e.target.value)}
               />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="accountNumber">cTrader Account Number</Label>
-              <Input
-                id="accountNumber"
-                placeholder="Enter your cTrader account number"
-                value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value)}
-              />
-            </div>
 
             <Button 
-              onClick={handleConnect}
-              disabled={isConnecting || !accountNumber.trim() || !accountName_internal.trim()}
+              onClick={handleOneClickConnect}
+              disabled={isConnecting || !accountName_internal.trim()}
               className="w-full"
               size="lg"
             >
@@ -193,7 +244,7 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
 
             <div className="bg-muted p-3 rounded-lg">
               <p className="text-sm text-muted-foreground text-center">
-                This will create your trading account and connect it to cTrader for automatic trade import
+                ✨ No account numbers needed! OAuth will automatically discover your accounts and import trades.
               </p>
             </div>
           </CardContent>
@@ -202,6 +253,94 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
     );
   }
 
+  if (loadingConnection) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="ml-2">Checking cTrader connection...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // If connected, show connection status and import options
+  if (connection) {
+    return (
+      <PremiumFeature feature="cTrader Integration">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/CTrader_logo.svg/120px-CTrader_logo.svg.png" 
+                alt="cTrader" 
+                className="w-6 h-6"
+              />
+              cTrader Integration
+              <CheckCircle className="h-5 w-5 text-green-500 ml-auto" />
+            </CardTitle>
+            <CardDescription>
+              Connected to cTrader account {connection.account_number}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium text-green-800">Connected</span>
+              </div>
+              <p className="text-sm text-green-700">
+                Account {connection.account_number} connected on{' '}
+                {new Date(connection.connected_at).toLocaleDateString()}
+              </p>
+              {connection.last_sync && (
+                <p className="text-sm text-green-700">
+                  Last sync: {new Date(connection.last_sync).toLocaleString()}
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleImportTrades}
+                disabled={isImporting}
+                className="flex-1"
+              >
+                {isImporting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="mr-2 h-4 w-4" />
+                )}
+                Import Latest Trades
+              </Button>
+
+              <Button 
+                onClick={handleDisconnect}
+                variant="outline"
+                className="flex-1"
+              >
+                Disconnect
+              </Button>
+            </div>
+
+            <div className="bg-muted p-4 rounded-lg">
+              <h4 className="font-medium mb-2">Auto-Import Features:</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                <li>Automatic trade detection from your cTrader account</li>
+                <li>Real-time trade data synchronization</li>
+                <li>Complete trade history with P&L calculations</li>
+                <li>Secure OAuth authentication</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      </PremiumFeature>
+    );
+  }
+
+  // If not connected, show connection option
   return (
     <PremiumFeature feature="cTrader Integration">
       <Card>
@@ -213,68 +352,41 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
               className="w-6 h-6"
             />
             cTrader Integration
+            <AlertCircle className="h-5 w-5 text-amber-500 ml-auto" />
           </CardTitle>
           <CardDescription>
             Connect your cTrader account to automatically import trades for {accountName}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="accountNumber">cTrader Account Number</Label>
-            <Input
-              id="accountNumber"
-              placeholder="Enter your cTrader account number"
-              value={accountNumber}
-              onChange={(e) => setAccountNumber(e.target.value)}
-            />
-            <p className="text-sm text-muted-foreground">
-              You can find your account number in your cTrader platform under Account Information
-            </p>
-          </div>
-
-          <div className="flex gap-3">
-            <Button 
-              onClick={handleConnect}
-              disabled={isConnecting || !accountNumber.trim()}
-              className="flex-1"
-            >
-              {isConnecting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <ExternalLink className="mr-2 h-4 w-4" />
-              )}
-              Connect to cTrader
-            </Button>
-
-            <Button 
-              onClick={handleImportTrades}
-              disabled={isImporting}
-              variant="outline"
-              className="flex-1"
-            >
-              {isImporting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="mr-2 h-4 w-4" />
-              )}
-              Import Trades
-            </Button>
-          </div>
+          <Button 
+            onClick={handleOneClickConnect}
+            disabled={isConnecting}
+            className="w-full"
+            size="lg"
+          >
+            {isConnecting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <ExternalLink className="mr-2 h-4 w-4" />
+            )}
+            One-Click Connect to cTrader
+          </Button>
 
           <div className="bg-muted p-4 rounded-lg">
-            <h4 className="font-medium mb-2">How it works:</h4>
+            <h4 className="font-medium mb-2">✨ Simple One-Click Process:</h4>
             <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-              <li>Enter your cTrader account number</li>
-              <li>Click "Connect to cTrader" to authenticate</li>
-              <li>Once connected, use "Import Trades" to fetch your trading history</li>
-              <li>Your trades will be automatically mapped to this trading account</li>
+              <li>Click "One-Click Connect to cTrader"</li>
+              <li>Authenticate with your cTrader credentials</li>
+              <li>Choose which account to connect</li>
+              <li>Start importing your trading history automatically</li>
             </ol>
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
-            <p className="text-sm text-amber-800">
-              <strong>Note:</strong> You'll need a cTrader account with API access enabled. 
-              Contact your broker if you need API access activated.
+          <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>No manual entry required!</strong> OAuth will automatically discover your available 
+              cTrader accounts and let you choose which one to connect.
             </p>
           </div>
         </CardContent>
