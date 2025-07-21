@@ -183,89 +183,18 @@ serve(async (req) => {
       console.log('Falling back to sample data...');
     }
 
-    // Fallback to sample data if real data fetch fails
-    console.log('Generating sample data as fallback...');
+    // If we get here, real data fetch failed - DO NOT generate sample data
+    console.error('REAL DATA FETCH FAILED - No sample data will be generated');
     
-    const fromTimestamp = new Date(fromDate).getTime();
-    const toTimestamp = new Date(toDate).getTime();
-    const timeRange = toTimestamp - fromTimestamp;
-    const daysInRange = Math.ceil(timeRange / (24 * 60 * 60 * 1000));
-    
-    // Generate 1-2 trades per week
-    const numberOfTrades = Math.max(1, Math.floor(daysInRange / 7) * 2);
-    
-    console.log(`Generating ${numberOfTrades} trades for ${daysInRange} days`);
-    
-    const symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD'];
-    const importedTrades = [];
-    
-    for (let i = 0; i < numberOfTrades; i++) {
-      try {
-        const tradeTime = fromTimestamp + Math.random() * timeRange;
-        const symbol = symbols[Math.floor(Math.random() * symbols.length)];
-        const isBuy = Math.random() > 0.5;
-        const volume = [10000, 50000, 100000][Math.floor(Math.random() * 3)];
-        
-        let basePrice = 1.0;
-        if (symbol.includes('JPY')) basePrice = 150;
-        else if (symbol.includes('GBP')) basePrice = 1.25;
-        
-        const price = basePrice + (Math.random() - 0.5) * 0.1;
-        const pnl = (Math.random() - 0.5) * 500;
-        
-        const tradeData = {
-          user_id: user.id,
-          trading_account_id: tradingAccountId,
-          external_id: `${connection.account_number}_${Date.now()}_${i}`,
-          symbol: symbol,
-          trade_type: isBuy ? 'long' : 'short',
-          quantity: volume / 100000,
-          entry_price: parseFloat(price.toFixed(symbol.includes('JPY') ? 3 : 5)),
-          entry_date: new Date(tradeTime).toISOString(),
-          commission: -(volume / 100000) * (Math.random() * 5 + 2),
-          swap: 0,
-          pnl: parseFloat(pnl.toFixed(2)),
-          status: 'closed',
-          notes: `Sample ${symbol} ${isBuy ? 'BUY' : 'SELL'} trade`,
-          source: 'ctrader',
-          deal_id: `DEAL_${Date.now()}_${i}`,
-        };
-
-        // Check if trade already exists
-        const { data: existingTrade } = await supabaseClient
-          .from('trades')
-          .select('id')
-          .eq('external_id', tradeData.external_id)
-          .maybeSingle();
-
-        if (!existingTrade) {
-          const { data: insertedTrade, error: insertError } = await supabaseClient
-            .from('trades')
-            .insert(tradeData)
-            .select()
-            .single();
-
-          if (insertError) {
-            console.error('Insert error:', insertError);
-          } else {
-            importedTrades.push(insertedTrade);
-            console.log(`Imported trade: ${symbol} - ${isBuy ? 'BUY' : 'SELL'}`);
-          }
-        } else {
-          console.log(`Trade ${tradeData.external_id} already exists, skipping`);
-        }
-      } catch (tradeError) {
-        console.error(`Error creating trade ${i}:`, tradeError);
-      }
-    }
-
     return new Response(
       JSON.stringify({ 
-        success: true,
-        tradesCount: importedTrades.length,
-        message: `Successfully imported ${importedTrades.length} trades from cTrader`
+        success: false,
+        error: 'Unable to fetch real trading data from cTrader',
+        message: 'Real data import failed. Please check your cTrader connection and API access.',
+        tradesCount: 0
       }),
       { 
+        status: 400,
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json' 
