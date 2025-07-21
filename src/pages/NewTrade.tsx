@@ -48,6 +48,7 @@ const NewTrade = () => {
   const [isClosedTrade, setIsClosedTrade] = useState(false);
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [uploadingScreenshots, setUploadingScreenshots] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     symbol: '',
     trade_type: '',
@@ -205,6 +206,60 @@ const NewTrade = () => {
     return 0;
   };
 
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    // Required fields
+    if (!formData.symbol.trim()) errors.symbol = 'Symbol is required';
+    if (!formData.trade_type) errors.trade_type = 'Trade type is required';
+    if (!formData.entry_price || isNaN(parseFloat(formData.entry_price))) {
+      errors.entry_price = 'Valid entry price is required';
+    }
+    if (!formData.quantity || isNaN(parseFloat(formData.quantity))) {
+      errors.quantity = 'Valid quantity is required';
+    }
+    if (!formData.trading_account_id) errors.trading_account_id = 'Trading account is required';
+    if (!entryDate) errors.entry_date = 'Entry date is required';
+
+    // Closed trade validations
+    if (isClosedTrade) {
+      if (!exitDate) errors.exit_date = 'Exit date is required for closed trades';
+      if (!formData.exit_price || isNaN(parseFloat(formData.exit_price))) {
+        errors.exit_price = 'Valid exit price is required for closed trades';
+      }
+      if (!formData.pnl || isNaN(parseFloat(formData.pnl))) {
+        errors.pnl = 'Valid P&L is required for closed trades';
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Check if form is valid for button state
+  const isFormValid = () => {
+    const hasRequiredFields = 
+      formData.symbol.trim() &&
+      formData.trade_type &&
+      formData.entry_price &&
+      !isNaN(parseFloat(formData.entry_price)) &&
+      formData.quantity &&
+      !isNaN(parseFloat(formData.quantity)) &&
+      formData.trading_account_id &&
+      entryDate;
+
+    if (isClosedTrade) {
+      return hasRequiredFields &&
+        exitDate &&
+        formData.exit_price &&
+        !isNaN(parseFloat(formData.exit_price)) &&
+        formData.pnl &&
+        !isNaN(parseFloat(formData.pnl));
+    }
+
+    return hasRequiredFields;
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
@@ -262,21 +317,11 @@ const NewTrade = () => {
     e.preventDefault();
     if (!user || !entryDate) return;
 
-    // Validation for required fields
-    if (!formData.symbol || !formData.trade_type || !formData.entry_price || !formData.quantity || !formData.trading_account_id) {
+    // Validate form
+    if (!validateForm()) {
       toast({
-        title: "Missing Required Fields",
-        description: "Please fill in all required fields: Symbol, Trade Type, Entry Price, Quantity, and Trading Account",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Validation for closed trades
-    if (isClosedTrade && (!exitDate || !formData.exit_price || !formData.pnl)) {
-      toast({
-        title: "Missing Closed Trade Details",
-        description: "For closed trades, please provide Exit Date, Exit Price, and P&L",
+        title: "Form Validation Failed",
+        description: "Please fix the errors below and try again",
         variant: "destructive"
       });
       return;
@@ -417,20 +462,28 @@ const NewTrade = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
-                <Label htmlFor="symbol">Symbol</Label>
+                <Label htmlFor="symbol" className="text-sm font-medium">
+                  Symbol <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="symbol"
                   placeholder="e.g., EURUSD, AAPL"
                   value={formData.symbol}
                   onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
+                  className={formErrors.symbol ? "border-destructive focus:ring-destructive" : ""}
                   required
                 />
+                {formErrors.symbol && (
+                  <p className="text-sm text-destructive mt-1">{formErrors.symbol}</p>
+                )}
               </div>
 
               <div>
-                <Label htmlFor="trade_type">Trade Type</Label>
+                <Label htmlFor="trade_type" className="text-sm font-medium">
+                  Trade Type <span className="text-destructive">*</span>
+                </Label>
                 <Select value={formData.trade_type} onValueChange={(value) => setFormData({ ...formData, trade_type: value })}>
-                  <SelectTrigger>
+                  <SelectTrigger className={formErrors.trade_type ? "border-destructive focus:ring-destructive" : ""}>
                     <SelectValue placeholder="Select trade type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -438,30 +491,45 @@ const NewTrade = () => {
                     <SelectItem value="short">Short (Sell)</SelectItem>
                   </SelectContent>
                 </Select>
+                {formErrors.trade_type && (
+                  <p className="text-sm text-destructive mt-1">{formErrors.trade_type}</p>
+                )}
               </div>
 
               <div>
-                <Label htmlFor="entry_price">Entry Price</Label>
+                <Label htmlFor="entry_price" className="text-sm font-medium">
+                  Entry Price <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="entry_price"
                   type="number"
                   step="any"
                   value={formData.entry_price}
                   onChange={(e) => setFormData({ ...formData, entry_price: e.target.value })}
+                  className={formErrors.entry_price ? "border-destructive focus:ring-destructive" : ""}
                   required
                 />
+                {formErrors.entry_price && (
+                  <p className="text-sm text-destructive mt-1">{formErrors.entry_price}</p>
+                )}
               </div>
 
               <div>
-                <Label htmlFor="quantity">Quantity/Lot Size</Label>
+                <Label htmlFor="quantity" className="text-sm font-medium">
+                  Quantity/Lot Size <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="quantity"
                   type="number"
                   step="any"
                   value={formData.quantity}
                   onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                  className={formErrors.quantity ? "border-destructive focus:ring-destructive" : ""}
                   required
                 />
+                {formErrors.quantity && (
+                  <p className="text-sm text-destructive mt-1">{formErrors.quantity}</p>
+                )}
               </div>
 
               <div>
@@ -487,12 +555,16 @@ const NewTrade = () => {
               </div>
 
                 <div>
-                <Label>Entry Date</Label>
+                <Label className="text-sm font-medium">
+                  Entry Date <span className="text-destructive">*</span>
+                </Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="w-full justify-start text-left font-normal text-sm"
+                      className={`w-full justify-start text-left font-normal text-sm ${
+                        formErrors.entry_date ? "border-destructive focus:ring-destructive" : ""
+                      }`}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
                       <span className="truncate">
@@ -510,12 +582,17 @@ const NewTrade = () => {
                       />
                     </PopoverContent>
                   </Popover>
+                {formErrors.entry_date && (
+                  <p className="text-sm text-destructive mt-1">{formErrors.entry_date}</p>
+                )}
                 </div>
 
                 <div>
-                  <Label htmlFor="trading_account">Trading Account</Label>
+                  <Label htmlFor="trading_account" className="text-sm font-medium">
+                    Trading Account <span className="text-destructive">*</span>
+                  </Label>
                   <Select value={formData.trading_account_id} onValueChange={(value) => setFormData({ ...formData, trading_account_id: value })}>
-                    <SelectTrigger>
+                    <SelectTrigger className={formErrors.trading_account_id ? "border-destructive focus:ring-destructive" : ""}>
                       <SelectValue placeholder="Select account" />
                     </SelectTrigger>
                     <SelectContent>
@@ -526,6 +603,9 @@ const NewTrade = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formErrors.trading_account_id && (
+                    <p className="text-sm text-destructive mt-1">{formErrors.trading_account_id}</p>
+                  )}
                 </div>
 
               <div>
@@ -778,12 +858,16 @@ const NewTrade = () => {
               
               <div className="space-y-3">
                 <div>
-                  <Label>Exit Date {isClosedTrade && <span className="text-red-500">*</span>}</Label>
+                  <Label className="text-sm font-medium">
+                    Exit Date {isClosedTrade && <span className="text-destructive">*</span>}
+                  </Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full justify-start text-left font-normal text-sm"
+                        className={`w-full justify-start text-left font-normal text-sm ${
+                          formErrors.exit_date ? "border-destructive focus:ring-destructive" : ""
+                        }`}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
                         <span className="truncate">
@@ -803,6 +887,9 @@ const NewTrade = () => {
                       />
                     </PopoverContent>
                   </Popover>
+                  {formErrors.exit_date && (
+                    <p className="text-sm text-destructive mt-1">{formErrors.exit_date}</p>
+                  )}
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -834,7 +921,9 @@ const NewTrade = () => {
                 {isClosedTrade && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
                     <div>
-                      <Label htmlFor="exit_price">Exit Price <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="exit_price" className="text-sm font-medium">
+                        Exit Price <span className="text-destructive">*</span>
+                      </Label>
                       <Input
                         id="exit_price"
                         type="number"
@@ -842,12 +931,18 @@ const NewTrade = () => {
                         placeholder="Exit price"
                         value={formData.exit_price}
                         onChange={(e) => setFormData({ ...formData, exit_price: e.target.value })}
+                        className={formErrors.exit_price ? "border-destructive focus:ring-destructive" : ""}
                         required={isClosedTrade}
                       />
+                      {formErrors.exit_price && (
+                        <p className="text-sm text-destructive mt-1">{formErrors.exit_price}</p>
+                      )}
                     </div>
 
                     <div>
-                      <Label htmlFor="pnl">Profit/Loss <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="pnl" className="text-sm font-medium">
+                        Profit/Loss <span className="text-destructive">*</span>
+                      </Label>
                       <Input
                         id="pnl"
                         type="number"
@@ -855,8 +950,12 @@ const NewTrade = () => {
                         placeholder="P&L amount"
                         value={formData.pnl}
                         onChange={(e) => setFormData({ ...formData, pnl: e.target.value })}
+                        className={formErrors.pnl ? "border-destructive focus:ring-destructive" : ""}
                         required={isClosedTrade}
                       />
+                      {formErrors.pnl && (
+                        <p className="text-sm text-destructive mt-1">{formErrors.pnl}</p>
+                      )}
                       <p className="text-xs text-muted-foreground mt-1">
                         Enter positive for profit, negative for loss
                       </p>
@@ -945,7 +1044,11 @@ const NewTrade = () => {
             </div>
 
             <div className="flex space-x-4">
-              <Button type="submit" disabled={loading || uploadingScreenshots}>
+              <Button 
+                type="submit" 
+                disabled={loading || uploadingScreenshots || !isFormValid()}
+                className={!isFormValid() ? "opacity-50 cursor-not-allowed" : ""}
+              >
                 {loading ? (uploadingScreenshots ? 'Uploading Screenshots...' : (isEditing ? 'Updating...' : 'Creating...')) : (isEditing ? 'Update Trade' : 'Create Trade')}
               </Button>
               <Button type="button" variant="outline" onClick={() => navigate('/trades')}>
