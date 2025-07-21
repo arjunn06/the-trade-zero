@@ -225,32 +225,104 @@ serve(async (req) => {
 // Helper function to fetch account information from cTrader API
 async function fetchAccountInfo(accessToken: string) {
   try {
-    // In a real implementation, you would make API calls to cTrader
-    // to get account information. For now, we'll return a placeholder.
-    // The actual implementation would involve WebSocket connections
-    // and Protocol Buffer messages to cTrader's Open API.
+    console.log('Fetching REAL account info from cTrader API...');
     
-    console.log('Fetching account info from cTrader API...');
+    // Connect to cTrader Open API to get real account information
+    const accountInfo = await getRealAccountInfo(accessToken);
+    console.log('Successfully fetched real account info:', accountInfo);
     
-    // Placeholder implementation - in reality you'd:
-    // 1. Connect to cTrader WebSocket API
-    // 2. Send ProtoOAApplicationAuthReq
-    // 3. Send ProtoOAAccountListReq to get available accounts
-    // 4. Return the first/selected account details
-    
-    return {
-      accountNumber: `CT${Math.floor(Math.random() * 1000000)}`, // Placeholder
-      accountName: 'Live Account',
-      currency: 'USD',
-      balance: 0
-    };
+    return accountInfo;
   } catch (error) {
-    console.error('Error fetching account info:', error);
-    return {
-      accountNumber: `CT${Date.now()}`, // Fallback
-      accountName: 'Connected Account',
-      currency: 'USD',
-      balance: 0
-    };
+    console.error('Error fetching real account info:', error);
+    throw new Error(`Failed to fetch your account information: ${error.message}`);
   }
+}
+
+async function getRealAccountInfo(accessToken: string) {
+  return new Promise((resolve, reject) => {
+    let ws: WebSocket;
+    
+    try {
+      // Connect to cTrader Open API
+      ws = new WebSocket('wss://openapi.ctrader.com');
+      
+      const timeout = setTimeout(() => {
+        ws.close();
+        reject(new Error('Timeout fetching account information'));
+      }, 20000);
+      
+      ws.onopen = () => {
+        console.log('Connected to cTrader for account info');
+        clearTimeout(timeout);
+        
+        // Authenticate application
+        const authMessage = JSON.stringify({
+          payloadType: 'ProtoOAApplicationAuthReq',
+          clientId: Deno.env.get('CTRADER_CLIENT_ID'),
+          clientSecret: Deno.env.get('CTRADER_CLIENT_SECRET')
+        });
+        
+        ws.send(authMessage);
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          console.log('Account info message type:', message.payloadType);
+          
+          if (message.payloadType === 'ProtoOAApplicationAuthRes') {
+            // App authenticated, get account list
+            const accountListMessage = JSON.stringify({
+              payloadType: 'ProtoOAAccountListReq',
+              accessToken: accessToken
+            });
+            ws.send(accountListMessage);
+            
+          } else if (message.payloadType === 'ProtoOAAccountListRes') {
+            // Got account list - return the first/primary account
+            if (message.ctidTraderAccount && message.ctidTraderAccount.length > 0) {
+              const account = message.ctidTraderAccount[0];
+              
+              const accountInfo = {
+                accountNumber: account.ctidTraderAccountId?.toString() || `CT${account.accountNumber || Date.now()}`,
+                accountName: account.accountName || account.traderLogin || 'Live Account',
+                currency: account.depositCurrency || 'USD',
+                balance: account.balance || 0,
+                ctidTraderAccountId: account.ctidTraderAccountId,
+                traderLogin: account.traderLogin
+              };
+              
+              console.log('Real account info:', accountInfo);
+              ws.close();
+              resolve(accountInfo);
+            } else {
+              ws.close();
+              reject(new Error('No accounts found for this cTrader user'));
+            }
+            
+          } else if (message.payloadType === 'ProtoOAErrorRes') {
+            ws.close();
+            reject(new Error(`cTrader API Error: ${message.errorCode} - ${message.description}`));
+          }
+          
+        } catch (parseError) {
+          console.error('Error parsing account info message:', parseError);
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error during account fetch:', error);
+        reject(new Error('Failed to connect to cTrader API'));
+      };
+      
+      ws.onclose = (event) => {
+        if (event.code !== 1000) {
+          reject(new Error(`WebSocket closed unexpectedly: ${event.reason || 'Unknown error'}`));
+        }
+      };
+      
+    } catch (error) {
+      reject(new Error(`Account info fetch failed: ${error.message}`));
+    }
+  });
 }
