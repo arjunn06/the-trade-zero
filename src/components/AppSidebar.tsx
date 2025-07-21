@@ -12,6 +12,7 @@ import {
   LogOut,
   Crown
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -53,47 +54,66 @@ export function AppSidebar() {
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = (isActive: boolean) =>
-    isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
+    isActive ? 
+      "bg-primary text-primary-foreground font-medium shadow-sm w-full justify-start rounded-md" : 
+      "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full justify-start rounded-md";
+
 
   return (
-    <Sidebar collapsible="icon" className="border-r">
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-2">
-          <div className="bg-primary text-primary-foreground rounded-lg p-2">
+    <Sidebar 
+      className="hidden lg:flex"
+      collapsible="icon"
+      variant="sidebar"
+    >
+      <SidebarHeader className="p-6 border-b border-sidebar-border">
+        {!collapsed && (
+          <div className="flex items-center gap-3">
+            <div className="bg-primary text-primary-foreground rounded-lg p-2">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="font-bold text-lg text-sidebar-foreground">The Trade Zero</span>
+              <p className="text-xs text-sidebar-foreground/60">Trading Journal</p>
+            </div>
+          </div>
+        )}
+        {collapsed && (
+          <div className="bg-primary text-primary-foreground rounded-lg p-2 mx-auto">
             <TrendingUp className="h-5 w-5" />
           </div>
-          {state === 'expanded' && (
-            <div className="flex flex-col">
-              <span className="font-bold text-lg">The Trade Zero</span>
-              <p className="text-xs text-muted-foreground">Trading Journal</p>
-            </div>
-          )}
-        </div>
+        )}
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="px-3 py-4">
         <SidebarGroup>
-          <SidebarGroupLabel>Trading</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider mb-2">
+            Trading
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <div className="space-y-1">
               {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className={getNavCls(isActive(item.url))}>
-                    <NavLink to={item.url} end>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <Button
+                  key={item.title}
+                  variant="ghost"
+                  asChild
+                  className={getNavCls(currentPath === item.url)}
+                >
+                  <NavLink to={item.url} end>
+                    <item.icon className="h-4 w-4" />
+                    {!collapsed && <span className="ml-3">{item.title}</span>}
+                  </NavLink>
+                </Button>
               ))}
-            </SidebarMenu>
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>System</SidebarGroupLabel>
+        <SidebarGroup className="mt-6">
+          <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider mb-2">
+            System
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <div className="space-y-1">
               {systemItems.map((item) => {
                 // Hide upgrade button for premium users
                 if (item.title === 'Upgrade' && isPremium) {
@@ -101,22 +121,25 @@ export function AppSidebar() {
                 }
                 
                 return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild className={getNavCls(isActive(item.url))}>
-                      <NavLink to={item.url} end>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <Button
+                    key={item.title}
+                    variant="ghost"
+                    asChild
+                    className={getNavCls(currentPath === item.url)}
+                  >
+                    <NavLink to={item.url} end>
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span className="ml-3">{item.title}</span>}
+                    </NavLink>
+                  </Button>
                 );
               })}
-            </SidebarMenu>
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
+      <SidebarFooter className="p-4 border-t border-sidebar-border">
         <UserProfileManager collapsed={collapsed} />
       </SidebarFooter>
     </Sidebar>
