@@ -286,52 +286,47 @@ async function tryMultipleAccountFetchMethods(accessToken: string) {
 async function fetchAccountViaREST(accessToken: string) {
   console.log('Attempting REST API call to cTrader...');
   
-  const endpoints = [
-    'https://openapi.ctrader.com/v1/accounts',
-    'https://api.ctrader.com/v1/accounts',
-    'https://connect.spotware.com/api/v1/accounts'
-  ];
+  // Use the correct cTrader API endpoint
+  const endpoint = 'https://openapi.ctrader.com/v2/accounts';
   
-  for (const endpoint of endpoints) {
-    try {
-      console.log(`Trying REST endpoint: ${endpoint}`);
-      
-      const response = await fetch(endpoint, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      
-      console.log(`REST response status: ${response.status}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('REST response data:', data);
-        
-        // Parse the response based on different possible formats
-        let accounts = data.accounts || data.data || data;
-        if (!Array.isArray(accounts)) accounts = [accounts];
-        
-        if (accounts.length > 0) {
-          const account = accounts[0];
-          return {
-            accountNumber: account.accountId || account.accountNumber || account.login || account.ctidTraderAccountId,
-            accountName: account.name || account.accountName || account.displayName || 'Live Account',
-            currency: account.currency || account.depositCurrency || 'USD',
-            balance: account.balance || account.equity || 0,
-            ctidTraderAccountId: account.ctidTraderAccountId
-          };
-        }
+  try {
+    console.log(`Trying REST endpoint: ${endpoint}`);
+    
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       }
-    } catch (error) {
-      console.log(`REST endpoint ${endpoint} error:`, error.message);
+    });
+    
+    console.log(`REST response status: ${response.status}`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('REST response data:', JSON.stringify(data, null, 2));
+      
+      // cTrader v2 API returns { data: [accounts] }
+      if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+        const account = data.data[0];
+        return {
+          accountNumber: account.ctidTraderAccountId?.toString() || account.login?.toString() || `CT${Date.now()}`,
+          accountName: account.name || account.displayName || 'Live Account',
+          currency: account.depositCurrency || 'USD',
+          balance: account.balance || 0,
+          ctidTraderAccountId: account.ctidTraderAccountId
+        };
+      }
+    } else {
+      const errorText = await response.text();
+      console.log(`REST API error response: ${errorText}`);
     }
+  } catch (error) {
+    console.log(`REST endpoint error:`, error.message);
   }
   
-  throw new Error('No working REST endpoints found');
+  throw new Error('REST API call failed');
 }
 
 async function fetchAccountViaWebSocket(accessToken: string, endpoint: string) {

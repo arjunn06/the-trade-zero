@@ -471,13 +471,14 @@ async function fetchViaWebSocket(
 async function getRealAccountInfoSimple(accessToken: string) {
   console.log('Attempting to get real account info with access token...');
   
-  // Try a simple HTTP request to cTrader's account endpoint
+  // Try the correct cTrader API v2 endpoint
   try {
-    const response = await fetch('https://openapi.ctrader.com/v1/accounts', {
+    const response = await fetch('https://openapi.ctrader.com/v2/accounts', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       }
     });
     
@@ -485,16 +486,20 @@ async function getRealAccountInfoSimple(accessToken: string) {
     
     if (response.ok) {
       const data = await response.json();
-      console.log('Account API response:', data);
+      console.log('Account API response:', JSON.stringify(data, null, 2));
       
-      if (data.accounts && data.accounts.length > 0) {
-        const account = data.accounts[0];
+      // cTrader v2 API returns { data: [accounts] }
+      if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+        const account = data.data[0];
         return {
-          accountNumber: account.accountId || account.accountNumber || account.login,
+          accountNumber: account.ctidTraderAccountId?.toString() || account.login?.toString(),
           accountName: account.name || account.displayName || 'Live Account',
-          currency: account.currency || 'USD'
+          currency: account.depositCurrency || 'USD'
         };
       }
+    } else {
+      const errorText = await response.text();
+      console.log('Account API error response:', errorText);
     }
     
     throw new Error(`API response: ${response.status} ${response.statusText}`);
