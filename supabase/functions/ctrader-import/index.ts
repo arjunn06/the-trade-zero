@@ -166,7 +166,7 @@ async function fetchCTraderDeals(
   fromDate: string, 
   toDate: string
 ): Promise<CTraderDeal[]> {
-  // This is a placeholder implementation
+  // This is a placeholder implementation that creates sample trades for testing
   // In a real implementation, you would:
   // 1. Establish WebSocket connection to cTrader Open API
   // 2. Send ProtoOAApplicationAuthReq message
@@ -175,9 +175,52 @@ async function fetchCTraderDeals(
   // 5. Parse ProtoOADealListRes response
   
   console.log('Fetching deals from cTrader API...');
+  console.log(`Account: ${accountNumber}, From: ${fromDate}, To: ${toDate}`);
   
-  // For now, return empty array - you'll need to implement the actual API calls
-  return [];
+  // For testing, return sample deals
+  const sampleDeals: CTraderDeal[] = [
+    {
+      dealId: `SAMPLE_${Date.now()}_1`,
+      orderId: `ORDER_${Date.now()}_1`,
+      positionId: `POS_${Date.now()}_1`,
+      symbolName: 'EURUSD',
+      dealType: 0, // BUY
+      volume: 100000, // 1 lot
+      filledVolume: 100000,
+      createTimestamp: Date.now() - 86400000, // Yesterday
+      executionTimestamp: Date.now() - 86400000,
+      executionPrice: 1.0850,
+      commission: -7.50,
+      swap: 0,
+      pnl: 125.00,
+      grossProfit: 125.00,
+      dealStatus: 'FILLED',
+      orderType: 'MARKET',
+      comment: 'Sample trade from cTrader import test'
+    },
+    {
+      dealId: `SAMPLE_${Date.now()}_2`,
+      orderId: `ORDER_${Date.now()}_2`,
+      positionId: `POS_${Date.now()}_2`,
+      symbolName: 'GBPUSD',
+      dealType: 1, // SELL
+      volume: 50000, // 0.5 lot
+      filledVolume: 50000,
+      createTimestamp: Date.now() - 43200000, // 12 hours ago
+      executionTimestamp: Date.now() - 43200000,
+      executionPrice: 1.2650,
+      commission: -3.75,
+      swap: -2.50,
+      pnl: -45.00,
+      grossProfit: -45.00,
+      dealStatus: 'FILLED',
+      orderType: 'MARKET',
+      comment: 'Sample trade from cTrader import test'
+    }
+  ];
+  
+  console.log(`Returning ${sampleDeals.length} sample deals for testing`);
+  return sampleDeals;
 }
 
 async function convertDealToTrade(
