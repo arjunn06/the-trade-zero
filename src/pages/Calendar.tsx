@@ -42,66 +42,6 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  const fetchPnLData = async () => {
-  try {
-    const { data: trades, error } = await supabase
-      .from('trades')
-      .select('exit_date, entry_date, pnl, symbol, trade_type')
-      .eq('user_id', user?.id)
-      .eq('status', 'closed')
-      .not('pnl', 'is', null);
-
-    if (error) throw error;
-
-    type Trade = {
-      exit_date: string;
-      pnl: number;
-      symbol: string;
-      trade_type: string;
-    };
-
-    type PnLAccumulator = Record<string, { pnl: number; trades: Trade[] }>;
-
-    const groupPnLByDate = (trades: Trade[]): PnLAccumulator => {
-      const acc: PnLAccumulator = {};
-      for (const trade of trades) {
-        const dateKey = format(new Date(trade.exit_date), 'yyyy-MM-dd');
-        if (!acc[dateKey]) {
-          acc[dateKey] = { pnl: 0, trades: [] };
-        }
-        acc[dateKey].pnl += Number(trade.pnl);
-        acc[dateKey].trades.push(trade);
-      }
-      return acc;
-    };
-
-    const pnlByDate = groupPnLByDate(trades);
-
-    const dayPnLArray: DayPnL[] = Object.entries(pnlByDate).map(([date, data]) => {
-      const winningTrades = data.trades.filter(t => Number(t.pnl) > 0);
-      const losingTrades = data.trades.filter(t => Number(t.pnl) < 0);
-      const winRate = data.trades.length > 0 ? (winningTrades.length / data.trades.length) * 100 : 0;
-      const bestTrade = data.trades.length > 0 ? Math.max(...data.trades.map(t => Number(t.pnl))) : 0;
-      const worstTrade = data.trades.length > 0 ? Math.min(...data.trades.map(t => Number(t.pnl))) : 0;
-
-      return {
-        date,
-        pnl: data.pnl,
-        trades: data.trades.length,
-        winRate,
-        bestTrade,
-        worstTrade,
-      };
-    });
-
-    setDayPnLData(dayPnLArray);
-  } catch (error) {
-    console.error('Error fetching P&L data:', error);
-  } finally {
-    setLoading(false);
-  }
-};
-  
   useEffect(() => {
     if (user) {
       fetchAccounts();
@@ -142,9 +82,7 @@ export default function CalendarPage() {
 
       if (error) throw error;
 
-      type PnLAccumulator = Record<string, { pnl: number; trades: any[] }>;
-
-      const pnlByDate: PnLAccumulator = trades.reduce((acc, trade) => {
+      const pnlByDate = trades.reduce((acc: Record<string, { pnl: number; trades: any[] }>, trade) => {
         if (trade.exit_date && trade.pnl !== null) {
           const dateKey = format(new Date(trade.exit_date), 'yyyy-MM-dd');
           if (!acc[dateKey]) {
@@ -185,11 +123,7 @@ export default function CalendarPage() {
     try {
       let query = supabase
         .from('trades')
-        .select(`
-          *,
-          trading_accounts!inner(name, currency),
-          strategies(name)
-        `)
+        .select(`*, trading_accounts!inner(name, currency), strategies(name)`)
         .eq('user_id', user?.id)
         .gte('exit_date', startOfDay(selectedDate).toISOString())
         .lte('exit_date', endOfDay(selectedDate).toISOString())
@@ -266,53 +200,12 @@ export default function CalendarPage() {
     return dayPnLData.find(data => data.date === dateKey);
   };
 
-  const getDayComponent = (day: Date) => {
-    const pnlData = getDayPnL(day);
-    const isSelected = date && format(day, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
-
-    if (!pnlData) {
-      return (
-        <div className={`w-full h-full flex flex-col items-center justify-center p-1 rounded-md transition-colors hover:bg-accent ${isSelected ? 'bg-primary text-primary-foreground' : ''}`}>
-          <div className="text-sm font-medium">{day.getDate()}</div>
-        </div>
-      );
-    }
-
-    const isProfit = pnlData.pnl > 0;
-    const isLoss = pnlData.pnl < 0;
-
-    return (
-      <div className={`w-full h-full flex flex-col items-center justify-center p-1 rounded-md transition-colors hover:bg-accent ${
-        isSelected ? 'bg-primary text-primary-foreground' : 
-        isProfit ? 'bg-profit/10 hover:bg-profit/20' : 
-        isLoss ? 'bg-loss/10 hover:bg-loss/20' : ''
-      }`}>
-        <div className="text-sm font-medium">{day.getDate()}</div>
-        <div className={`text-xs font-bold ${
-          isSelected ? 'text-primary-foreground' :
-          isProfit ? 'text-profit' : 
-          isLoss ? 'text-loss' : 'text-muted-foreground'
-        }`}>
-          ${Math.abs(pnlData.pnl) >= 1000 ? 
-            `${(pnlData.pnl / 1000).toFixed(1)}k` : 
-            pnlData.pnl.toFixed(0)
-          }
-        </div>
-        <div className="text-xs text-muted-foreground">{pnlData.trades}T</div>
-      </div>
-    );
-  };
-
-  const totalPnL = selectedDateTrades.reduce((sum, trade) => sum + (Number(trade.pnl) || 0), 0);
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
   };
-
-  const selectedDayData = date ? getDayPnL(date) : null;
 
   return (
     <DashboardLayout>
@@ -336,8 +229,7 @@ export default function CalendarPage() {
           </Select>
         </div>
 
-        {/* ... rest of your calendar + metrics UI */}
-        {/* Leave the rest of the JSX as it was */}
+        {/* You can add Calendar and Metrics components here */}
       </div>
     </DashboardLayout>
   );
