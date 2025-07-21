@@ -73,6 +73,7 @@ const NewTrade = () => {
     exit_price: '',
     pnl: ''
   });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [showAdvancedFields, setShowAdvancedFields] = useState(false);
 
   useEffect(() => {
@@ -205,6 +206,64 @@ const NewTrade = () => {
     return 0;
   };
 
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    // Required fields
+    if (!formData.symbol.trim()) {
+      errors.symbol = 'Symbol is required';
+    }
+    if (!formData.trade_type) {
+      errors.trade_type = 'Trade type is required';
+    }
+    if (!formData.entry_price) {
+      errors.entry_price = 'Entry price is required';
+    } else if (isNaN(parseFloat(formData.entry_price)) || parseFloat(formData.entry_price) <= 0) {
+      errors.entry_price = 'Entry price must be a positive number';
+    }
+    if (!formData.quantity) {
+      errors.quantity = 'Quantity is required';
+    } else if (isNaN(parseFloat(formData.quantity)) || parseFloat(formData.quantity) <= 0) {
+      errors.quantity = 'Quantity must be a positive number';
+    }
+    if (!formData.trading_account_id) {
+      errors.trading_account_id = 'Trading account is required';
+    }
+
+    // Closed trade validations
+    if (isClosedTrade) {
+      if (!exitDate) {
+        errors.exit_date = 'Exit date is required for closed trades';
+      }
+      if (!formData.exit_price) {
+        errors.exit_price = 'Exit price is required for closed trades';
+      } else if (isNaN(parseFloat(formData.exit_price)) || parseFloat(formData.exit_price) <= 0) {
+        errors.exit_price = 'Exit price must be a positive number';
+      }
+      if (!formData.pnl) {
+        errors.pnl = 'P&L is required for closed trades';
+      } else if (isNaN(parseFloat(formData.pnl))) {
+        errors.pnl = 'P&L must be a valid number';
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const isFormValid = () => {
+    const requiredFields = ['symbol', 'trade_type', 'entry_price', 'quantity', 'trading_account_id'];
+    const hasRequiredFields = requiredFields.every(field => formData[field as keyof typeof formData]?.toString().trim());
+    
+    if (isClosedTrade) {
+      const closedTradeFields = ['exit_price', 'pnl'];
+      const hasClosedTradeFields = closedTradeFields.every(field => formData[field as keyof typeof formData]?.toString().trim());
+      return hasRequiredFields && hasClosedTradeFields && exitDate;
+    }
+    
+    return hasRequiredFields;
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
@@ -262,21 +321,10 @@ const NewTrade = () => {
     e.preventDefault();
     if (!user || !entryDate) return;
 
-    // Validation for required fields
-    if (!formData.symbol || !formData.trade_type || !formData.entry_price || !formData.quantity || !formData.trading_account_id) {
+    if (!validateForm()) {
       toast({
-        title: "Missing Required Fields",
-        description: "Please fill in all required fields: Symbol, Trade Type, Entry Price, Quantity, and Trading Account",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Validation for closed trades
-    if (isClosedTrade && (!exitDate || !formData.exit_price || !formData.pnl)) {
-      toast({
-        title: "Missing Closed Trade Details",
-        description: "For closed trades, please provide Exit Date, Exit Price, and P&L",
+        title: "Form Validation Error",
+        description: "Please fix the errors below and try again",
         variant: "destructive"
       });
       return;
@@ -417,20 +465,41 @@ const NewTrade = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
-                <Label htmlFor="symbol">Symbol</Label>
+                <Label htmlFor="symbol" className="flex items-center gap-1">
+                  Symbol <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="symbol"
                   placeholder="e.g., EURUSD, AAPL"
                   value={formData.symbol}
-                  onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, symbol: e.target.value });
+                    if (formErrors.symbol) {
+                      setFormErrors({ ...formErrors, symbol: '' });
+                    }
+                  }}
+                  className={formErrors.symbol ? 'border-destructive focus-visible:ring-destructive' : ''}
                   required
                 />
+                {formErrors.symbol && (
+                  <p className="text-sm text-destructive mt-1">{formErrors.symbol}</p>
+                )}
               </div>
 
               <div>
-                <Label htmlFor="trade_type">Trade Type</Label>
-                <Select value={formData.trade_type} onValueChange={(value) => setFormData({ ...formData, trade_type: value })}>
-                  <SelectTrigger>
+                <Label htmlFor="trade_type" className="flex items-center gap-1">
+                  Trade Type <span className="text-destructive">*</span>
+                </Label>
+                <Select 
+                  value={formData.trade_type} 
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, trade_type: value });
+                    if (formErrors.trade_type) {
+                      setFormErrors({ ...formErrors, trade_type: '' });
+                    }
+                  }}
+                >
+                  <SelectTrigger className={formErrors.trade_type ? 'border-destructive focus:ring-destructive' : ''}>
                     <SelectValue placeholder="Select trade type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -438,30 +507,55 @@ const NewTrade = () => {
                     <SelectItem value="short">Short (Sell)</SelectItem>
                   </SelectContent>
                 </Select>
+                {formErrors.trade_type && (
+                  <p className="text-sm text-destructive mt-1">{formErrors.trade_type}</p>
+                )}
               </div>
 
               <div>
-                <Label htmlFor="entry_price">Entry Price</Label>
+                <Label htmlFor="entry_price" className="flex items-center gap-1">
+                  Entry Price <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="entry_price"
                   type="number"
                   step="any"
                   value={formData.entry_price}
-                  onChange={(e) => setFormData({ ...formData, entry_price: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, entry_price: e.target.value });
+                    if (formErrors.entry_price) {
+                      setFormErrors({ ...formErrors, entry_price: '' });
+                    }
+                  }}
+                  className={formErrors.entry_price ? 'border-destructive focus-visible:ring-destructive' : ''}
                   required
                 />
+                {formErrors.entry_price && (
+                  <p className="text-sm text-destructive mt-1">{formErrors.entry_price}</p>
+                )}
               </div>
 
               <div>
-                <Label htmlFor="quantity">Quantity/Lot Size</Label>
+                <Label htmlFor="quantity" className="flex items-center gap-1">
+                  Quantity/Lot Size <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="quantity"
                   type="number"
                   step="any"
                   value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, quantity: e.target.value });
+                    if (formErrors.quantity) {
+                      setFormErrors({ ...formErrors, quantity: '' });
+                    }
+                  }}
+                  className={formErrors.quantity ? 'border-destructive focus-visible:ring-destructive' : ''}
                   required
                 />
+                {formErrors.quantity && (
+                  <p className="text-sm text-destructive mt-1">{formErrors.quantity}</p>
+                )}
               </div>
 
               <div>
@@ -513,9 +607,19 @@ const NewTrade = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="trading_account">Trading Account</Label>
-                  <Select value={formData.trading_account_id} onValueChange={(value) => setFormData({ ...formData, trading_account_id: value })}>
-                    <SelectTrigger>
+                  <Label htmlFor="trading_account" className="flex items-center gap-1">
+                    Trading Account <span className="text-destructive">*</span>
+                  </Label>
+                  <Select 
+                    value={formData.trading_account_id} 
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, trading_account_id: value });
+                      if (formErrors.trading_account_id) {
+                        setFormErrors({ ...formErrors, trading_account_id: '' });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className={formErrors.trading_account_id ? 'border-destructive focus:ring-destructive' : ''}>
                       <SelectValue placeholder="Select account" />
                     </SelectTrigger>
                     <SelectContent>
@@ -526,6 +630,9 @@ const NewTrade = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formErrors.trading_account_id && (
+                    <p className="text-sm text-destructive mt-1">{formErrors.trading_account_id}</p>
+                  )}
                 </div>
 
               <div>
@@ -777,33 +884,43 @@ const NewTrade = () => {
               </h4>
               
               <div className="space-y-3">
-                <div>
-                  <Label>Exit Date {isClosedTrade && <span className="text-red-500">*</span>}</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal text-sm"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
-                        <span className="truncate">
-                          {exitDate ? format(exitDate, "PPP") : 
-                            isClosedTrade ? "Pick exit date (required)" : "Pick exit date (optional)"
-                          }
-                        </span>
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={exitDate}
-                        onSelect={setExitDate}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                 <div>
+                   <Label className="flex items-center gap-1">
+                     Exit Date {isClosedTrade && <span className="text-destructive">*</span>}
+                   </Label>
+                   <Popover>
+                     <PopoverTrigger asChild>
+                       <Button
+                         variant="outline"
+                         className={`w-full justify-start text-left font-normal text-sm ${formErrors.exit_date ? 'border-destructive' : ''}`}
+                       >
+                         <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                         <span className="truncate">
+                           {exitDate ? format(exitDate, "PPP") : 
+                             isClosedTrade ? "Pick exit date (required)" : "Pick exit date (optional)"
+                           }
+                         </span>
+                       </Button>
+                     </PopoverTrigger>
+                     <PopoverContent className="w-auto p-0" align="start">
+                       <Calendar
+                         mode="single"
+                         selected={exitDate}
+                         onSelect={(date) => {
+                           setExitDate(date);
+                           if (formErrors.exit_date) {
+                             setFormErrors({ ...formErrors, exit_date: '' });
+                           }
+                         }}
+                         initialFocus
+                         className="p-3 pointer-events-auto"
+                       />
+                     </PopoverContent>
+                   </Popover>
+                   {formErrors.exit_date && (
+                     <p className="text-sm text-destructive mt-1">{formErrors.exit_date}</p>
+                   )}
+                 </div>
 
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -833,34 +950,56 @@ const NewTrade = () => {
                 {/* P&L Details for Closed Trades */}
                 {isClosedTrade && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                    <div>
-                      <Label htmlFor="exit_price">Exit Price <span className="text-red-500">*</span></Label>
-                      <Input
-                        id="exit_price"
-                        type="number"
-                        step="any"
-                        placeholder="Exit price"
-                        value={formData.exit_price}
-                        onChange={(e) => setFormData({ ...formData, exit_price: e.target.value })}
-                        required={isClosedTrade}
-                      />
-                    </div>
+                     <div>
+                       <Label htmlFor="exit_price" className="flex items-center gap-1">
+                         Exit Price <span className="text-destructive">*</span>
+                       </Label>
+                       <Input
+                         id="exit_price"
+                         type="number"
+                         step="any"
+                         placeholder="Exit price"
+                         value={formData.exit_price}
+                         onChange={(e) => {
+                           setFormData({ ...formData, exit_price: e.target.value });
+                           if (formErrors.exit_price) {
+                             setFormErrors({ ...formErrors, exit_price: '' });
+                           }
+                         }}
+                         className={formErrors.exit_price ? 'border-destructive focus-visible:ring-destructive' : ''}
+                         required={isClosedTrade}
+                       />
+                       {formErrors.exit_price && (
+                         <p className="text-sm text-destructive mt-1">{formErrors.exit_price}</p>
+                       )}
+                     </div>
 
-                    <div>
-                      <Label htmlFor="pnl">Profit/Loss <span className="text-red-500">*</span></Label>
-                      <Input
-                        id="pnl"
-                        type="number"
-                        step="0.01"
-                        placeholder="P&L amount"
-                        value={formData.pnl}
-                        onChange={(e) => setFormData({ ...formData, pnl: e.target.value })}
-                        required={isClosedTrade}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Enter positive for profit, negative for loss
-                      </p>
-                    </div>
+                     <div>
+                       <Label htmlFor="pnl" className="flex items-center gap-1">
+                         Profit/Loss <span className="text-destructive">*</span>
+                       </Label>
+                       <Input
+                         id="pnl"
+                         type="number"
+                         step="0.01"
+                         placeholder="P&L amount"
+                         value={formData.pnl}
+                         onChange={(e) => {
+                           setFormData({ ...formData, pnl: e.target.value });
+                           if (formErrors.pnl) {
+                             setFormErrors({ ...formErrors, pnl: '' });
+                           }
+                         }}
+                         className={formErrors.pnl ? 'border-destructive focus-visible:ring-destructive' : ''}
+                         required={isClosedTrade}
+                       />
+                       {formErrors.pnl && (
+                         <p className="text-sm text-destructive mt-1">{formErrors.pnl}</p>
+                       )}
+                       <p className="text-xs text-muted-foreground mt-1">
+                         Enter positive for profit, negative for loss
+                       </p>
+                     </div>
                   </div>
                 )}
               </div>
@@ -945,7 +1084,11 @@ const NewTrade = () => {
             </div>
 
             <div className="flex space-x-4">
-              <Button type="submit" disabled={loading || uploadingScreenshots}>
+              <Button 
+                type="submit" 
+                disabled={loading || uploadingScreenshots || !isFormValid()}
+                className="min-w-[120px]"
+              >
                 {loading ? (uploadingScreenshots ? 'Uploading Screenshots...' : (isEditing ? 'Updating...' : 'Creating...')) : (isEditing ? 'Update Trade' : 'Create Trade')}
               </Button>
               <Button type="button" variant="outline" onClick={() => navigate('/trades')}>

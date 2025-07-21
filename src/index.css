@@ -120,10 +120,6 @@ All colors MUST be HSL.
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  /* Enable dark theme by default */
-  html {
-    @apply dark;
-  }
 }
 
 @layer components {

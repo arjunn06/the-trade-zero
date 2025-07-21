@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface UserProfileManagerProps {
   collapsed?: boolean;
@@ -281,6 +282,9 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
               </DropdownMenuItem>
             </DialogTrigger>
           </Dialog>
+          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+            <ThemeToggle collapsed={true} />
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>
             <LogOut className="h-4 w-4 mr-2" />
@@ -317,132 +321,135 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
         </div>
       </div>
 
-      <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-        <DialogTrigger asChild>
-          <Button variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent">
-            <Settings className="h-4 w-4 mr-3" />
-            Profile Settings
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Profile Settings</DialogTitle>
-            <DialogDescription>
-              Make changes to your profile here. Click save when you're done.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            {/* Profile Photo */}
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src={user?.user_metadata?.avatar_url} />
-                  <AvatarFallback className="text-lg">
-                    {getInitials(user?.user_metadata?.display_name)}
-                  </AvatarFallback>
-                </Avatar>
-                {isPremium && (
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                    <Crown className="h-3.5 w-3.5 text-white" />
-                  </div>
-                )}
-              </div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handlePhotoUpload}
-                accept="image/*"
-                className="hidden"
-              />
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-              >
-                <Camera className="h-4 w-4 mr-2" />
-                {uploading ? 'Uploading...' : 'Change Photo'}
-              </Button>
-            </div>
-
-            {/* Display Name */}
-            <div className="space-y-2">
-              <Label htmlFor="displayName">Display Name</Label>
-              <Input
-                id="displayName"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Enter your display name"
-              />
-            </div>
-
-            {/* Email */}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
+      <div className="flex gap-1">
+        <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="ghost" className="flex-1 justify-start text-sidebar-foreground hover:bg-sidebar-accent">
+              <Settings className="h-4 w-4 mr-3" />
+              Profile Settings
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Profile Settings</DialogTitle>
+              <DialogDescription>
+                Make changes to your profile here. Click save when you're done.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6 py-4">
+              {/* Profile Photo */}
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={user?.user_metadata?.avatar_url} />
+                    <AvatarFallback className="text-lg">
+                      {getInitials(user?.user_metadata?.display_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  {isPremium && (
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                      <Crown className="h-3.5 w-3.5 text-white" />
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handlePhotoUpload}
+                  accept="image/*"
+                  className="hidden"
                 />
-                <Button variant="outline" size="sm">
-                  <Mail className="h-4 w-4" />
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  {uploading ? 'Uploading...' : 'Change Photo'}
+                </Button>
+              </div>
+
+              {/* Display Name */}
+              <div className="space-y-2">
+                <Label htmlFor="displayName">Display Name</Label>
+                <Input
+                  id="displayName"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Enter your display name"
+                />
+              </div>
+
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                  />
+                  <Button variant="outline" size="sm">
+                    <Mail className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Password Change */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  <Label className="text-sm font-medium">Change Password</Label>
+                </div>
+                <div className="space-y-2">
+                  <Input
+                    type="password"
+                    placeholder="New password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                  <Input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                  {newPassword && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handlePasswordChange}
+                      disabled={!newPassword || !confirmPassword}
+                    >
+                      Update Password
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t">
+                <Button 
+                  onClick={handleUpdateProfile} 
+                  className="flex-1"
+                  disabled={updating}
+                >
+                  {updating ? 'Saving...' : 'Save Changes'}
+                </Button>
+                <Button variant="outline" onClick={() => setProfileDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button variant="ghost" onClick={handleSignOut} size="sm">
+                  <LogOut className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-
-            {/* Password Change */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Lock className="h-4 w-4" />
-                <Label className="text-sm font-medium">Change Password</Label>
-              </div>
-              <div className="space-y-2">
-                <Input
-                  type="password"
-                  placeholder="New password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                />
-                <Input
-                  type="password"
-                  placeholder="Confirm new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-                {newPassword && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handlePasswordChange}
-                    disabled={!newPassword || !confirmPassword}
-                  >
-                    Update Password
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-4 border-t">
-              <Button 
-                onClick={handleUpdateProfile} 
-                className="flex-1"
-                disabled={updating}
-              >
-                {updating ? 'Saving...' : 'Save Changes'}
-              </Button>
-              <Button variant="outline" onClick={() => setProfileDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button variant="ghost" onClick={handleSignOut} size="sm">
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+        <ThemeToggle collapsed={false} />
+      </div>
 
     </div>
   );
