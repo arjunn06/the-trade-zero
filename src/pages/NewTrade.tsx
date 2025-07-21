@@ -262,6 +262,26 @@ const NewTrade = () => {
     e.preventDefault();
     if (!user || !entryDate) return;
 
+    // Validation for required fields
+    if (!formData.symbol || !formData.trade_type || !formData.entry_price || !formData.quantity || !formData.trading_account_id) {
+      toast({
+        title: "Missing Required Fields",
+        description: "Please fill in all required fields: Symbol, Trade Type, Entry Price, Quantity, and Trading Account",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validation for closed trades
+    if (isClosedTrade && (!exitDate || !formData.exit_price || !formData.pnl)) {
+      toast({
+        title: "Missing Closed Trade Details",
+        description: "For closed trades, please provide Exit Date, Exit Price, and P&L",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -466,7 +486,7 @@ const NewTrade = () => {
                 />
               </div>
 
-              <div>
+                <div>
                 <Label>Entry Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -480,7 +500,7 @@ const NewTrade = () => {
                       </span>
                     </Button>
                   </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 max-w-[280px]" align="start">
+                    <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={entryDate}
@@ -773,7 +793,7 @@ const NewTrade = () => {
                         </span>
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 max-w-[280px]" align="start">
+                    <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={exitDate}
