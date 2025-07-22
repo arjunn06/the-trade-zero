@@ -15,7 +15,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumFeature } from '@/components/PremiumFeature';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CalendarIcon, Upload, X, ImageIcon, Clock, CheckSquare } from 'lucide-react';
+import { CalendarIcon, Upload, X, ImageIcon, Clock, CheckSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TradingAccount {
@@ -87,6 +87,8 @@ const NewTrade = () => {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [showAdvancedFields, setShowAdvancedFields] = useState(false);
+  const [showConfluenceSection, setShowConfluenceSection] = useState(true);
+  const [isPartialExit, setIsPartialExit] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -997,13 +999,14 @@ const NewTrade = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <Label className="text-sm font-medium">Exit Time</Label>
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="include-exit-time"
                       checked={includeExitTime}
                       onCheckedChange={(checked) => setIncludeExitTime(checked === true)}
                     />
-                    <Label htmlFor="include-exit-time" className="flex items-center gap-2 text-sm font-medium">
+                    <Label htmlFor="include-exit-time" className="flex items-center gap-2 text-sm">
                       <Clock className="w-4 h-4" />
                       Include specific exit time
                     </Label>
@@ -1017,6 +1020,23 @@ const NewTrade = () => {
                       onChange={(e) => setExitTime(e.target.value)}
                     />
                   )}
+                </div>
+
+                {/* Partial Exit Checkbox */}
+                <div className="col-span-full">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="is-partial-exit"
+                      checked={isPartialExit}
+                      onCheckedChange={(checked) => setIsPartialExit(checked === true)}
+                    />
+                    <Label htmlFor="is-partial-exit" className="text-sm font-medium">
+                      This is a partial exit
+                    </Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Check this if you only closed part of your position
+                  </p>
                 </div>
 
                 {/* P&L Details for Closed Trades */}
@@ -1046,6 +1066,24 @@ const NewTrade = () => {
                       )}
                     </div>
 
+                    {isPartialExit && (
+                      <div className="space-y-2">
+                        <Label htmlFor="exit_quantity" className="flex items-center gap-1 text-sm font-medium">
+                          Exit Quantity <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="exit_quantity"
+                          type="number"
+                          step="any"
+                          placeholder="Quantity closed"
+                          className="border-orange-300 focus-visible:ring-orange-500"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Enter the quantity/lot size that was closed
+                        </p>
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <Label htmlFor="pnl" className="flex items-center gap-1 text-sm font-medium">
                         Profit/Loss <span className="text-destructive">*</span>
@@ -1069,7 +1107,10 @@ const NewTrade = () => {
                         <p className="text-sm text-destructive mt-1">{formErrors.pnl}</p>
                       )}
                       <p className="text-xs text-muted-foreground mt-1">
-                        Enter positive for profit, negative for loss
+                        {isPartialExit 
+                          ? 'Enter P&L for the partial exit only' 
+                          : 'Enter positive for profit, negative for loss'
+                        }
                       </p>
                     </div>
                   </>
@@ -1118,16 +1159,28 @@ const NewTrade = () => {
             {/* Confluence Checklist */}
             {confluenceItems.length > 0 && (
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold border-b pb-2 flex items-center gap-2">
-                  <CheckSquare className="w-5 h-5" />
-                  Confluence Checklist (Optional)
-                </h3>
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Select the confluence factors that apply to this trade setup
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div 
+                  className="flex items-center justify-between cursor-pointer border-b pb-2"
+                  onClick={() => setShowConfluenceSection(!showConfluenceSection)}
+                >
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <CheckSquare className="w-5 h-5" />
+                    Confluence Checklist (Optional)
+                  </h3>
+                  {showConfluenceSection ? (
+                    <ChevronUp className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
+                  )}
+                </div>
+                
+                {showConfluenceSection && (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Select the confluence factors that apply to this trade setup
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {confluenceItems.reduce((acc, item) => {
                       const category = item.category || 'General';
                       if (!acc[category]) acc[category] = [];
@@ -1206,7 +1259,8 @@ const NewTrade = () => {
                       <p className="text-xs">Create confluence factors in the Confluence page first</p>
                     </div>
                   )}
-                </div>
+                  </div>
+                )}
               </div>
             )}
 
