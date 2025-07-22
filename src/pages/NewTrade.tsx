@@ -163,6 +163,9 @@ const NewTrade = () => {
       if (data.status === 'closed') {
         setIsClosedTrade(true);
       }
+
+      // Fetch confluence data for this trade
+      await fetchTradeConfluence(data.id);
     } catch (error) {
       console.error('Error fetching trade:', error);
       toast({
@@ -171,6 +174,29 @@ const NewTrade = () => {
         variant: "destructive"
       });
       navigate('/trades');
+    }
+  };
+
+  const fetchTradeConfluence = async (tradeId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('trade_confluence')
+        .select('confluence_item_id, is_present')
+        .eq('trade_id', tradeId);
+
+      if (error) throw error;
+
+      // Set selected confluence items
+      const confluenceSelection: {[key: string]: boolean} = {};
+      data?.forEach(item => {
+        if (item.is_present) {
+          confluenceSelection[item.confluence_item_id] = true;
+        }
+      });
+      
+      setSelectedConfluence(confluenceSelection);
+    } catch (error) {
+      console.error('Error fetching trade confluence:', error);
     }
   };
 

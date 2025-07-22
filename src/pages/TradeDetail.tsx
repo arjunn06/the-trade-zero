@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, TrendingUp, TrendingDown, ImageIcon, Edit, Trash2, Calendar } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, ImageIcon, Edit, Trash2, Calendar, CheckSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -44,18 +44,28 @@ interface Trade {
   };
 }
 
+interface ConfluenceItem {
+  id: string;
+  name: string;
+  description: string;
+  weight: number;
+  category: string;
+}
+
 const TradeDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const [trade, setTrade] = useState<Trade | null>(null);
+  const [confluenceItems, setConfluenceItems] = useState<ConfluenceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [screenshotDialog, setScreenshotDialog] = useState(false);
 
   useEffect(() => {
     if (user && id) {
       fetchTrade();
+      fetchTradeConfluence();
     }
   }, [user, id]);
 
@@ -105,6 +115,35 @@ const TradeDetail = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const fetchTradeConfluence = async () => {
+    if (!user || !id) return;
+
+    try {
+      const { data: confluenceData, error: confluenceError } = await supabase
+        .from('trade_confluence')
+        .select(`
+          confluence_item_id,
+          is_present,
+          confluence_items (
+            id,
+            name,
+            description,
+            weight,
+            category
+          )
+        `)
+        .eq('trade_id', id)
+        .eq('is_present', true);
+
+      if (confluenceError) throw confluenceError;
+
+      const items = confluenceData?.map(item => item.confluence_items).filter(Boolean) || [];
+      setConfluenceItems(items as ConfluenceItem[]);
+    } catch (error) {
+      console.error('Error fetching trade confluence:', error);
+    }
   };
 
   const handleDelete = async () => {
@@ -387,7 +426,74 @@ const TradeDetail = () => {
               <CardTitle>Notes</CardTitle>
             </CardHeader>
             <CardContent>
-            <div className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">{trade.notes}</div>
+              <div className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">{trade.notes}</div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Confluence Section */}
+        {confluenceItems.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckSquare className="h-5 w-5" />
+                Confluence Analysis
+              </CardTitle>
+              <CardDescription>
+                Confluence factors that supported this trade setup
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
+                  <span className="font-medium">Total Confluence Score:</span>
+                  <span className="font-bold text-primary text-lg">
+                    {confluenceItems.reduce((sum, item) => sum + item.weight, 0).toFixed(1)} points
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {confluenceItems.reduce((acc, item) => {
+                    const category = item.category || 'General';
+                    if (!acc[category]) acc[category] = [];
+                    acc[category].push(item);
+                    return acc;
+                  }, {} as Record<string, ConfluenceItem[]>)
+                  && Object.entries(
+                    confluenceItems.reduce((acc, item) => {
+                      const category = item.category || 'General';
+                      if (!acc[category]) acc[category] = [];
+                      acc[category].push(item);
+                      return acc;
+                    }, {} as Record<string, ConfluenceItem[]>)
+                  ).map(([category, items]) => (
+                    <div key={category} className="space-y-3">
+                      <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                        {category}
+                      </h4>
+                      <div className="space-y-2">
+                        {items.map((item) => (
+                          <div key={item.id} className="flex items-start justify-between p-3 border rounded-lg bg-muted/20">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium">
+                                {item.name}
+                              </p>
+                              {item.description && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {item.description}
+                                </p>
+                              )}
+                            </div>
+                            <Badge variant="secondary" className="ml-2 flex-shrink-0">
+                              {item.weight}pts
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
