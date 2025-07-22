@@ -50,13 +50,12 @@ const TradingAccounts = () => {
   const [editingAccount, setEditingAccount] = useState<TradingAccount | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<TradingAccount | null>(null);
+  const [accountEquities, setAccountEquities] = useState<Record<string, number>>({});
   const [formData, setFormData] = useState({
     name: '',
     account_type: '',
     broker: '',
     initial_balance: '',
-    current_balance: '',
-    current_equity: '',
     currency: 'USD',
     equity_goal: ''
   });
@@ -74,14 +73,35 @@ const TradingAccounts = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('trading_accounts')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const [accountsResult, tradesResult] = await Promise.all([
+        supabase
+          .from('trading_accounts')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('trades')
+          .select('trading_account_id, pnl')
+          .eq('user_id', user.id)
+          .not('pnl', 'is', null)
+      ]);
 
-      if (error) throw error;
-      setAccounts(data || []);
+      if (accountsResult.error) throw accountsResult.error;
+      if (tradesResult.error) throw tradesResult.error;
+
+      const accounts = accountsResult.data || [];
+      const trades = tradesResult.data || [];
+
+      // Calculate equity for each account
+      const equities: Record<string, number> = {};
+      accounts.forEach(account => {
+        const accountTrades = trades.filter(trade => trade.trading_account_id === account.id);
+        const totalPnl = accountTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+        equities[account.id] = account.initial_balance + totalPnl;
+      });
+
+      setAccounts(accounts);
+      setAccountEquities(equities);
     } catch (error) {
       console.error('Error fetching accounts:', error);
       toast({
@@ -104,8 +124,8 @@ const TradingAccounts = () => {
         account_type: formData.account_type,
         broker: formData.broker,
         initial_balance: parseFloat(formData.initial_balance),
-        current_balance: parseFloat(formData.current_balance),
-        current_equity: parseFloat(formData.current_equity),
+        current_balance: parseFloat(formData.initial_balance), // Start with initial balance
+        current_equity: parseFloat(formData.initial_balance), // Start with initial balance
         currency: formData.currency,
         equity_goal: formData.equity_goal ? parseFloat(formData.equity_goal) : null,
         user_id: user.id
@@ -149,8 +169,6 @@ const TradingAccounts = () => {
       account_type: account.account_type,
       broker: account.broker || '',
       initial_balance: account.initial_balance.toString(),
-      current_balance: account.current_balance.toString(),
-      current_equity: account.current_equity.toString(),
       currency: account.currency,
       equity_goal: (account as any).equity_goal?.toString() || ''
     });
@@ -232,8 +250,6 @@ const TradingAccounts = () => {
       account_type: '',
       broker: '',
       initial_balance: '',
-      current_balance: '',
-      current_equity: '',
       currency: 'USD',
       equity_goal: ''
     });
@@ -366,30 +382,6 @@ const TradingAccounts = () => {
                   </p>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="current_balance">Current Balance</Label>
-                    <Input
-                      id="current_balance"
-                      type="number"
-                      step="0.01"
-                      value={formData.current_balance}
-                      onChange={(e) => setFormData({ ...formData, current_balance: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="current_equity">Current Equity</Label>
-                    <Input
-                      id="current_equity"
-                      type="number"
-                      step="0.01"
-                      value={formData.current_equity}
-                      onChange={(e) => setFormData({ ...formData, current_equity: e.target.value })}
-                      required
-                     />
-                   </div>
-                 </div>
                  
                   {/* CSV Import Section - only show for existing accounts */}
                   {editingAccount && (
@@ -490,26 +482,22 @@ const TradingAccounts = () => {
                     </Badge>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Initial Balance</span>
-                    <span className="font-medium">{formatCurrency(account.initial_balance, account.currency)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Current Balance</span>
-                    <span className="font-medium">{formatCurrency(account.current_balance, account.currency)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Current Equity</span>
-                    <span className="font-medium">{formatCurrency(account.current_equity, account.currency)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">P&L</span>
-                    <span className={`font-medium ${account.current_balance - account.initial_balance >= 0 ? 'text-profit' : 'text-loss'}`}>
-                      {formatCurrency(account.current_balance - account.initial_balance, account.currency)}
-                    </span>
-                  </div>
-                </div>
+                 <div className="space-y-2">
+                   <div className="flex justify-between">
+                     <span className="text-sm text-muted-foreground">Initial Balance</span>
+                     <span className="font-medium">{formatCurrency(account.initial_balance, account.currency)}</span>
+                   </div>
+                   <div className="flex justify-between">
+                     <span className="text-sm text-muted-foreground">Current Equity</span>
+                     <span className="font-medium">{formatCurrency(accountEquities[account.id] || account.initial_balance, account.currency)}</span>
+                   </div>
+                   <div className="flex justify-between">
+                     <span className="text-sm text-muted-foreground">P&L</span>
+                     <span className={`font-medium ${(accountEquities[account.id] || account.initial_balance) - account.initial_balance >= 0 ? 'text-profit' : 'text-loss'}`}>
+                       {formatCurrency((accountEquities[account.id] || account.initial_balance) - account.initial_balance, account.currency)}
+                     </span>
+                   </div>
+                 </div>
                   <div className="flex justify-between pt-2 border-t">
                     <div className="flex space-x-2">
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(account)}>

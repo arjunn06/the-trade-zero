@@ -146,9 +146,20 @@ const Dashboard = () => {
         ? allAccounts
         : allAccounts.filter(account => account.id === selectedAccountId);
 
-      // Calculate account totals
-      const totalCurrentBalance = accounts.reduce((sum, account) => sum + (account.current_balance || 0), 0);
+      // Calculate account totals from trades
       const totalInitialBalance = accounts.reduce((sum, account) => sum + (account.initial_balance || 0), 0);
+      
+      // Calculate equity from trades
+      const accountEquities: Record<string, number> = {};
+      let totalCurrentEquity = 0;
+      
+      accounts.forEach(account => {
+        const accountTrades = filteredTrades.filter(trade => trade.trading_account_id === account.id);
+        const accountPnl = accountTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+        const equity = account.initial_balance + accountPnl;
+        accountEquities[account.id] = equity;
+        totalCurrentEquity += equity;
+      });
 
       // Calculate statistics
       const closedTrades = trades.filter(t => t.status === 'closed');
@@ -181,7 +192,7 @@ const Dashboard = () => {
         worstTrade,
         avgWin,
         avgLoss,
-        currentBalance: totalCurrentBalance,
+        currentBalance: totalCurrentEquity,
         initialBalance: totalInitialBalance,
         mostTradedAsset
       });
@@ -210,16 +221,16 @@ const Dashboard = () => {
       });
 
       // Add current balance as the final point if different from calculated
-      if (equitySortedTrades.length > 0 && Math.abs(runningBalance - totalCurrentBalance) > 0.01) {
+      if (equitySortedTrades.length > 0 && Math.abs(runningBalance - totalCurrentEquity) > 0.01) {
         equityCurve.push({
           date: 'Current',
-          balance: totalCurrentBalance
+          balance: totalCurrentEquity
         });
       } else if (sortedTrades.length === 0) {
         // If no trades, just show progression from initial to current
         equityCurve.push({
           date: 'Current',
-          balance: totalCurrentBalance
+          balance: totalCurrentEquity
         });
       }
       
@@ -398,7 +409,11 @@ const Dashboard = () => {
               {accounts
                 .filter(acc => acc.equity_goal && acc.equity_goal > 0)
                 .map((account) => {
-                  const progress = (account.current_equity / account.equity_goal!) * 100;
+                  // Calculate equity for this account from its trades
+                  const accountTrades = allTrades.filter(trade => trade.trading_account_id === account.id);
+                  const accountPnl = accountTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+                  const equity = account.initial_balance + accountPnl;
+                  const progress = (equity / account.equity_goal!) * 100;
                   const progressClamped = Math.min(Math.max(progress, 0), 100);
                   const isGoalAchieved = progress >= 100;
                   
@@ -408,7 +423,7 @@ const Dashboard = () => {
                         <div>
                           <p className="font-medium">{account.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {formatCurrency(account.current_equity, account.currency)} / {formatCurrency(account.equity_goal!, account.currency)}
+                            {formatCurrency(equity, account.currency)} / {formatCurrency(account.equity_goal!, account.currency)}
                           </p>
                         </div>
                         <div className="text-right">

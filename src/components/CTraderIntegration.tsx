@@ -84,10 +84,8 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
             name: accountName_internal.trim(),
             account_type: 'live',
             broker: 'cTrader',
-            initial_balance: 0,
-            current_balance: 0,
-            current_equity: 0,
-            currency: 'USD',
+        initial_balance: 0,
+        currency: 'USD',
             user_id: user.id,
           })
           .select()
