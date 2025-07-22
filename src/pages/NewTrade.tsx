@@ -15,7 +15,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumFeature } from '@/components/PremiumFeature';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CalendarIcon, Upload, X, ImageIcon, Clock } from 'lucide-react';
+import { CalendarIcon, Upload, X, ImageIcon, Clock, CheckSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TradingAccount {
@@ -29,6 +29,15 @@ interface Strategy {
   name: string;
 }
 
+interface ConfluenceItem {
+  id: string;
+  name: string;
+  description: string;
+  weight: number;
+  category: string;
+  is_active: boolean;
+}
+
 const NewTrade = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -39,6 +48,8 @@ const NewTrade = () => {
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
+  const [confluenceItems, setConfluenceItems] = useState<ConfluenceItem[]>([]);
+  const [selectedConfluence, setSelectedConfluence] = useState<{[key: string]: boolean}>({});
   const [entryDate, setEntryDate] = useState<Date | undefined>(new Date());
   const [exitDate, setExitDate] = useState<Date | undefined>();
   const [entryTime, setEntryTime] = useState<string>('');
@@ -81,6 +92,7 @@ const NewTrade = () => {
     if (user) {
       fetchAccounts();
       fetchStrategies();
+      fetchConfluenceItems();
       if (isEditing && id) {
         fetchTrade();
       }
@@ -191,6 +203,25 @@ const NewTrade = () => {
       setStrategies(data || []);
     } catch (error) {
       console.error('Error fetching strategies:', error);
+    }
+  };
+
+  const fetchConfluenceItems = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('confluence_items')
+        .select('id, name, description, weight, category, is_active')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('category', { ascending: true })
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setConfluenceItems(data || []);
+    } catch (error) {
+      console.error('Error fetching confluence items:', error);
     }
   };
 
@@ -412,13 +443,18 @@ const NewTrade = () => {
 
       if (isEditing && id) {
         // Update existing trade
-        const { error } = await supabase
+        const { data: tradeResult, error } = await supabase
           .from('trades')
           .update(tradeData)
           .eq('id', id)
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .select()
+          .single();
 
         if (error) throw error;
+
+        // Handle confluence items
+        await handleConfluenceItems(tradeResult.id);
 
         toast({
           title: "Success",
@@ -426,11 +462,16 @@ const NewTrade = () => {
         });
       } else {
         // Create new trade
-        const { error } = await supabase
+        const { data: tradeResult, error } = await supabase
           .from('trades')
-          .insert([tradeData]);
+          .insert([tradeData])
+          .select()
+          .single();
 
         if (error) throw error;
+
+        // Handle confluence items
+        await handleConfluenceItems(tradeResult.id);
 
         toast({
           title: "Success",
@@ -448,6 +489,37 @@ const NewTrade = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleConfluenceItems = async (tradeId: string) => {
+    const selectedItems = Object.keys(selectedConfluence).filter(itemId => selectedConfluence[itemId]);
+    
+    if (selectedItems.length === 0) return;
+
+    try {
+      // First, delete existing confluence items for this trade (in case of editing)
+      if (isEditing) {
+        await supabase
+          .from('trade_confluence')
+          .delete()
+          .eq('trade_id', tradeId);
+      }
+
+      // Insert new confluence items
+      const confluenceData = selectedItems.map(itemId => ({
+        trade_id: tradeId,
+        confluence_item_id: itemId,
+        is_present: true
+      }));
+
+      const { error } = await supabase
+        .from('trade_confluence')
+        .insert(confluenceData);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error handling confluence items:', error);
     }
   };
 
@@ -1042,6 +1114,101 @@ const NewTrade = () => {
                 />
               </div>
             </div>
+
+            {/* Confluence Checklist */}
+            {confluenceItems.length > 0 && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold border-b pb-2 flex items-center gap-2">
+                  <CheckSquare className="w-5 h-5" />
+                  Confluence Checklist (Optional)
+                </h3>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Select the confluence factors that apply to this trade setup
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {confluenceItems.reduce((acc, item) => {
+                      const category = item.category || 'General';
+                      if (!acc[category]) acc[category] = [];
+                      acc[category].push(item);
+                      return acc;
+                    }, {} as Record<string, ConfluenceItem[]>)
+                    && Object.entries(
+                      confluenceItems.reduce((acc, item) => {
+                        const category = item.category || 'General';
+                        if (!acc[category]) acc[category] = [];
+                        acc[category].push(item);
+                        return acc;
+                      }, {} as Record<string, ConfluenceItem[]>)
+                    ).map(([category, items]) => (
+                      <div key={category} className="space-y-3">
+                        <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                          {category}
+                        </h4>
+                        <div className="space-y-2">
+                          {items.map((item) => (
+                            <div key={item.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
+                              <Checkbox
+                                id={`confluence-${item.id}`}
+                                checked={selectedConfluence[item.id] || false}
+                                onCheckedChange={(checked) => {
+                                  setSelectedConfluence(prev => ({
+                                    ...prev,
+                                    [item.id]: checked === true
+                                  }));
+                                }}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <Label 
+                                  htmlFor={`confluence-${item.id}`}
+                                  className="text-sm font-medium cursor-pointer"
+                                >
+                                  {item.name}
+                                  <span className="ml-1 text-xs text-muted-foreground">
+                                    ({item.weight}pts)
+                                  </span>
+                                </Label>
+                                {item.description && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {item.description}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {Object.keys(selectedConfluence).some(key => selectedConfluence[key]) && (
+                    <div className="p-4 bg-muted/30 rounded-lg border">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">Selected Confluence Score:</span>
+                        <span className="font-bold text-primary">
+                          {confluenceItems
+                            .filter(item => selectedConfluence[item.id])
+                            .reduce((sum, item) => sum + item.weight, 0)
+                            .toFixed(1)} points
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Selected: {Object.keys(selectedConfluence).filter(key => selectedConfluence[key]).length} factors
+                      </p>
+                    </div>
+                  )}
+
+                  {confluenceItems.length === 0 && (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <CheckSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No confluence items found</p>
+                      <p className="text-xs">Create confluence factors in the Confluence page first</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Chart Screenshots */}
             <div className="space-y-6">
