@@ -696,13 +696,14 @@ const NewTrade = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <Label className="text-sm font-medium">Entry Time</Label>
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="include-entry-time"
                       checked={includeEntryTime}
                       onCheckedChange={(checked) => setIncludeEntryTime(checked === true)}
                     />
-                    <Label htmlFor="include-entry-time" className="flex items-center gap-2 text-sm font-medium">
+                    <Label htmlFor="include-entry-time" className="flex items-center gap-2 text-sm">
                       <Clock className="w-4 h-4" />
                       Include specific entry time
                     </Label>
