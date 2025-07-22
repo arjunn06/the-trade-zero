@@ -1,8 +1,15 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, ImageIcon, Edit, Trash2, Eye, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, ImageIcon, Edit, Trash2, Eye, X, Copy, MoreHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface Trade {
   id: string;
@@ -30,10 +37,11 @@ interface TradeCardProps {
   trade: Trade;
   onClose?: (trade: Trade) => void;
   onDelete?: (tradeId: string) => void;
+  onDuplicate?: (tradeId: string) => void;
   onViewScreenshots?: (screenshots: string[]) => void;
 }
 
-export function TradeCard({ trade, onClose, onDelete, onViewScreenshots }: TradeCardProps) {
+export function TradeCard({ trade, onClose, onDelete, onDuplicate, onViewScreenshots }: TradeCardProps) {
   const navigate = useNavigate();
 
   const formatCurrency = (amount: number, currency: string = 'USD') => {
@@ -58,7 +66,7 @@ export function TradeCard({ trade, onClose, onDelete, onViewScreenshots }: Trade
 
   return (
     <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow duration-200"
+      className="cursor-pointer hover:shadow-md transition-shadow duration-200 group relative"
       onClick={handleCardClick}
     >
       <CardContent className="p-4">
@@ -74,11 +82,53 @@ export function TradeCard({ trade, onClose, onDelete, onViewScreenshots }: Trade
               {trade.trade_type.toUpperCase()}
             </Badge>
           </div>
-          <Badge 
-            variant={trade.status === 'open' ? 'outline' : 'secondary'}
-          >
-            {trade.status}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge 
+              variant={trade.status === 'open' ? 'outline' : 'secondary'}
+            >
+              {trade.status}
+            </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={(e) => handleActionClick(e, () => navigate(`/trades/${trade.id}`))}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Details
+                </DropdownMenuItem>
+                {onDuplicate && (
+                  <DropdownMenuItem onClick={(e) => handleActionClick(e, () => onDuplicate(trade.id))}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Duplicate Trade
+                  </DropdownMenuItem>
+                )}
+                {trade.status === 'open' && onClose && (
+                  <DropdownMenuItem onClick={(e) => handleActionClick(e, () => onClose(trade))}>
+                    <X className="h-4 w-4 mr-2" />
+                    Close Trade
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                {onDelete && (
+                  <DropdownMenuItem 
+                    onClick={(e) => handleActionClick(e, () => onDelete(trade.id))}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Trade
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-4">

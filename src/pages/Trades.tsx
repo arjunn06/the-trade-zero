@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, TrendingUp, TrendingDown, ImageIcon, Eye, X } from 'lucide-react';
+import { Plus, Edit, Trash2, TrendingUp, TrendingDown, ImageIcon, Eye, X, Copy, MoreHorizontal } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +33,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface Trade {
   id: string;
@@ -280,6 +287,50 @@ const Trades = () => {
     });
   };
 
+  const handleDuplicateTrade = async (tradeId: string) => {
+    const tradeToDuplicate = trades.find(t => t.id === tradeId);
+    if (!tradeToDuplicate || !user) return;
+
+    try {
+      // Create a clean trade object for duplication
+      const duplicateTradeData = {
+        symbol: tradeToDuplicate.symbol,
+        trade_type: tradeToDuplicate.trade_type,
+        entry_price: tradeToDuplicate.entry_price,
+        quantity: tradeToDuplicate.quantity,
+        status: 'open', // Always start duplicated trades as open
+        entry_date: new Date().toISOString(),
+        notes: tradeToDuplicate.notes ? `Copy of: ${tradeToDuplicate.notes}` : 'Duplicated trade',
+        user_id: user.id,
+        trading_account_id: tradeToDuplicate.trading_account_id,
+        strategy_id: tradeToDuplicate.strategy_id,
+        stop_loss: tradeToDuplicate.stop_loss,
+        take_profit: tradeToDuplicate.take_profit,
+        risk_amount: tradeToDuplicate.risk_amount
+      };
+
+      const { error } = await supabase
+        .from('trades')
+        .insert([duplicateTradeData]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Duplicated trade ${tradeToDuplicate.symbol} successfully`
+      });
+
+      fetchTrades();
+    } catch (error) {
+      console.error('Error duplicating trade:', error);
+      toast({
+        title: "Error",
+        description: "Failed to duplicate trade",
+        variant: "destructive"
+      });
+    }
+  };
+
   const openCloseDialog = (trade: Trade) => {
     setEditingTrade(trade);
     setCloseFormData({
@@ -444,6 +495,7 @@ const Trades = () => {
                   trade={trade}
                   onClose={openCloseDialog}
                   onDelete={(id) => handleDeleteConfirm(id, trade.symbol)}
+                  onDuplicate={handleDuplicateTrade}
                   onViewScreenshots={openScreenshotDialog}
                 />
               ))}
@@ -542,30 +594,54 @@ const Trades = () => {
                         </TableCell>
                         <TableCell>{formatDate(trade.entry_date)}</TableCell>
                         <TableCell>
-                          <div className="flex space-x-2">
-                            {trade.status === 'open' && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
                               <Button
                                 size="sm"
-                                variant="outline"
-                                onClick={(e) => {
+                                variant="ghost"
+                                className="h-8 w-8 p-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/trades/${trade.id}`);
+                              }}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                handleDuplicateTrade(trade.id);
+                              }}>
+                                <Copy className="h-4 w-4 mr-2" />
+                                Duplicate Trade
+                              </DropdownMenuItem>
+                              {trade.status === 'open' && (
+                                <DropdownMenuItem onClick={(e) => {
                                   e.stopPropagation();
                                   openCloseDialog(trade);
+                                }}>
+                                  <X className="h-4 w-4 mr-2" />
+                                  Close Trade
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteConfirm(trade.id, trade.symbol);
                                 }}
+                                className="text-destructive focus:text-destructive"
                               >
-                                Close
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteConfirm(trade.id, trade.symbol);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Trade
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))}
