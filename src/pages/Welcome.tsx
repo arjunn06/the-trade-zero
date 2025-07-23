@@ -13,6 +13,9 @@ const Welcome = () => {
     if (!user) return;
 
     try {
+      // Set localStorage immediately to prevent loops
+      localStorage.setItem('welcome-completed', 'true');
+      
       // Mark onboarding as completed in database
       const { error } = await supabase
         .from('profiles')
@@ -26,11 +29,9 @@ const Welcome = () => {
           description: "Failed to save onboarding progress. Please try again.",
           variant: "destructive"
         });
-        return;
+        // Don't return here - still navigate since localStorage is set
       }
 
-      // Keep localStorage as backup for session consistency
-      localStorage.setItem('welcome-completed', 'true');
       navigate('/dashboard');
     } catch (error) {
       console.error('Error completing onboarding:', error);
@@ -39,6 +40,8 @@ const Welcome = () => {
         description: "Something went wrong. Please try again.",
         variant: "destructive"
       });
+      // Still navigate since localStorage is already set
+      navigate('/dashboard');
     }
   };
 

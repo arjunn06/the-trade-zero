@@ -14,6 +14,91 @@ import { MetricCard } from '@/components/MetricCard';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { SmartSuggestions } from '@/components/SmartSuggestions';
 
+interface AccountGoalsSectionProps {
+  accounts: any[];
+  user: any;
+  formatCurrency: (amount: number, currency?: string) => string;
+}
+
+const AccountGoalsSection = ({ accounts, user, formatCurrency }: AccountGoalsSectionProps) => {
+  const [accountEquities, setAccountEquities] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const fetchAccountEquities = async () => {
+      if (!user || accounts.length === 0) return;
+
+      try {
+        const { data: allTradesData } = await supabase
+          .from('trades')
+          .select('pnl, trading_account_id')
+          .eq('user_id', user.id);
+
+        const equities: Record<string, number> = {};
+        accounts.forEach(account => {
+          const accountTrades = (allTradesData || []).filter(trade => trade.trading_account_id === account.id);
+          const accountPnl = accountTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+          equities[account.id] = account.initial_balance + accountPnl;
+        });
+        setAccountEquities(equities);
+      } catch (error) {
+        console.error('Error fetching account equities:', error);
+      }
+    };
+
+    fetchAccountEquities();
+  }, [accounts, user]);
+
+  const accountsWithGoals = accounts.filter(acc => acc.equity_goal && acc.equity_goal > 0);
+
+  if (accountsWithGoals.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <Target className="h-5 w-5 mr-2" />
+          Equity Goals Progress
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {accountsWithGoals.map((account) => {
+          const equity = accountEquities[account.id] || account.initial_balance;
+          const progress = (equity / account.equity_goal!) * 100;
+          const progressClamped = Math.min(Math.max(progress, 0), 100);
+          const isGoalAchieved = progress >= 100;
+          
+          return (
+            <div key={account.id} className="space-y-2">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-medium">{account.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {formatCurrency(equity, account.currency)} / {formatCurrency(account.equity_goal!, account.currency)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className={`font-medium ${isGoalAchieved ? 'text-green-600' : ''}`}>
+                    {progressClamped.toFixed(1)}%
+                  </p>
+                  {isGoalAchieved && (
+                    <Badge variant="default" className="text-xs">
+                      Goal Achieved! 🎉
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <Progress 
+                value={progressClamped} 
+                className="h-2"
+              />
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+};
+
 interface TradingAccount {
   id: string;
   name: string;
@@ -397,56 +482,7 @@ const Dashboard = () => {
         </div>
 
         {/* Account Progress Indicators */}
-        {accounts.filter(acc => acc.equity_goal && acc.equity_goal > 0).length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Target className="h-5 w-5 mr-2" />
-                Equity Goals Progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {accounts
-                .filter(acc => acc.equity_goal && acc.equity_goal > 0)
-                .map((account) => {
-                  // Calculate equity for this account from its trades
-                  const accountTrades = allTrades.filter(trade => trade.trading_account_id === account.id);
-                  const accountPnl = accountTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
-                  const equity = account.initial_balance + accountPnl;
-                  const progress = (equity / account.equity_goal!) * 100;
-                  const progressClamped = Math.min(Math.max(progress, 0), 100);
-                  const isGoalAchieved = progress >= 100;
-                  
-                  return (
-                    <div key={account.id} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium">{account.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatCurrency(equity, account.currency)} / {formatCurrency(account.equity_goal!, account.currency)}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className={`font-medium ${isGoalAchieved ? 'text-green-600' : ''}`}>
-                            {progressClamped.toFixed(1)}%
-                          </p>
-                          {isGoalAchieved && (
-                            <Badge variant="default" className="text-xs">
-                              Goal Achieved! 🎉
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <Progress 
-                        value={progressClamped} 
-                        className="h-2"
-                      />
-                    </div>
-                  );
-                })}
-            </CardContent>
-          </Card>
-        )}
+        <AccountGoalsSection accounts={accounts} user={user} formatCurrency={formatCurrency} />
 
         {/* Charts and Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">

@@ -25,6 +25,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       }
 
       try {
+        // First check localStorage for immediate response
+        const localStorageCompleted = localStorage.getItem('welcome-completed') === 'true';
+        
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('has_completed_onboarding')
@@ -33,14 +36,25 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
         if (error) {
           console.error('Error fetching profile:', error);
-          // If no profile exists, user hasn't completed onboarding
-          setHasCompletedOnboarding(false);
+          // If no profile exists but localStorage says completed, trust it
+          setHasCompletedOnboarding(localStorageCompleted);
         } else {
-          setHasCompletedOnboarding(profile?.has_completed_onboarding || false);
+          const dbCompleted = profile?.has_completed_onboarding || false;
+          // Use either database value OR localStorage value (whichever is true)
+          setHasCompletedOnboarding(dbCompleted || localStorageCompleted);
+          
+          // If localStorage says completed but DB doesn't, update DB
+          if (localStorageCompleted && !dbCompleted) {
+            await supabase
+              .from('profiles')
+              .update({ has_completed_onboarding: true })
+              .eq('user_id', user.id);
+          }
         }
       } catch (error) {
         console.error('Error checking onboarding status:', error);
-        setHasCompletedOnboarding(false);
+        // Fallback to localStorage
+        setHasCompletedOnboarding(localStorage.getItem('welcome-completed') === 'true');
       } finally {
         setCheckingOnboarding(false);
       }

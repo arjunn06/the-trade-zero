@@ -57,10 +57,9 @@ const Auth = () => {
         variant: "destructive"
       });
     } else {
-      toast({
-        title: "Welcome to The Trade Zero! 🎉",
-        description: `Thanks for joining us, ${displayName}! Please check your email to confirm your account.`
-      });
+      // Redirect to verification page with email parameter
+      window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
+      return;
     }
     
     setLoading(false);

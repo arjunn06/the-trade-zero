@@ -25,6 +25,7 @@ import Upgrade from "./pages/Upgrade";
 import Terms from "./pages/Terms";
 import Refund from "./pages/Refund";
 import Welcome from "./pages/Welcome";
+import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />
