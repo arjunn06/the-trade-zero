@@ -39,6 +39,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, displayName?: string) => {
+    // First check if user already exists
+    const { data: existingUser } = await supabase.auth.signInWithPassword({
+      email,
+      password: 'dummy-password' // This will fail but tell us if user exists
+    });
+
+    // If we get a "Invalid login credentials" error, user doesn't exist
+    // If we get a different error, user might exist
+    const { error: checkError } = await supabase.auth.signInWithPassword({
+      email,
+      password: 'dummy-password'
+    });
+
+    if (checkError && !checkError.message.includes('Invalid login credentials')) {
+      return { error: { message: 'An account with this email already exists. Please sign in instead.' } };
+    }
+
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
