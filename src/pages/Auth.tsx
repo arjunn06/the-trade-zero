@@ -111,6 +111,11 @@ const Auth = () => {
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Sign In
                 </Button>
+                <div className="text-center">
+                  <Button asChild variant="link" className="text-sm">
+                    <a href="/forgot-password">Forgot your password?</a>
+                  </Button>
+                </div>
               </form>
             </TabsContent>
             

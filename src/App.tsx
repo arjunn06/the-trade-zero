@@ -26,6 +26,7 @@ import Terms from "./pages/Terms";
 import Refund from "./pages/Refund";
 import Welcome from "./pages/Welcome";
 import VerifyEmail from "./pages/VerifyEmail";
+import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />
