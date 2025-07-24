@@ -247,6 +247,7 @@ const Index = () => {
       </main>
 
       {/* Footer */}
+      <script type="text/javascript" nonce="{place_your_nonce_value_here}" src="https://gc.zohopublic.in/org/60021522321/flows/581000000885913/embed/script" defer></script>
       <footer className="border-t mt-24">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center gap-2 mb-4">
