@@ -4,10 +4,28 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { RazorpayPayment } from '@/components/RazorpayPayment';
 import { TrendingUp, BarChart3, Shield, Calendar, Check, Star } from 'lucide-react';
+import { useEffect } from 'react';
 
 const Index = () => {
   const { user, loading } = useAuth();
   const { toast } = useToast();
+
+  // Load Zoho chatbot script
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://gc.zohopublic.in/org/60021522321/flows/581000000885913/embed/script';
+    script.defer = true;
+    script.setAttribute('nonce', '{place_your_nonce_value_here}');
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup script on unmount
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
+    };
+  }, []);
 
   // Handle payment integration with Zoho payments
   const handlePayment = (plan: string, amount: number) => {
@@ -247,7 +265,6 @@ const Index = () => {
       </main>
 
       {/* Footer */}
-      <script type="text/javascript" nonce="{place_your_nonce_value_here}" src="https://gc.zohopublic.in/org/60021522321/flows/581000000885913/embed/script" defer></script>
       <footer className="border-t mt-24">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center gap-2 mb-4">
