@@ -111,8 +111,31 @@ serve(async (req) => {
 
     console.log("Successfully stored cTrader connection for trading account:", stateRow.trading_account_id);
 
-    // Optional redirect to frontend
-    return new Response("cTrader linked successfully. You can close this tab.", {
+    // Trigger initial sync to import account data, balance, and trades
+    try {
+      console.log("Triggering initial sync for trading account:", stateRow.trading_account_id);
+      
+      const { data: syncResult, error: syncError } = await supabase.functions.invoke('ctrader-sync', {
+        body: {
+          tradingAccountId: stateRow.trading_account_id,
+          fullSync: true, // Do a full sync on initial connection
+        },
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        }
+      });
+
+      if (syncError) {
+        console.error("Initial sync failed:", syncError);
+      } else {
+        console.log("Initial sync completed successfully:", syncResult);
+      }
+    } catch (syncError) {
+      console.error("Error triggering initial sync:", syncError);
+    }
+
+    // Redirect to frontend with success message
+    return new Response("cTrader linked successfully! Your account data is being imported. You can close this tab.", {
       headers: { "Content-Type": "text/plain" },
     });
 

@@ -71,6 +71,18 @@ const TradingAccounts = () => {
     }
   }, [user]);
 
+  // Listen for account refresh messages from child components
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data === 'refresh-accounts') {
+        fetchAccounts();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   const fetchAccounts = async () => {
     if (!user) return;
 
@@ -174,26 +186,19 @@ const TradingAccounts = () => {
                 description: "Please complete the authentication to import your trading data",
               });
 
-              // Listen for window close to refresh and sync data
+              // Listen for window close to refresh data
               const checkClosed = setInterval(() => {
                 if (authWindow?.closed) {
                   clearInterval(checkClosed);
                   setTimeout(async () => {
-                    // Check if connection was successful and trigger initial sync
-                    const { data: connection } = await supabase
-                      .from('ctrader_connections')
-                      .select('*')
-                      .eq('trading_account_id', newAccount.id)
-                      .single();
-
-                    if (connection) {
-                      // Trigger initial sync immediately
-                      await supabase.functions.invoke('ctrader-sync', {
-                        body: { tradingAccountId: newAccount.id }
-                      });
-                    }
-                    
+                    // Refresh the accounts list - initial sync should already be triggered by callback
                     fetchAccounts();
+                    
+                    // Show sync completion message
+                    toast({
+                      title: "Connection Successful",
+                      description: "Your cTrader account is connected and data is being imported. This may take a few moments.",
+                    });
                   }, 2000);
                 }
               }, 1000);

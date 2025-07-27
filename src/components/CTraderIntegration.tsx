@@ -122,6 +122,11 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
                 window.location.reload();
               } else {
                 checkExistingConnection();
+                // Show connection success message
+                toast({
+                  title: "Connection Successful",
+                  description: "Your cTrader account is connected and data is being imported.",
+                });
               }
             }, 1000);
           }
@@ -194,8 +199,13 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
         description: `Account synced successfully. Balance and trades updated.`,
       });
 
-      // Update last sync time
+      // Update last sync time and refresh parent component
       setConnection(prev => prev ? { ...prev, last_sync: new Date().toISOString() } : null);
+      
+      // Refresh the parent component to show updated data
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage('refresh-accounts', '*');
+      }
     } catch (error) {
       console.error('Error syncing account:', error);
       toast({
@@ -225,8 +235,13 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
         description: `Complete trading history synced successfully.`,
       });
 
-      // Update last sync time
+      // Update last sync time and refresh parent component
       setConnection(prev => prev ? { ...prev, last_sync: new Date().toISOString() } : null);
+      
+      // Refresh the parent component to show updated data
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage('refresh-accounts', '*');
+      }
     } catch (error) {
       console.error('Error performing full sync:', error);
       toast({
