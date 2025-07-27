@@ -12,8 +12,21 @@ serve(async (req) => {
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
 
-    if (!code || !state) {
-      return new Response("Missing code or state", { status: 400 });
+    console.log("Callback received:", { 
+      code: code ? "present" : "missing", 
+      state: state ? "present" : "missing",
+      fullUrl: req.url,
+      allParams: Object.fromEntries(url.searchParams.entries())
+    });
+
+    if (!code) {
+      console.error("Missing authorization code");
+      return new Response("Missing authorization code", { status: 400 });
+    }
+
+    if (!state) {
+      console.error("Missing state parameter - this might be a cTrader configuration issue");
+      return new Response("Missing state parameter. Please check cTrader OAuth configuration.", { status: 400 });
     }
 
     const supabase = createClient(
