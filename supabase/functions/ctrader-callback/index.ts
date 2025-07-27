@@ -11,21 +11,58 @@ serve(async (req) => {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
+    const error = url.searchParams.get("error");
+    const errorDescription = url.searchParams.get("error_description");
     
     console.log("Callback received:", { 
       code: code ? "present" : "missing", 
       state: state ? "present" : "missing",
-      fullUrl: req.url 
+      error: error || "none",
+      errorDescription: errorDescription || "none",
+      fullUrl: req.url,
+      allParams: Object.fromEntries(url.searchParams.entries())
     });
+
+    // Check for OAuth errors first
+    if (error) {
+      console.error("OAuth error from cTrader:", { error, errorDescription });
+      return new Response(`OAuth Error: ${error} - ${errorDescription || 'Unknown error'}`, { 
+        status: 400,
+        headers: { "Content-Type": "text/plain" }
+      });
+    }
 
     if (!code) {
       console.error("Missing authorization code from cTrader");
-      return new Response("Authorization failed - missing code", { status: 400 });
+      return new Response("Authorization failed - missing authorization code", { 
+        status: 400,
+        headers: { "Content-Type": "text/plain" }
+      });
     }
 
+    // If state is missing, try to find the most recent auth session for debugging
     if (!state) {
-      console.error("Missing state parameter from cTrader");
-      return new Response("Authorization failed - missing state", { status: 400 });
+      console.error("Missing state parameter - this suggests cTrader OAuth app may not be configured correctly");
+      console.log("Attempting to find recent auth session for debugging...");
+      
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
+
+      // Try to find recent auth states for debugging
+      const { data: recentStates, error: statesError } = await supabase
+        .from("ctrader_auth_states")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      console.log("Recent auth states:", { recentStates, statesError });
+      
+      return new Response("Authorization failed - missing state parameter. This suggests the cTrader OAuth app configuration may be incorrect. Please check that the redirect URI in your cTrader app matches exactly: https://dynibyqrcbxneiwjyahn.supabase.co/functions/v1/ctrader-callback", { 
+        status: 400,
+        headers: { "Content-Type": "text/plain" }
+      });
     }
 
     const supabase = createClient(
