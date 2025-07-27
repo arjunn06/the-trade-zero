@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useUser } from '@supabase/auth-helpers-react';
-import { createClient } from '@/utils/supabase/client';
-
-const supabase = createClient();
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const TradingAccounts = () => {
-  const user = useUser();
+  const { user } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [form, setForm] = useState({ broker: '', accountType: '', balance: '', goal: '' });
   const [syncing, setSyncing] = useState(false);
@@ -38,12 +36,13 @@ const TradingAccounts = () => {
     const { broker, accountType, balance, goal } = form;
     const { data, error } = await supabase.from('trading_accounts').insert([
       {
+        name: `${broker} Account`,
         broker,
         account_type: accountType,
-        balance: parseFloat(balance),
+        initial_balance: parseFloat(balance),
+        current_balance: parseFloat(balance),
         equity_goal: parseFloat(goal),
         user_id: user?.id,
-        is_ctrader: false,
       },
     ]);
 
