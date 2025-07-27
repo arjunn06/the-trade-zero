@@ -177,16 +177,66 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
     }
   };
 
-  const handleImportLatestTrades = async () => {
-    await handleImportTrades(); // Use default 30 days
+  const handleSyncNow = async () => {
+    setIsImporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ctrader-sync', {
+        body: {
+          tradingAccountId: accountId,
+          fullSync: false,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sync Successful",
+        description: `Account synced successfully. Balance and trades updated.`,
+      });
+
+      // Update last sync time
+      setConnection(prev => prev ? { ...prev, last_sync: new Date().toISOString() } : null);
+    } catch (error) {
+      console.error('Error syncing account:', error);
+      toast({
+        title: "Sync Failed",
+        description: "Failed to sync account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
   };
 
-  const handleImportAllTrades = async () => {
-    // Import trades from the past year
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-    
-    await handleImportTrades(oneYearAgo.toISOString(), new Date().toISOString());
+  const handleFullSync = async () => {
+    setIsImporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ctrader-sync', {
+        body: {
+          tradingAccountId: accountId,
+          fullSync: true,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Full Sync Successful",
+        description: `Complete trading history synced successfully.`,
+      });
+
+      // Update last sync time
+      setConnection(prev => prev ? { ...prev, last_sync: new Date().toISOString() } : null);
+    } catch (error) {
+      console.error('Error performing full sync:', error);
+      toast({
+        title: "Full Sync Failed",
+        description: "Failed to perform full sync. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   const handleDisconnect = async () => {
@@ -282,7 +332,7 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
     );
   }
 
-  // If connected, show connection status and import options
+  // If connected, show connection status and sync options
   if (connection) {
     return (
       <PremiumFeature feature="cTrader Integration">
@@ -305,11 +355,10 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
             <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-medium text-green-800">Connected</span>
+                <span className="text-sm font-medium text-green-800">Auto-Sync Active</span>
               </div>
               <p className="text-sm text-green-700">
-                Account {connection.account_number} connected on{' '}
-                {new Date(connection.connected_at).toLocaleDateString()}
+                Account {connection.account_number} syncs automatically every 15 minutes
               </p>
               {connection.last_sync && (
                 <p className="text-sm text-green-700">
@@ -320,7 +369,7 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
 
             <div className="flex gap-3 flex-col sm:flex-row">
               <Button 
-                onClick={handleImportLatestTrades}
+                onClick={handleSyncNow}
                 disabled={isImporting}
                 className="flex-1"
               >
@@ -329,11 +378,11 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
                 ) : (
                   <Download className="mr-2 h-4 w-4" />
                 )}
-                Import Latest (30 days)
+                Sync Now
               </Button>
 
               <Button 
-                onClick={handleImportAllTrades}
+                onClick={handleFullSync}
                 disabled={isImporting}
                 variant="outline"
                 className="flex-1"
@@ -343,7 +392,7 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
                 ) : (
                   <Download className="mr-2 h-4 w-4" />
                 )}
-                Import All (1 year)
+                Full Sync
               </Button>
             </div>
 
@@ -358,12 +407,13 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
             </div>
 
             <div className="bg-muted p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Auto-Import Features:</h4>
+              <h4 className="font-medium mb-2">✨ Auto-Sync Features:</h4>
               <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                <li>Automatic trade detection from your cTrader account</li>
-                <li>Real-time trade data synchronization</li>
+                <li>Balance and equity updated automatically every 15 minutes</li>
+                <li>New trades imported in real-time</li>
+                <li>Open positions tracked and updated</li>
                 <li>Complete trade history with P&L calculations</li>
-                <li>Secure OAuth authentication</li>
+                <li>Secure OAuth authentication with token refresh</li>
               </ul>
             </div>
           </CardContent>
