@@ -58,7 +58,7 @@ const Index = () => {
       <header className="border-b">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-6 w-6 text-primary" />
+            <TrendingUp className="h-6 w-6 text-brand-blue" />
             <span className="font-bold text-xl">The Trade Zero</span>
           </div>
           <Button asChild>
@@ -89,8 +89,8 @@ const Index = () => {
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-24">
           <div className="text-center">
-            <div className="bg-primary/10 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="h-8 w-8 text-primary" />
+            <div className="bg-brand-blue/10 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <TrendingUp className="h-8 w-8 text-brand-blue" />
             </div>
             <h3 className="text-xl font-semibold mb-2">Trade Tracking</h3>
             <p className="text-muted-foreground">
@@ -99,8 +99,8 @@ const Index = () => {
           </div>
 
           <div className="text-center">
-            <div className="bg-primary/10 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <BarChart3 className="h-8 w-8 text-primary" />
+            <div className="bg-brand-blue/10 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <BarChart3 className="h-8 w-8 text-brand-blue" />
             </div>
             <h3 className="text-xl font-semibold mb-2">Performance Analytics</h3>
             <p className="text-muted-foreground">
@@ -109,8 +109,8 @@ const Index = () => {
           </div>
 
           <div className="text-center">
-            <div className="bg-primary/10 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Shield className="h-8 w-8 text-primary" />
+            <div className="bg-brand-blue/10 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <Shield className="h-8 w-8 text-brand-blue" />
             </div>
             <h3 className="text-xl font-semibold mb-2">Strategy Management</h3>
             <p className="text-muted-foreground">
@@ -119,8 +119,8 @@ const Index = () => {
           </div>
 
           <div className="text-center">
-            <div className="bg-primary/10 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Calendar className="h-8 w-8 text-primary" />
+            <div className="bg-brand-blue/10 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <Calendar className="h-8 w-8 text-brand-blue" />
             </div>
             <h3 className="text-xl font-semibold mb-2">P&L Calendar</h3>
             <p className="text-muted-foreground">
@@ -268,7 +268,7 @@ const Index = () => {
       <footer className="border-t mt-24">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <TrendingUp className="h-5 w-5 text-primary" />
+            <TrendingUp className="h-5 w-5 text-brand-blue" />
             <span className="font-semibold">The Trade Zero</span>
           </div>
           <p className="text-center text-muted-foreground mb-4">

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, TrendingUp } from 'lucide-react';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -69,7 +69,10 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">The Trade Zero</CardTitle>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <TrendingUp className="h-6 w-6 text-brand-blue" />
+            <CardTitle className="text-2xl font-bold">The Trade Zero</CardTitle>
+          </div>
           <CardDescription>
             Sign in to your trading journal or create a new account
           </CardDescription>
