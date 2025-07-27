@@ -127,6 +127,9 @@ serve(async (req) => {
         fromDate,
         toDate,
       },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     let tradesCount = 0;
