@@ -285,7 +285,7 @@ async function fetchAccountInfo(accessToken: string, accountNumber: string): Pro
               accountNumber: accountNumber
             });
 
-          } else if (message.payloadType && message.payloadType.includes('Error')) {
+          } else if (message.payloadType && typeof message.payloadType === 'string' && message.payloadType.includes('Error')) {
             clearTimeout(timeout);
             ws.close();
             reject(new Error(`cTrader API Error: ${message.description || message.errorCode}`));
@@ -381,7 +381,7 @@ async function fetchOpenPositions(accessToken: string, accountNumber: string): P
             ws.close();
             resolve(positions);
 
-          } else if (message.payloadType && message.payloadType.includes('Error')) {
+          } else if (message.payloadType && typeof message.payloadType === 'string' && message.payloadType.includes('Error')) {
             clearTimeout(timeout);
             ws.close();
             reject(new Error(`cTrader API Error: ${message.description || message.errorCode}`));
