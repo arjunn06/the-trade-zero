@@ -10,7 +10,7 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
-    const state = url.searchParams.get("state");
+    let state = url.searchParams.get("state");
 
     console.log("Callback received:", { 
       code: code ? "present" : "missing", 
@@ -24,25 +24,45 @@ serve(async (req) => {
       return new Response("Missing authorization code", { status: 400 });
     }
 
-    if (!state) {
-      console.error("Missing state parameter - this might be a cTrader configuration issue");
-      return new Response("Missing state parameter. Please check cTrader OAuth configuration.", { status: 400 });
-    }
-
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Find state row
-    const { data: stateRow, error: stateError } = await supabase
-      .from("ctrader_auth_states")
-      .select("*")
-      .eq("state", state)
-      .single();
-
-    if (stateError || !stateRow) {
-      return new Response("Invalid or expired OAuth state", { status: 400 });
+    // Find state row - if state is missing, try to find the most recent pending auth
+    let stateRow;
+    if (state) {
+      const { data, error } = await supabase
+        .from("ctrader_auth_states")
+        .select("*")
+        .eq("state", state)
+        .single();
+      
+      if (error || !data) {
+        console.error("Invalid or expired OAuth state:", error?.message);
+        return new Response("Invalid or expired OAuth state", { status: 400 });
+      }
+      stateRow = data;
+    } else {
+      // Fallback: find most recent auth state without tokens (within last hour)
+      console.log("No state parameter, attempting to find recent auth session");
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      
+      const { data, error } = await supabase
+        .from("ctrader_auth_states")
+        .select("*")
+        .is("access_token", null)
+        .gte("created_at", oneHourAgo)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+        
+      if (error || !data) {
+        console.error("No recent auth session found:", error?.message);
+        return new Response("No valid OAuth session found. Please try connecting again.", { status: 400 });
+      }
+      stateRow = data;
+      state = stateRow.state; // Use the found state for token exchange
     }
 
     // Exchange code for access/refresh token
@@ -67,15 +87,22 @@ serve(async (req) => {
 
     const { access_token, refresh_token, expires_in } = tokenData;
 
-    // Store tokens in Supabase (you can also move them to a separate table)
-    await supabase
+    // Update auth state with tokens
+    const { error: updateError } = await supabase
       .from("ctrader_auth_states")
       .update({
         access_token,
         refresh_token,
-        token_expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
+        expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
       })
       .eq("state", state);
+
+    if (updateError) {
+      console.error("Failed to store tokens:", updateError.message);
+      return new Response("Failed to store authentication tokens", { status: 500 });
+    }
+
+    console.log("Successfully stored cTrader tokens for state:", state);
 
     // Optional redirect to frontend
     return new Response("cTrader linked successfully. You can close this tab.", {
