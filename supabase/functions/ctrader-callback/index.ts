@@ -51,7 +51,6 @@ serve(async (req) => {
       const { data, error } = await supabase
         .from("ctrader_auth_states")
         .select("*")
-        .is("access_token", null)
         .gte("created_at", oneHourAgo)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -87,22 +86,30 @@ serve(async (req) => {
 
     const { access_token, refresh_token, expires_in } = tokenData;
 
-    // Update auth state with tokens
-    const { error: updateError } = await supabase
-      .from("ctrader_auth_states")
-      .update({
+    // Store connection in the ctrader_connections table
+    const { error: connectionError } = await supabase
+      .from("ctrader_connections")
+      .insert({
+        user_id: stateRow.user_id,
+        trading_account_id: stateRow.trading_account_id,
+        account_number: stateRow.account_number,
         access_token,
         refresh_token,
         expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
-      })
-      .eq("state", state);
+      });
 
-    if (updateError) {
-      console.error("Failed to store tokens:", updateError.message);
-      return new Response("Failed to store authentication tokens", { status: 500 });
+    if (connectionError) {
+      console.error("Failed to store connection:", connectionError.message);
+      return new Response("Failed to store connection data", { status: 500 });
     }
 
-    console.log("Successfully stored cTrader tokens for state:", state);
+    // Clean up the auth state record
+    await supabase
+      .from("ctrader_auth_states")
+      .delete()
+      .eq("state", state);
+
+    console.log("Successfully stored cTrader connection for trading account:", stateRow.trading_account_id);
 
     // Optional redirect to frontend
     return new Response("cTrader linked successfully. You can close this tab.", {
