@@ -166,9 +166,18 @@ const TradingAccounts = () => {
         // If cTrader integration is enabled, initiate OAuth flow immediately
         if (formData.use_ctrader && newAccount) {
           try {
+            // Get current session for authentication
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+              throw new Error('No valid authentication session found');
+            }
+
             const { data: authData, error: authError } = await supabase.functions.invoke('ctrader-auth', {
               body: {
                 tradingAccountId: newAccount.id,
+              },
+              headers: {
+                Authorization: `Bearer ${session.access_token}`,
               },
             });
 

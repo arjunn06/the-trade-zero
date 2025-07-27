@@ -95,10 +95,19 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
         finalAccountId = newAccount.id;
       }
 
+      // Get current session for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No valid authentication session found');
+      }
+
       // Call the edge function to initiate OAuth flow (no account number needed)
       const { data, error } = await supabase.functions.invoke('ctrader-auth', {
         body: {
           tradingAccountId: finalAccountId,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 
@@ -147,6 +156,12 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
   const handleImportTrades = async (customFromDate?: string, customToDate?: string) => {
     setIsImporting(true);
     try {
+      // Get current session for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No valid authentication session found');
+      }
+
       // Use custom dates if provided, otherwise default to last 30 days
       const fromDate = customFromDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const toDate = customToDate || new Date().toISOString();
@@ -156,6 +171,9 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
           tradingAccountId: accountId,
           fromDate,
           toDate,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 
@@ -185,10 +203,19 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
   const handleSyncNow = async () => {
     setIsImporting(true);
     try {
+      // Get current session for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No valid authentication session found');
+      }
+
       const { data, error } = await supabase.functions.invoke('ctrader-sync', {
         body: {
           tradingAccountId: accountId,
           fullSync: false,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 
@@ -221,10 +248,19 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
   const handleFullSync = async () => {
     setIsImporting(true);
     try {
+      // Get current session for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No valid authentication session found');
+      }
+
       const { data, error } = await supabase.functions.invoke('ctrader-sync', {
         body: {
           tradingAccountId: accountId,
           fullSync: true,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 
