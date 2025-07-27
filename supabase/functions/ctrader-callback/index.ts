@@ -10,18 +10,10 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
-    let state = url.searchParams.get("state");
+    const state = url.searchParams.get("state");
 
-    console.log("Callback received:", { 
-      code: code ? "present" : "missing", 
-      state: state ? "present" : "missing",
-      fullUrl: req.url,
-      allParams: Object.fromEntries(url.searchParams.entries())
-    });
-
-    if (!code) {
-      console.error("Missing authorization code");
-      return new Response("Missing authorization code", { status: 400 });
+    if (!code || !state) {
+      return new Response("Missing code or state", { status: 400 });
     }
 
     const supabase = createClient(
@@ -29,42 +21,16 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Find state row - if state is missing, try to find the most recent pending auth
-    let stateRow;
-    if (state) {
-      const { data, error } = await supabase
-        .from("ctrader_auth_states")
-        .select("*")
-        .eq("state", state)
-        .single();
-      
-      if (error || !data) {
-        console.error("Invalid or expired OAuth state:", error?.message);
-        return new Response("Invalid or expired OAuth state", { status: 400 });
-      }
-      stateRow = data;
-    } else {
-      // Fallback: find most recent auth state without tokens (within last hour)
-      console.log("No state parameter, attempting to find recent auth session");
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-      
-      const { data, error } = await supabase
-        .from("ctrader_auth_states")
-        .select("*")
-        .gte("created_at", oneHourAgo)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
-        
-      if (error || !data) {
-        console.error("No recent auth session found:", error?.message);
-        return new Response("No valid OAuth session found. Please try connecting again.", { status: 400 });
-      }
-      stateRow = data;
-      state = stateRow.state; // Use the found state for token exchange
+    const { data: stateRow, error: stateError } = await supabase
+      .from("ctrader_auth_states")
+      .select("*")
+      .eq("state", state)
+      .single();
+
+    if (stateError || !stateRow) {
+      return new Response("Invalid or expired OAuth state", { status: 400 });
     }
 
-    // Exchange code for access/refresh token
     const tokenRes = await fetch("https://connect.spotware.com/apps/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -86,33 +52,36 @@ serve(async (req) => {
 
     const { access_token, refresh_token, expires_in } = tokenData;
 
-    // Store connection in the ctrader_connections table
-    const { error: connectionError } = await supabase
-      .from("ctrader_connections")
-      .insert({
-        user_id: stateRow.user_id,
-        trading_account_id: stateRow.trading_account_id,
-        account_number: stateRow.account_number,
+    const { error: updateError } = await supabase
+      .from("ctrader_auth_states")
+      .update({
         access_token,
         refresh_token,
-        expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
-      });
-
-    if (connectionError) {
-      console.error("Failed to store connection:", connectionError.message);
-      return new Response("Failed to store connection data", { status: 500 });
-    }
-
-    // Clean up the auth state record
-    await supabase
-      .from("ctrader_auth_states")
-      .delete()
+        token_expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
+      })
       .eq("state", state);
 
-    console.log("Successfully stored cTrader connection for trading account:", stateRow.trading_account_id);
+    if (updateError) {
+      console.error("❌ Failed to update tokens:", updateError);
+      return new Response("Database update failed", { status: 500 });
+    }
 
-    // Optional redirect to frontend
-    return new Response("cTrader linked successfully. You can close this tab.", {
+    const importRes = await fetch("https://dynibyqrcbxneiwjyahn.supabase.co/functions/v1/ctrader-import", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        accessToken: access_token,
+        refreshToken: refresh_token,
+        userId: state, // assuming `state` maps to user ID
+      }),
+    });
+
+    const importText = await importRes.text();
+    console.log("📨 Import function response:", importText);
+
+    return new Response("✅ cTrader linked successfully. You can close this tab.", {
       headers: { "Content-Type": "text/plain" },
     });
 
