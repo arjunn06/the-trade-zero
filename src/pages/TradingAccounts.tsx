@@ -490,17 +490,17 @@ const TradingAccounts = () => {
                 )}
 
                 <div>
-                  <Label htmlFor="equity_goal">Equity Goal (Optional)</Label>
+                  <Label htmlFor="equity_goal">Profit Goal (Optional)</Label>
                   <Input
                     id="equity_goal"
                     type="number"
                     step="0.01"
-                    placeholder="Target equity goal"
+                    placeholder="Target profit goal"
                     value={formData.equity_goal}
                     onChange={(e) => setFormData({ ...formData, equity_goal: e.target.value })}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Set a target equity goal to track your progress
+                    Set a target profit goal to track your progress
                   </p>
                 </div>
                 
