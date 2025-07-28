@@ -102,8 +102,20 @@ const Trades = () => {
     exit_date: '',
     pnl: '',
     commission: '',
-    swap: ''
+    swap: '',
+    partial_quantity: '',
+    is_partial: false
   });
+  const [partialExits, setPartialExits] = useState<Array<{
+    id: string;
+    exit_price: string;
+    exit_date: string;
+    pnl: string;
+    commission: string;
+    swap: string;
+    partial_quantity: string;
+  }>>([]);
+  const [closeType, setCloseType] = useState<'full' | 'partial'>('full');
 
   // Premium limits for basic users
   const BASIC_TRADE_LIMIT = 50;
@@ -166,26 +178,85 @@ const Trades = () => {
     if (!editingTrade) return;
 
     try {
-      const updateData = {
-        status: 'closed',
-        exit_price: parseFloat(closeFormData.exit_price),
-        exit_date: new Date(closeFormData.exit_date).toISOString(),
-        pnl: parseFloat(closeFormData.pnl),
-        commission: closeFormData.commission ? parseFloat(closeFormData.commission) : 0,
-        swap: closeFormData.swap ? parseFloat(closeFormData.swap) : 0
-      };
+      if (closeType === 'full') {
+        // Full close - update the original trade
+        const updateData = {
+          status: 'closed',
+          exit_price: parseFloat(closeFormData.exit_price),
+          exit_date: new Date(closeFormData.exit_date).toISOString(),
+          pnl: parseFloat(closeFormData.pnl),
+          commission: closeFormData.commission ? parseFloat(closeFormData.commission) : 0,
+          swap: closeFormData.swap ? parseFloat(closeFormData.swap) : 0
+        };
 
-      const { error } = await supabase
-        .from('trades')
-        .update(updateData)
-        .eq('id', editingTrade.id);
+        const { error } = await supabase
+          .from('trades')
+          .update(updateData)
+          .eq('id', editingTrade.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Trade closed successfully"
-      });
+        toast({
+          title: "Success",
+          description: "Trade closed successfully"
+        });
+      } else {
+        // Partial close - create new trade entries and update original
+        const partialQty = parseFloat(closeFormData.partial_quantity);
+        const remainingQty = editingTrade.quantity - partialQty;
+
+        if (partialQty <= 0 || partialQty >= editingTrade.quantity) {
+          throw new Error('Partial quantity must be between 0 and current quantity');
+        }
+
+        // Create closed partial trade
+        const partialTradeData = {
+          symbol: editingTrade.symbol,
+          trade_type: editingTrade.trade_type,
+          entry_price: editingTrade.entry_price,
+          exit_price: parseFloat(closeFormData.exit_price),
+          quantity: partialQty,
+          status: 'closed',
+          entry_date: editingTrade.entry_date,
+          exit_date: new Date(closeFormData.exit_date).toISOString(),
+          pnl: parseFloat(closeFormData.pnl),
+          commission: closeFormData.commission ? parseFloat(closeFormData.commission) : 0,
+          swap: closeFormData.swap ? parseFloat(closeFormData.swap) : 0,
+          notes: `Partial close from trade ${editingTrade.symbol}`,
+          user_id: user?.id,
+          trading_account_id: editingTrade.trading_account_id,
+          strategy_id: editingTrade.strategy_id,
+          stop_loss: editingTrade.stop_loss,
+          take_profit: editingTrade.take_profit,
+          source: 'partial_close'
+        };
+
+        // Update original trade with remaining quantity
+        const updateData = {
+          quantity: remainingQty,
+          notes: editingTrade.notes ? 
+            `${editingTrade.notes} | Partial close: ${partialQty} units` : 
+            `Partial close: ${partialQty} units`
+        };
+
+        const { error: insertError } = await supabase
+          .from('trades')
+          .insert([partialTradeData]);
+
+        if (insertError) throw insertError;
+
+        const { error: updateError } = await supabase
+          .from('trades')
+          .update(updateData)
+          .eq('id', editingTrade.id);
+
+        if (updateError) throw updateError;
+
+        toast({
+          title: "Success",
+          description: `Partial close completed. ${partialQty} units closed, ${remainingQty} units remaining open.`
+        });
+      }
 
       setDialogOpen(false);
       setEditingTrade(null);
@@ -194,10 +265,39 @@ const Trades = () => {
       console.error('Error closing trade:', error);
       toast({
         title: "Error",
-        description: "Failed to close trade",
+        description: error instanceof Error ? error.message : "Failed to close trade",
         variant: "destructive"
       });
     }
+  };
+
+  const addPartialExit = () => {
+    const newExit = {
+      id: Date.now().toString(),
+      exit_price: '',
+      exit_date: new Date().toISOString().split('T')[0],
+      pnl: '',
+      commission: '',
+      swap: '',
+      partial_quantity: ''
+    };
+    setPartialExits([...partialExits, newExit]);
+  };
+
+  const removePartialExit = (id: string) => {
+    setPartialExits(partialExits.filter(exit => exit.id !== id));
+  };
+
+  const updatePartialExit = (id: string, field: string, value: string) => {
+    setPartialExits(partialExits.map(exit => 
+      exit.id === id ? { ...exit, [field]: value } : exit
+    ));
+  };
+
+  const setPercentageQuantity = (percentage: number) => {
+    if (!editingTrade) return;
+    const qty = (editingTrade.quantity * (percentage / 100)).toFixed(4);
+    setCloseFormData({ ...closeFormData, partial_quantity: qty });
   };
 
   const handleDeleteTrade = async (id: string) => {
@@ -338,8 +438,12 @@ const Trades = () => {
       exit_date: new Date().toISOString().split('T')[0],
       pnl: '',
       commission: '0',
-      swap: '0'
+      swap: '0',
+      partial_quantity: '',
+      is_partial: false
     });
+    setCloseType('full');
+    setPartialExits([]);
     setDialogOpen(true);
   };
 
@@ -667,14 +771,85 @@ const Trades = () => {
         />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Close Trade</DialogTitle>
             <DialogDescription>
-              Enter the exit details for {editingTrade?.symbol}
+              Enter the exit details for {editingTrade?.symbol} - Current Quantity: {editingTrade?.quantity}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCloseTrade} className="space-y-4">
+            {/* Close Type Selection */}
+            <div className="space-y-2">
+              <Label>Close Type</Label>
+              <Select value={closeType} onValueChange={(value: 'full' | 'partial') => setCloseType(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="full">Full Close</SelectItem>
+                  <SelectItem value="partial">Partial Close</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Partial Quantity with Percentage Suggestions */}
+            {closeType === 'partial' && (
+              <div className="space-y-2">
+                <Label htmlFor="partial_quantity">Partial Quantity</Label>
+                <div className="flex gap-2 mb-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPercentageQuantity(25)}
+                  >
+                    25%
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPercentageQuantity(30)}
+                  >
+                    30%
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPercentageQuantity(50)}
+                  >
+                    50%
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPercentageQuantity(75)}
+                  >
+                    75%
+                  </Button>
+                </div>
+                <Input
+                  id="partial_quantity"
+                  type="number"
+                  step="any"
+                  placeholder="Enter quantity to close"
+                  value={closeFormData.partial_quantity}
+                  onChange={(e) => setCloseFormData({ ...closeFormData, partial_quantity: e.target.value })}
+                  required={closeType === 'partial'}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Max: {editingTrade?.quantity} units. Remaining after close: {
+                    editingTrade && closeFormData.partial_quantity ? 
+                    (editingTrade.quantity - parseFloat(closeFormData.partial_quantity || '0')).toFixed(4) :
+                    editingTrade?.quantity
+                  } units
+                </p>
+              </div>
+            )}
+
             <div>
               <Label htmlFor="exit_price">Exit Price</Label>
               <Input
@@ -697,7 +872,7 @@ const Trades = () => {
               />
             </div>
             <div>
-              <Label htmlFor="pnl">P&L</Label>
+              <Label htmlFor="pnl">P&L {closeType === 'partial' ? '(for this partial close only)' : ''}</Label>
               <Input
                 id="pnl"
                 type="number"
@@ -729,8 +904,17 @@ const Trades = () => {
                 />
               </div>
             </div>
+
+            {closeType === 'partial' && (
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Note:</strong> This will create a new closed trade record for the partial exit and keep the original trade open with the remaining quantity.
+                </p>
+              </div>
+            )}
+
             <Button type="submit" className="w-full">
-              Close Trade
+              {closeType === 'full' ? 'Close Trade' : 'Execute Partial Close'}
             </Button>
           </form>
          </DialogContent>
