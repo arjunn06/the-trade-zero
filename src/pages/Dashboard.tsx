@@ -48,7 +48,12 @@ const AccountGoalsSection = ({ accounts, user, formatCurrency }: AccountGoalsSec
     fetchAccountEquities();
   }, [accounts, user]);
 
-  const accountsWithGoals = accounts.filter(acc => acc.equity_goal && acc.equity_goal > 0);
+  const accountsWithGoals = accounts.filter(acc => {
+    if (!acc.equity_goal || acc.equity_goal <= 0) return false;
+    const equity = accountEquities[acc.id] || acc.initial_balance;
+    const progress = (equity / acc.equity_goal) * 100;
+    return progress < 100; // Only show goals not yet achieved
+  });
 
   if (accountsWithGoals.length === 0) return null;
 
