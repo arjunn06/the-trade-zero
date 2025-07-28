@@ -14,6 +14,7 @@ import { TradeCard } from '@/components/TradeCard';
 import { TradeFilters, type TradeFilters as TradeFiltersType } from '@/components/TradeFilters';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useUndoToast } from '@/components/UndoToast';
+import { CopyTradeDialog } from '@/components/CopyTradeDialog';
 import {
   Table,
   TableBody,
@@ -116,6 +117,8 @@ const Trades = () => {
     partial_quantity: string;
   }>>([]);
   const [closeType, setCloseType] = useState<'full' | 'partial'>('full');
+  const [copyTradeDialog, setCopyTradeDialog] = useState(false);
+  const [tradeToCopy, setTradeToCopy] = useState<Trade | null>(null);
 
   // Premium limits for basic users
   const BASIC_TRADE_LIMIT = 50;
@@ -387,48 +390,16 @@ const Trades = () => {
     });
   };
 
-  const handleDuplicateTrade = async (tradeId: string) => {
-    const tradeToDuplicate = trades.find(t => t.id === tradeId);
-    if (!tradeToDuplicate || !user) return;
+  const handleCopyTrade = (tradeId: string) => {
+    const tradeToCopy = trades.find(t => t.id === tradeId);
+    if (!tradeToCopy) return;
+    
+    setTradeToCopy(tradeToCopy);
+    setCopyTradeDialog(true);
+  };
 
-    try {
-      // Create a clean trade object for duplication
-      const duplicateTradeData = {
-        symbol: tradeToDuplicate.symbol,
-        trade_type: tradeToDuplicate.trade_type,
-        entry_price: tradeToDuplicate.entry_price,
-        quantity: tradeToDuplicate.quantity,
-        status: 'open', // Always start duplicated trades as open
-        entry_date: new Date().toISOString(),
-        notes: tradeToDuplicate.notes ? `Copy of: ${tradeToDuplicate.notes}` : 'Duplicated trade',
-        user_id: user.id,
-        trading_account_id: tradeToDuplicate.trading_account_id,
-        strategy_id: tradeToDuplicate.strategy_id,
-        stop_loss: tradeToDuplicate.stop_loss,
-        take_profit: tradeToDuplicate.take_profit,
-        risk_amount: tradeToDuplicate.risk_amount
-      };
-
-      const { error } = await supabase
-        .from('trades')
-        .insert([duplicateTradeData]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Duplicated trade ${tradeToDuplicate.symbol} successfully`
-      });
-
-      fetchTrades();
-    } catch (error) {
-      console.error('Error duplicating trade:', error);
-      toast({
-        title: "Error",
-        description: "Failed to duplicate trade",
-        variant: "destructive"
-      });
-    }
+  const handleCopySuccess = () => {
+    fetchTrades();
   };
 
   const openCloseDialog = (trade: Trade) => {
@@ -599,7 +570,7 @@ const Trades = () => {
                   trade={trade}
                   onClose={openCloseDialog}
                   onDelete={(id) => handleDeleteConfirm(id, trade.symbol)}
-                  onDuplicate={handleDuplicateTrade}
+                  onDuplicate={() => handleCopyTrade(trade.id)}
                   onViewScreenshots={openScreenshotDialog}
                 />
               ))}
@@ -719,10 +690,10 @@ const Trades = () => {
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={(e) => {
                                 e.stopPropagation();
-                                handleDuplicateTrade(trade.id);
+                                handleCopyTrade(trade.id);
                               }}>
                                 <Copy className="h-4 w-4 mr-2" />
-                                Duplicate Trade
+                                Copy to Account
                               </DropdownMenuItem>
                               {trade.status === 'open' && (
                                 <DropdownMenuItem onClick={(e) => {
@@ -953,6 +924,14 @@ const Trades = () => {
            </div>
           </DialogContent>
         </Dialog>
+
+        {/* Copy Trade Dialog */}
+        <CopyTradeDialog
+          open={copyTradeDialog}
+          onOpenChange={setCopyTradeDialog}
+          trade={tradeToCopy}
+          onCopySuccess={handleCopySuccess}
+        />
       </div>
     </DashboardLayout>
   );

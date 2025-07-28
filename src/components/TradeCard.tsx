@@ -107,7 +107,7 @@ export function TradeCard({ trade, onClose, onDelete, onDuplicate, onViewScreens
                 {onDuplicate && (
                   <DropdownMenuItem onClick={(e) => handleActionClick(e, () => onDuplicate(trade.id))}>
                     <Copy className="h-4 w-4 mr-2" />
-                    Duplicate Trade
+                    Copy to Account
                   </DropdownMenuItem>
                 )}
                 {trade.status === 'open' && onClose && (

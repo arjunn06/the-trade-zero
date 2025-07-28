@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Calendar } from '@/components/ui/calendar';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -44,7 +44,9 @@ const NewTrade = () => {
   const { isPremium } = useSubscription();
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const isEditing = !!id;
+  const isCopying = !!searchParams.get('copy');
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
@@ -97,9 +99,14 @@ const NewTrade = () => {
       fetchConfluenceItems();
       if (isEditing && id) {
         fetchTrade();
+      } else if (isCopying) {
+        const copyId = searchParams.get('copy');
+        if (copyId) {
+          fetchTradeForCopy(copyId);
+        }
       }
     }
-  }, [user, isEditing, id]);
+  }, [user, isEditing, id, isCopying, searchParams]);
 
   const fetchTrade = async () => {
     if (!user || !id) return;
@@ -174,6 +181,73 @@ const NewTrade = () => {
         variant: "destructive"
       });
       navigate('/trades');
+    }
+  };
+
+  const fetchTradeForCopy = async (tradeId: string) => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('trades')
+        .select('*')
+        .eq('id', tradeId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      // Populate form with trade data for copying (but reset some fields)
+      setFormData({
+        symbol: data.symbol || '',
+        trade_type: data.trade_type || '',
+        entry_price: data.entry_price?.toString() || '',
+        quantity: data.quantity?.toString() || '',
+        stop_loss: data.stop_loss?.toString() || '',
+        take_profit: data.take_profit?.toString() || '',
+        trading_account_id: '',  // User should select new account
+        strategy_id: data.strategy_id || '',
+        notes: data.notes ? `Copy of: ${data.notes}` : 'Copied trade',
+        emotions: '',
+        risk_amount: data.risk_amount?.toString() || '',
+        risk_reward_ratio: data.risk_reward_ratio?.toString() || '',
+        commission: '',  // Reset these fields
+        swap: '',
+        slippage_points: data.slippage_points?.toString() || '',
+        order_type: data.order_type || '',
+        margin_rate: data.margin_rate?.toString() || '',
+        filled_volume: data.filled_volume?.toString() || '',
+        exit_price: '',  // Reset exit details for copying
+        pnl: '',
+        execution_price: data.execution_price?.toString() || '',
+        spread: data.spread?.toString() || ''
+      });
+
+      // Copy exit details if it was a closed trade and user wants them
+      if (data.status === 'closed' && data.exit_price && data.pnl !== null) {
+        setIsClosedTrade(true);
+        setFormData(prev => ({
+          ...prev,
+          exit_price: data.exit_price?.toString() || '',
+          pnl: data.pnl?.toString() || ''
+        }));
+        if (data.exit_date) {
+          setExitDate(new Date(data.exit_date));
+        }
+      }
+
+      // Set entry date
+      if (data.entry_date) {
+        setEntryDate(new Date(data.entry_date));
+      }
+
+    } catch (error) {
+      console.error('Error fetching trade for copy:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load trade for copying",
+        variant: "destructive"
+      });
     }
   };
 
