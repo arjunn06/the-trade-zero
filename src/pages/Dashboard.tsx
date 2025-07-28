@@ -51,7 +51,9 @@ const AccountGoalsSection = ({ accounts, user, formatCurrency }: AccountGoalsSec
   const accountsWithGoals = accounts.filter(acc => {
     if (!acc.equity_goal || acc.equity_goal <= 0) return false;
     const equity = accountEquities[acc.id] || acc.initial_balance;
-    const progress = (equity / acc.equity_goal) * 100;
+    const profit = equity - acc.initial_balance;
+    const profitGoal = acc.equity_goal - acc.initial_balance;
+    const progress = profitGoal > 0 ? (profit / profitGoal) * 100 : 0;
     return progress < 100; // Only show goals not yet achieved
   });
 
@@ -62,13 +64,15 @@ const AccountGoalsSection = ({ accounts, user, formatCurrency }: AccountGoalsSec
       <CardHeader>
         <CardTitle className="flex items-center">
           <Target className="h-5 w-5 mr-2" />
-          Equity Goals Progress
+          Profit Goals Progress
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {accountsWithGoals.map((account) => {
           const equity = accountEquities[account.id] || account.initial_balance;
-          const progress = (equity / account.equity_goal!) * 100;
+          const profit = equity - account.initial_balance;
+          const profitGoal = account.equity_goal! - account.initial_balance;
+          const progress = profitGoal > 0 ? (profit / profitGoal) * 100 : 0;
           const progressClamped = Math.min(Math.max(progress, 0), 100);
           const isGoalAchieved = progress >= 100;
           
@@ -78,7 +82,7 @@ const AccountGoalsSection = ({ accounts, user, formatCurrency }: AccountGoalsSec
                 <div>
                   <p className="font-medium">{account.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatCurrency(equity, account.currency)} / {formatCurrency(account.equity_goal!, account.currency)}
+                    {formatCurrency(profit, account.currency)} / {formatCurrency(profitGoal, account.currency)} profit
                   </p>
                 </div>
                 <div className="text-right">
