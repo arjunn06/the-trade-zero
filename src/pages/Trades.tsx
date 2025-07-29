@@ -675,14 +675,18 @@ const Trades = () => {
                                 size="sm"
                                 variant="ghost"
                                 className="h-8 w-8 p-0"
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  console.log('Dropdown trigger clicked for trade:', trade.id);
+                                }}
                               >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="z-50 bg-popover">
                               <DropdownMenuItem onClick={(e) => {
                                 e.stopPropagation();
+                                console.log('Navigating to trade details:', trade.id);
                                 navigate(`/trades/${trade.id}`);
                               }}>
                                 <Eye className="h-4 w-4 mr-2" />
@@ -928,7 +932,13 @@ const Trades = () => {
         {/* Copy Trade Dialog */}
         <CopyTradeDialog
           open={copyTradeDialog}
-          onOpenChange={setCopyTradeDialog}
+          onOpenChange={(open) => {
+            console.log('Copy dialog open change:', open);
+            setCopyTradeDialog(open);
+            if (!open) {
+              setTradeToCopy(null);
+            }
+          }}
           trade={tradeToCopy}
           onCopySuccess={handleCopySuccess}
         />
