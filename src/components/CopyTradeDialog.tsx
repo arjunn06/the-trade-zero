@@ -71,7 +71,12 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
     notes: '',
     copy_exit_details: false,
     entry_price: '',
-    entry_date: ''
+    entry_date: '',
+    exit_price: '',
+    exit_date: '',
+    pnl: '',
+    commission: '',
+    swap: ''
   });
 
   useEffect(() => {
@@ -89,7 +94,12 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
           notes: trade.notes ? `Copy of: ${trade.notes}` : 'Copied trade',
           copy_exit_details: false,
           entry_price: trade.entry_price.toString(),
-          entry_date: new Date().toISOString().split('T')[0]
+          entry_date: new Date().toISOString().split('T')[0],
+          exit_price: trade.exit_price?.toString() || '',
+          exit_date: trade.exit_date ? new Date(trade.exit_date).toISOString().split('T')[0] : '',
+          pnl: trade.pnl?.toString() || '',
+          commission: trade.commission?.toString() || '',
+          swap: trade.swap?.toString() || ''
         });
       }
     }
@@ -157,11 +167,11 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
 
       // Include exit details if copying closed trade
       if (copyData.copy_exit_details && trade.status === 'closed') {
-        copyTradeData.exit_price = trade.exit_price;
-        copyTradeData.exit_date = trade.exit_date;
-        copyTradeData.pnl = trade.pnl;
-        copyTradeData.commission = trade.commission;
-        copyTradeData.swap = trade.swap;
+        copyTradeData.exit_price = copyData.exit_price ? parseFloat(copyData.exit_price) : trade.exit_price;
+        copyTradeData.exit_date = copyData.exit_date ? new Date(copyData.exit_date).toISOString() : trade.exit_date;
+        copyTradeData.pnl = copyData.pnl ? parseFloat(copyData.pnl) : trade.pnl;
+        copyTradeData.commission = copyData.commission ? parseFloat(copyData.commission) : trade.commission;
+        copyTradeData.swap = copyData.swap ? parseFloat(copyData.swap) : trade.swap;
       }
 
       const { error } = await supabase
@@ -381,6 +391,69 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
                     placeholder="Add notes for this copied trade"
                   />
                 </div>
+
+                {/* Exit Details Section - Only show if copying exit details */}
+                {copyData.copy_exit_details && trade.status === 'closed' && (
+                  <>
+                    <Separator />
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium">Exit Details</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="exit_price">Exit Price</Label>
+                          <Input
+                            id="exit_price"
+                            type="number"
+                            step="any"
+                            value={copyData.exit_price}
+                            onChange={(e) => setCopyData({ ...copyData, exit_price: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="exit_date">Exit Date</Label>
+                          <Input
+                            id="exit_date"
+                            type="date"
+                            value={copyData.exit_date}
+                            onChange={(e) => setCopyData({ ...copyData, exit_date: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor="pnl">P&L</Label>
+                          <Input
+                            id="pnl"
+                            type="number"
+                            step="0.01"
+                            value={copyData.pnl}
+                            onChange={(e) => setCopyData({ ...copyData, pnl: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="commission">Commission</Label>
+                          <Input
+                            id="commission"
+                            type="number"
+                            step="0.01"
+                            value={copyData.commission}
+                            onChange={(e) => setCopyData({ ...copyData, commission: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="swap">Swap</Label>
+                          <Input
+                            id="swap"
+                            type="number"
+                            step="0.01"
+                            value={copyData.swap}
+                            onChange={(e) => setCopyData({ ...copyData, swap: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
