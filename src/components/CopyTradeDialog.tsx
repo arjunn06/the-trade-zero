@@ -41,6 +41,7 @@ interface TradingAccount {
   id: string;
   name: string;
   currency: string;
+  current_balance?: number;
 }
 
 interface Strategy {
@@ -115,6 +116,33 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
        calculatePnL();
      }
    }, [copyData.entry_price, copyData.exit_price, copyData.quantity, copyData.commission, copyData.swap, copyData.copy_exit_details, trade?.trade_type]);
+
+   // Calculate lot size based on percentage of account balance
+   const calculateLotSizeByPercentage = (percentage: number) => {
+     const selectedAccount = tradingAccounts.find(acc => acc.id === copyData.trading_account_id);
+     const entryPrice = parseFloat(copyData.entry_price);
+     
+     if (!selectedAccount || !entryPrice) {
+       toast({
+         title: "Cannot calculate lot size",
+         description: "Please select an account and entry price first",
+         variant: "destructive"
+       });
+       return;
+     }
+
+      // For copy dialog, use the actual account balance if available
+      const accountBalance = selectedAccount.current_balance || 10000; // fallback to theoretical balance
+      const riskAmount = (accountBalance * percentage) / 100;
+      const suggestedLotSize = (riskAmount / entryPrice).toFixed(4);
+     
+     setCopyData({ ...copyData, quantity: suggestedLotSize });
+     
+      toast({
+        title: "Lot size calculated",
+        description: `${percentage}% of ${accountBalance} ${selectedAccount.currency} = ${suggestedLotSize} lots`,
+      });
+   };
   useEffect(() => {
     if (open && user) {
       fetchTradingAccounts();
@@ -146,7 +174,7 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
     try {
       const { data, error } = await supabase
         .from('trading_accounts')
-        .select('id, name, currency')
+        .select('id, name, currency, current_balance')
         .eq('user_id', user.id)
         .eq('is_active', true);
 
@@ -302,6 +330,25 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="quantity">Quantity *</Label>
+                
+                {/* Percentage buttons for quick lot size calculation */}
+                <div className="flex gap-2 mb-2 mt-1">
+                  <span className="text-xs text-muted-foreground self-center">Quick %:</span>
+                  {[1, 2, 5, 10].map((percentage) => (
+                    <Button
+                      key={percentage}
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => calculateLotSizeByPercentage(percentage)}
+                      className="text-xs px-2 py-1 h-7"
+                      disabled={!copyData.trading_account_id || !copyData.entry_price}
+                    >
+                      {percentage}%
+                    </Button>
+                  ))}
+                </div>
+                
                 <Input
                   id="quantity"
                   type="number"
@@ -310,6 +357,11 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
                   onChange={(e) => setCopyData({ ...copyData, quantity: e.target.value })}
                   required
                 />
+                {copyData.trading_account_id && copyData.entry_price && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Click percentage buttons to auto-calculate lot size
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="risk_amount">Risk Amount</Label>

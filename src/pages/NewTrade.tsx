@@ -22,6 +22,7 @@ interface TradingAccount {
   id: string;
   name: string;
   currency: string;
+  current_balance: number;
 }
 
 interface Strategy {
@@ -127,7 +128,32 @@ const NewTrade = () => {
     if (isClosedTrade && formData.exit_price) {
       calculatePnL();
     }
-  }, [formData.entry_price, formData.exit_price, formData.quantity, formData.trade_type, formData.commission, formData.swap, isClosedTrade]);
+   }, [formData.entry_price, formData.exit_price, formData.quantity, formData.trade_type, formData.commission, formData.swap, isClosedTrade]);
+
+   // Calculate lot size based on percentage of account balance
+   const calculateLotSizeByPercentage = (percentage: number) => {
+     const selectedAccount = accounts.find(acc => acc.id === formData.trading_account_id);
+     const entryPrice = parseFloat(formData.entry_price);
+     
+     if (!selectedAccount || !entryPrice || !selectedAccount.current_balance) {
+       toast({
+         title: "Cannot calculate lot size",
+         description: "Please select an account and enter entry price first",
+         variant: "destructive"
+       });
+       return;
+     }
+
+     const riskAmount = (selectedAccount.current_balance * percentage) / 100;
+     const suggestedLotSize = (riskAmount / entryPrice).toFixed(4);
+     
+     setFormData({ ...formData, quantity: suggestedLotSize });
+     
+     toast({
+       title: "Lot size calculated",
+       description: `${percentage}% of ${selectedAccount.current_balance} ${selectedAccount.currency} = ${suggestedLotSize} lots`,
+     });
+   };
 
   useEffect(() => {
     if (user) {
@@ -340,7 +366,7 @@ const NewTrade = () => {
     try {
       const { data, error } = await supabase
         .from('trading_accounts')
-        .select('id, name, currency')
+        .select('id, name, currency, current_balance')
         .eq('user_id', user.id)
         .eq('is_active', true);
 
@@ -799,6 +825,25 @@ const NewTrade = () => {
                   <Label htmlFor="quantity" className="flex items-center gap-1 text-sm font-medium">
                     Quantity/Lot Size <span className="text-destructive">*</span>
                   </Label>
+                  
+                  {/* Percentage buttons for quick lot size calculation */}
+                  <div className="flex gap-2 mb-2">
+                    <span className="text-xs text-muted-foreground self-center">Quick %:</span>
+                    {[1, 2, 5, 10].map((percentage) => (
+                      <Button
+                        key={percentage}
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => calculateLotSizeByPercentage(percentage)}
+                        className="text-xs px-2 py-1 h-7"
+                        disabled={!formData.trading_account_id || !formData.entry_price}
+                      >
+                        {percentage}%
+                      </Button>
+                    ))}
+                  </div>
+                  
                   <Input
                     id="quantity"
                     type="number"
@@ -815,6 +860,11 @@ const NewTrade = () => {
                   />
                   {formErrors.quantity && (
                     <p className="text-sm text-destructive mt-1">{formErrors.quantity}</p>
+                  )}
+                  {formData.trading_account_id && (
+                    <p className="text-xs text-muted-foreground">
+                      Click percentage buttons to auto-calculate lot size based on account balance
+                    </p>
                   )}
                 </div>
 
