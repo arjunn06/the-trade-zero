@@ -199,8 +199,8 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
 
   const navigateToEditTrade = () => {
     if (!trade) return;
-    window.open(`/new-trade?copy=${trade.id}`, '_blank');
-    onOpenChange(false);
+    // Use navigate instead of window.open to preserve screenshots
+    window.location.href = `/new-trade?copy=${trade.id}`;
   };
 
   if (!trade) return null;

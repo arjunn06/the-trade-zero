@@ -171,6 +171,18 @@ const NewTrade = () => {
         setIsClosedTrade(true);
       }
 
+      // Handle existing screenshots for editing
+      if (data.screenshots && Array.isArray(data.screenshots)) {
+        // For editing, we need to show existing screenshots as already uploaded
+        // Create placeholder files to represent existing screenshots
+        const existingScreenshots = data.screenshots.map((url, index) => {
+          const file = new File([''], `screenshot-${index}.png`, { type: 'image/png' });
+          (file as any).url = url; // Add URL to show preview
+          return file;
+        });
+        setScreenshots(existingScreenshots);
+      }
+
       // Fetch confluence data for this trade
       await fetchTradeConfluence(data.id);
     } catch (error) {
@@ -239,6 +251,17 @@ const NewTrade = () => {
       // Set entry date
       if (data.entry_date) {
         setEntryDate(new Date(data.entry_date));
+      }
+
+      // Copy screenshots when duplicating
+      if (data.screenshots && Array.isArray(data.screenshots)) {
+        // For copying, we preserve the screenshot URLs
+        const copiedScreenshots = data.screenshots.map((url, index) => {
+          const file = new File([''], `screenshot-${index}.png`, { type: 'image/png' });
+          (file as any).url = url; // Add URL to show preview
+          return file;
+        });
+        setScreenshots(copiedScreenshots);
       }
 
     } catch (error) {
