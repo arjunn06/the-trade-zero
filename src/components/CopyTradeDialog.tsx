@@ -398,15 +398,86 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
             </div>
 
             {trade.status === 'closed' && (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="copy_exit_details"
-                  checked={copyData.copy_exit_details}
-                  onCheckedChange={(checked) => setCopyData({ ...copyData, copy_exit_details: checked === true })}
-                />
-                <Label htmlFor="copy_exit_details" className="text-sm">
-                  Copy exit details (create as closed trade)
-                </Label>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="copy_exit_details"
+                    checked={copyData.copy_exit_details}
+                    onCheckedChange={(checked) => setCopyData({ ...copyData, copy_exit_details: checked === true })}
+                  />
+                  <Label htmlFor="copy_exit_details" className="text-sm font-medium">
+                    Copy exit details (create as closed trade)
+                  </Label>
+                </div>
+
+                {/* Exit Details Section - More prominent placement */}
+                {copyData.copy_exit_details && (
+                  <Card className="p-4 bg-muted/30">
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium text-foreground">Exit Details</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="exit_price">Exit Price *</Label>
+                          <Input
+                            id="exit_price"
+                            type="number"
+                            step="any"
+                            value={copyData.exit_price}
+                            onChange={(e) => setCopyData({ ...copyData, exit_price: e.target.value })}
+                            placeholder="Exit price"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="exit_date">Exit Date *</Label>
+                          <Input
+                            id="exit_date"
+                            type="date"
+                            value={copyData.exit_date}
+                            onChange={(e) => setCopyData({ ...copyData, exit_date: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor="pnl">P&L</Label>
+                          <Input
+                            id="pnl"
+                            type="number"
+                            step="0.01"
+                            value={copyData.pnl}
+                            onChange={(e) => setCopyData({ ...copyData, pnl: e.target.value })}
+                            placeholder="Auto-calculated"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Auto-calculated based on prices
+                          </p>
+                        </div>
+                        <div>
+                          <Label htmlFor="commission">Commission</Label>
+                          <Input
+                            id="commission"
+                            type="number"
+                            step="0.01"
+                            value={copyData.commission}
+                            onChange={(e) => setCopyData({ ...copyData, commission: e.target.value })}
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="swap">Swap</Label>
+                          <Input
+                            id="swap"
+                            type="number"
+                            step="0.01"
+                            value={copyData.swap}
+                            onChange={(e) => setCopyData({ ...copyData, swap: e.target.value })}
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                )}
               </div>
             )}
 
@@ -479,69 +550,6 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
                     placeholder="Add notes for this copied trade"
                   />
                 </div>
-
-                {/* Exit Details Section - Only show if copying exit details */}
-                {copyData.copy_exit_details && trade.status === 'closed' && (
-                  <>
-                    <Separator />
-                    <div className="space-y-4">
-                      <h4 className="text-sm font-medium">Exit Details</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="exit_price">Exit Price</Label>
-                          <Input
-                            id="exit_price"
-                            type="number"
-                            step="any"
-                            value={copyData.exit_price}
-                            onChange={(e) => setCopyData({ ...copyData, exit_price: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="exit_date">Exit Date</Label>
-                          <Input
-                            id="exit_date"
-                            type="date"
-                            value={copyData.exit_date}
-                            onChange={(e) => setCopyData({ ...copyData, exit_date: e.target.value })}
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <Label htmlFor="pnl">P&L</Label>
-                          <Input
-                            id="pnl"
-                            type="number"
-                            step="0.01"
-                            value={copyData.pnl}
-                            onChange={(e) => setCopyData({ ...copyData, pnl: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="commission">Commission</Label>
-                          <Input
-                            id="commission"
-                            type="number"
-                            step="0.01"
-                            value={copyData.commission}
-                            onChange={(e) => setCopyData({ ...copyData, commission: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="swap">Swap</Label>
-                          <Input
-                            id="swap"
-                            type="number"
-                            step="0.01"
-                            value={copyData.swap}
-                            onChange={(e) => setCopyData({ ...copyData, swap: e.target.value })}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
               </div>
             )}
           </div>
