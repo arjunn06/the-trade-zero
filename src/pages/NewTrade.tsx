@@ -92,6 +92,43 @@ const NewTrade = () => {
   const [showConfluenceSection, setShowConfluenceSection] = useState(true);
   const [isPartialExit, setIsPartialExit] = useState(false);
 
+  // Auto-calculate PnL when relevant fields change
+  useEffect(() => {
+    const calculatePnL = () => {
+      const entryPrice = parseFloat(formData.entry_price);
+      const exitPrice = parseFloat(formData.exit_price);
+      const quantity = parseFloat(formData.quantity);
+      const commission = parseFloat(formData.commission) || 0;
+      const swap = parseFloat(formData.swap) || 0;
+
+      if (entryPrice && exitPrice && quantity && formData.trade_type) {
+        let grossPnL = 0;
+        
+        if (formData.trade_type.toLowerCase() === 'buy') {
+          grossPnL = (exitPrice - entryPrice) * quantity;
+        } else if (formData.trade_type.toLowerCase() === 'sell') {
+          grossPnL = (entryPrice - exitPrice) * quantity;
+        }
+
+        // Calculate net PnL including commission and swap
+        const netPnL = grossPnL - commission - swap;
+
+        // Only update if the calculated value is different from current
+        if (Math.abs(netPnL - parseFloat(formData.pnl || '0')) > 0.001) {
+          setFormData(prev => ({
+            ...prev,
+            pnl: netPnL.toFixed(2)
+          }));
+        }
+      }
+    };
+
+    // Only calculate if we have exit price (closed trade)
+    if (isClosedTrade && formData.exit_price) {
+      calculatePnL();
+    }
+  }, [formData.entry_price, formData.exit_price, formData.quantity, formData.trade_type, formData.commission, formData.swap, isClosedTrade]);
+
   useEffect(() => {
     if (user) {
       fetchAccounts();

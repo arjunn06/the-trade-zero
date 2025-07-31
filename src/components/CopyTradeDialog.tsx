@@ -77,8 +77,44 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
     pnl: '',
     commission: '',
     swap: ''
-  });
+   });
 
+   // Auto-calculate PnL when relevant fields change
+   useEffect(() => {
+     const calculatePnL = () => {
+       const entryPrice = parseFloat(copyData.entry_price);
+       const exitPrice = parseFloat(copyData.exit_price);
+       const quantity = parseFloat(copyData.quantity);
+       const commission = parseFloat(copyData.commission) || 0;
+       const swap = parseFloat(copyData.swap) || 0;
+
+       if (entryPrice && exitPrice && quantity && trade?.trade_type) {
+         let grossPnL = 0;
+         
+         if (trade.trade_type.toLowerCase() === 'buy') {
+           grossPnL = (exitPrice - entryPrice) * quantity;
+         } else if (trade.trade_type.toLowerCase() === 'sell') {
+           grossPnL = (entryPrice - exitPrice) * quantity;
+         }
+
+         // Calculate net PnL including commission and swap
+         const netPnL = grossPnL - commission - swap;
+
+         // Only update if the calculated value is different from current
+         if (Math.abs(netPnL - parseFloat(copyData.pnl || '0')) > 0.001) {
+           setCopyData(prev => ({
+             ...prev,
+             pnl: netPnL.toFixed(2)
+           }));
+         }
+       }
+     };
+
+     // Only calculate if we have exit price and copying exit details
+     if (copyData.copy_exit_details && copyData.exit_price) {
+       calculatePnL();
+     }
+   }, [copyData.entry_price, copyData.exit_price, copyData.quantity, copyData.commission, copyData.swap, copyData.copy_exit_details, trade?.trade_type]);
   useEffect(() => {
     if (open && user) {
       fetchTradingAccounts();
