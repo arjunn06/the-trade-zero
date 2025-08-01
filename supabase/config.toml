@@ -87,3 +87,6 @@ verify_jwt = true
 
 [functions.ctrader-auto-sync]
 verify_jwt = false
+
+[functions.create-trade]
+verify_jwt = true
