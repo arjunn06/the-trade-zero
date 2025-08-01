@@ -1,26 +1,38 @@
-import { createClient } from "@supabase/supabase-js";
-import { NextRequest } from "next/server";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 // Load env variables
 const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+)
 
 const CREDENTIALS = {
-  client_id: process.env.CTRADER_CLIENT_ID!,
-  client_secret: process.env.CTRADER_CLIENT_SECRET!,
-  redirect_uri: process.env.CTRADER_REDIRECT_URI!,
-};
+  client_id: Deno.env.get('CTRADER_CLIENT_ID') ?? '',
+  client_secret: Deno.env.get('CTRADER_CLIENT_SECRET') ?? '',
+  redirect_uri: Deno.env.get('CTRADER_REDIRECT_URI') ?? '',
+}
 
-export async function GET(req: NextRequest) {
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  if (req.method !== 'GET') {
+    return new Response('Method not allowed', { status: 405, headers: corsHeaders })
+  }
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
   const user_id = searchParams.get("user_id");
 
   if (!code || !user_id) {
     console.error("Missing code or user_id in query params");
-    return new Response("Missing code or user_id", { status: 400 });
+    return new Response("Missing code or user_id", { status: 400, headers: corsHeaders });
   }
 
   console.log("⚡ Received OAuth callback", { code, user_id });
@@ -44,7 +56,7 @@ export async function GET(req: NextRequest) {
 
   if (!tokenRes.ok) {
     console.error("❌ Failed to get tokens", tokenData);
-    return new Response("Token exchange failed", { status: 500 });
+    return new Response("Token exchange failed", { status: 500, headers: corsHeaders });
   }
 
   const { access_token, refresh_token } = tokenData;
@@ -61,14 +73,14 @@ export async function GET(req: NextRequest) {
 
   if (!accountRes.ok) {
     console.error("❌ Failed to fetch trading accounts", accountsData);
-    return new Response("Failed to fetch trading accounts", { status: 500 });
+    return new Response("Failed to fetch trading accounts", { status: 500, headers: corsHeaders });
   }
 
   const tradingAccount = accountsData[0]; // Just pick the first one for now
 
   if (!tradingAccount) {
     console.error("No trading accounts found");
-    return new Response("No trading account found", { status: 404 });
+    return new Response("No trading account found", { status: 404, headers: corsHeaders });
   }
 
   const { tradingAccountId, brokerName } = tradingAccount;
@@ -91,27 +103,22 @@ export async function GET(req: NextRequest) {
 
   if (connectionError) {
     console.error("❌ Failed to store connection", connectionError);
-    return new Response("Failed to store connection", { status: 500 });
+    return new Response("Failed to store connection", { status: 500, headers: corsHeaders });
   }
 
   console.log("✅ Stored connection successfully");
 
-  // 4. Trigger import
-  const importRes = await fetch(`${process.env.BASE_URL}/api/sync/ctrader`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ user_id, trading_account_id: tradingAccountId }),
+  // 4. Trigger sync via existing ctrader-sync function
+  const syncRes = await supabase.functions.invoke('ctrader-sync', {
+    body: { user_id, trading_account_id: tradingAccountId }
   });
 
-  if (!importRes.ok) {
-    const errorText = await importRes.text();
-    console.error("❌ Import trigger failed", errorText);
-    return new Response("Import trigger failed", { status: 500 });
+  if (syncRes.error) {
+    console.error("❌ Sync trigger failed", syncRes.error);
+    return new Response("Sync trigger failed", { status: 500, headers: corsHeaders });
   }
 
-  console.log("✅ Import triggered");
+  console.log("✅ Sync triggered");
 
-  return new Response("Connected & syncing!", { status: 200 });
-}
+  return new Response("Connected & syncing!", { status: 200, headers: corsHeaders });
+})
