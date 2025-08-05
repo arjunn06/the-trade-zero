@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,6 +46,7 @@ const TradingAccounts = () => {
   const { toast } = useToast();
   const { showUndoToast } = useUndoToast();
   const { isPremium } = useSubscription();
+  const navigate = useNavigate();
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -59,7 +61,8 @@ const TradingAccounts = () => {
     initial_balance: '',
     currency: 'USD',
     equity_goal: '',
-    use_ctrader: false
+    use_ctrader: false,
+    is_active: true
   });
 
   // Premium limits for basic users
@@ -142,6 +145,7 @@ const TradingAccounts = () => {
         current_equity: formData.use_ctrader ? 0 : parseFloat(formData.initial_balance),
         currency: formData.currency,
         equity_goal: formData.equity_goal ? parseFloat(formData.equity_goal) : null,
+        is_active: editingAccount ? formData.is_active : true,
         user_id: user.id
       };
 
@@ -250,7 +254,8 @@ const TradingAccounts = () => {
       initial_balance: account.initial_balance.toString(),
       currency: account.currency,
       equity_goal: (account as any).equity_goal?.toString() || '',
-      use_ctrader: false
+      use_ctrader: false,
+      is_active: account.is_active
     });
     setDialogOpen(true);
   };
@@ -332,7 +337,8 @@ const TradingAccounts = () => {
       initial_balance: '',
       currency: 'USD',
       equity_goal: '',
-      use_ctrader: false
+      use_ctrader: false,
+      is_active: true
     });
   };
 
@@ -489,20 +495,36 @@ const TradingAccounts = () => {
                   </div>
                 )}
 
-                <div>
-                  <Label htmlFor="equity_goal">Profit Goal (Optional)</Label>
-                  <Input
-                    id="equity_goal"
-                    type="number"
-                    step="0.01"
-                    placeholder="Target profit goal"
-                    value={formData.equity_goal}
-                    onChange={(e) => setFormData({ ...formData, equity_goal: e.target.value })}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Set a target profit goal to track your progress
-                  </p>
-                </div>
+                 <div>
+                   <Label htmlFor="equity_goal">Profit Goal (Optional)</Label>
+                   <Input
+                     id="equity_goal"
+                     type="number"
+                     step="0.01"
+                     placeholder="Target profit goal"
+                     value={formData.equity_goal}
+                     onChange={(e) => setFormData({ ...formData, equity_goal: e.target.value })}
+                   />
+                   <p className="text-xs text-muted-foreground mt-1">
+                     Set a target profit goal to track your progress
+                   </p>
+                 </div>
+
+                 {editingAccount && (
+                   <div className="border rounded-lg p-4">
+                     <div className="flex items-center space-x-2">
+                       <Checkbox
+                         id="is_active"
+                         checked={formData.is_active !== false}
+                         onCheckedChange={(checked) => setFormData({ ...formData, is_active: !!checked })}
+                       />
+                       <Label htmlFor="is_active">Account is active</Label>
+                     </div>
+                     <p className="text-xs text-muted-foreground mt-1">
+                       Inactive accounts are hidden from trade entry but statistics remain viewable
+                     </p>
+                   </div>
+                 )}
                 
                  
                   {/* CSV Import Section - only show for existing accounts */}
@@ -620,16 +642,24 @@ const TradingAccounts = () => {
                      </span>
                    </div>
                  </div>
-                  <div className="flex justify-between pt-2 border-t">
-                    <div className="flex space-x-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(account)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+                   <div className="flex justify-between pt-2 border-t">
+                     <div className="flex space-x-1">
+                       <Button 
+                         variant="ghost" 
+                         size="sm" 
+                         onClick={() => navigate(`/account-performance/${account.id}`)}
+                         className="text-xs px-2"
+                       >
+                         Performance
+                       </Button>
+                       <Button variant="ghost" size="sm" onClick={() => handleEdit(account)}>
+                         <Edit className="h-4 w-4" />
+                       </Button>
+                       <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account)}>
+                         <Trash2 className="h-4 w-4" />
+                       </Button>
+                     </div>
+                   </div>
                 </CardContent>
               </Card>
           ))}

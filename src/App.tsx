@@ -15,6 +15,7 @@ import NewTrade from "./pages/NewTrade";
 import Trades from "./pages/Trades";
 import TradeDetail from "./pages/TradeDetail";
 import TradingAccounts from "./pages/TradingAccounts";
+import AccountPerformance from "./pages/AccountPerformance";
 import Strategies from "./pages/Strategies";
 import Notes from "./pages/Notes";
 import Calendar from "./pages/Calendar";
@@ -57,10 +58,11 @@ const App = () => (
             } />
             <Route path="/trades" element={<ProtectedRoute><Trades /></ProtectedRoute>} />
             <Route path="/trades/:id" element={<ProtectedRoute><TradeDetail /></ProtectedRoute>} />
-            <Route path="/trades/new" element={<ProtectedRoute><NewTrade /></ProtectedRoute>} />
-            <Route path="/trades/edit/:id" element={<ProtectedRoute><NewTrade /></ProtectedRoute>} />
+            <Route path="/new-trade" element={<ProtectedRoute><NewTrade /></ProtectedRoute>} />
+            <Route path="/new-trade/:id" element={<ProtectedRoute><NewTrade /></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
             <Route path="/accounts" element={<ProtectedRoute><TradingAccounts /></ProtectedRoute>} />
+            <Route path="/account-performance/:id" element={<ProtectedRoute><AccountPerformance /></ProtectedRoute>} />
             <Route path="/strategies" element={<ProtectedRoute><Strategies /></ProtectedRoute>} />
             <Route path="/upgrade" element={<ProtectedRoute><Upgrade /></ProtectedRoute>} />
             <Route path="/confluence" element={<ProtectedRoute><Confluence /></ProtectedRoute>} />
