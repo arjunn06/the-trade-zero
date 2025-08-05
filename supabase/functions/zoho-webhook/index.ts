@@ -32,6 +32,9 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log('Request method:', req.method)
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()))
+    
     if (req.method !== 'POST') {
       return new Response(
         JSON.stringify({ error: 'Method not allowed' }),
@@ -45,6 +48,9 @@ Deno.serve(async (req) => {
     const { action, user_email, trade_data, query } = payload
 
     switch (action) {
+      case 'verify_email':
+        return await handleVerifyEmail(user_email)
+        
       case 'create_trade':
         return await handleCreateTrade(user_email, trade_data)
       
@@ -64,7 +70,7 @@ Deno.serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             error: 'Unknown action',
-            available_actions: ['create_trade', 'get_trading_accounts', 'get_strategies', 'get_recent_trades', 'search_trades']
+            available_actions: ['verify_email', 'create_trade', 'get_trading_accounts', 'get_strategies', 'get_recent_trades', 'search_trades']
           }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
@@ -96,6 +102,58 @@ async function getUserByEmail(email: string) {
   }
 
   return profile.user_id
+}
+
+async function handleVerifyEmail(user_email?: string) {
+  try {
+    if (!user_email) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'user_email is required',
+          chatbot_message: 'I need your email to verify your account.'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const userId = await getUserByEmail(user_email)
+
+    // Get user profile and trading accounts
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('display_name, email')
+      .eq('user_id', userId)
+      .single()
+
+    const { data: accounts } = await supabase
+      .from('trading_accounts')
+      .select('id, name, broker, account_type, current_balance, currency')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        user_verified: true,
+        user_id: userId,
+        profile: profile,
+        trading_accounts: accounts || [],
+        chatbot_message: `Welcome ${profile?.display_name || 'Trader'}! I found your account with ${accounts?.length || 0} trading account(s). How can I help you with your trading today?`
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error in handleVerifyEmail:', error)
+    return new Response(
+      JSON.stringify({ 
+        user_verified: false,
+        error: error.message,
+        chatbot_message: 'I couldn\'t find an account with that email. Please make sure you\'re using the email address you registered with.'
+      }),
+      { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
 }
 
 async function handleCreateTrade(user_email?: string, trade_data?: ZohoWebhookRequest['trade_data']) {
