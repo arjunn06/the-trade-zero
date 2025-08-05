@@ -126,10 +126,7 @@ const NewTrade = () => {
 
     // Only calculate if we have exit price (closed trade)
     if (isClosedTrade && formData.exit_price) {
-      const timer = setTimeout(() => {
-        calculatePnL();
-      }, 100);
-      return () => clearTimeout(timer);
+      calculatePnL();
     }
    }, [formData.entry_price, formData.exit_price, formData.quantity, formData.trade_type, formData.commission, formData.swap, isClosedTrade]);
 
@@ -247,11 +244,6 @@ const NewTrade = () => {
           return file;
         });
         setScreenshots(existingScreenshots);
-        // Store the existing screenshot URLs in formData
-        setFormData(prev => ({
-          ...prev,
-          screenshots: data.screenshots
-        }));
       }
 
       // Fetch confluence data for this trade
