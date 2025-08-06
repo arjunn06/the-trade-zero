@@ -46,7 +46,7 @@ const NewTrade = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const isEditing = !!id;
+  const isEditing = !!id && id !== 'new';
   const isCopying = !!searchParams.get('copy');
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
@@ -163,7 +163,7 @@ const NewTrade = () => {
       fetchAccounts();
       fetchStrategies();
       fetchConfluenceItems();
-      if (isEditing && id) {
+      if (isEditing && id && id !== 'new') {
         fetchTrade();
       } else if (isCopying) {
         const copyId = searchParams.get('copy');
