@@ -1,54 +1,62 @@
-import { serve } from "https://deno.land/std/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js"
+// supabase/functions/fetch-accounts/index.ts
 
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-)
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.3";
 
 serve(async (req) => {
-  try {
-    const body = await req.json()
-    const email = body.email
-
-    if (!email) {
-      return new Response(JSON.stringify({ error: "Missing email" }), { status: 400 })
-    }
-
-    const { data: users, error: userError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("email", email)
-
-    if (userError) {
-      console.error("DB Error:", userError)
-      return new Response(JSON.stringify({ error: "Error looking up user" }), { status: 500 })
-    }
-
-    if (!users || users.length === 0) {
-      return new Response(JSON.stringify({ error: "No user found with this email" }), { status: 404 })
-    }
-
-    const user = users[0]
-
-    // ✅ Now use user's ID to get their trading accounts
-    const { data: accounts, error: accError } = await supabase
-      .from("accounts")
-      .select("*")
-      .eq("user_id", user.id) // 👈 make sure this matches your schema
-
-    if (accError) {
-      console.error("Accounts Error:", accError)
-      return new Response(JSON.stringify({ error: "Error fetching accounts" }), { status: 500 })
-    }
-
-    return new Response(JSON.stringify({ accounts }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    })
-
-  } catch (err) {
-    console.error("Unexpected Error:", err)
-    return new Response(JSON.stringify({ error: "Unexpected error occurred" }), { status: 500 })
+  // Validate Authorization header
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({
+      code: 401,
+      message: "Auth header is not 'Bearer {token}'"
+    }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" }
+    });
   }
-})
+
+  const token = authHeader.split("Bearer ")[1];
+
+  // Create Supabase client with user's token
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    {
+      global: {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    }
+  );
+
+  // Get user info from token
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return new Response(JSON.stringify({
+      code: 401,
+      message: "Invalid or expired token"
+    }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+
+  // Now fetch user-specific data from Supabase
+  const { data, error } = await supabase
+    .from("accounts")
+    .select("*")
+    .eq("user_id", user.id);
+
+  if (error) {
+    return new Response(JSON.stringify({ error: "Error fetching accounts", details: error }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+
+  return new Response(JSON.stringify({ accounts: data }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" }
+  });
+});
