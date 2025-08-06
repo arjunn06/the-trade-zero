@@ -6,6 +6,7 @@ import { Plus, Building2, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumFeature } from '@/components/PremiumFeature';
@@ -45,6 +46,7 @@ const TradingAccounts = () => {
   const { toast } = useToast();
   const { showUndoToast } = useUndoToast();
   const { isPremium } = useSubscription();
+  const navigate = useNavigate();
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -146,9 +148,13 @@ const TradingAccounts = () => {
       };
 
       if (editingAccount) {
+        const updateData = {
+          ...accountData,
+          is_active: editingAccount.is_active
+        };
         const { error } = await supabase
           .from('trading_accounts')
-          .update(accountData)
+          .update(updateData)
           .eq('id', editingAccount.id);
 
         if (error) throw error;
@@ -620,12 +626,20 @@ const TradingAccounts = () => {
                      </span>
                    </div>
                  </div>
-                  <div className="flex justify-between pt-2 border-t">
+                  <div className="flex flex-col gap-2 pt-2 border-t">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => navigate(`/account-performance/${account.id}`)}
+                      size="sm"
+                      className="w-full"
+                    >
+                      Account Performance
+                    </Button>
                     <div className="flex space-x-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(account)}>
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(account)} className="flex-1">
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account)}>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account)} className="flex-1">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

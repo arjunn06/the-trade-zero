@@ -534,6 +534,12 @@ const NewTrade = () => {
     
     try {
       for (const file of screenshots) {
+        // Skip files that already have URLs (existing screenshots)
+        if ((file as any).url) {
+          uploadedUrls.push((file as any).url);
+          continue;
+        }
+        
         const fileExt = file.name.split('.').pop();
         const fileName = `${user!.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         
@@ -559,6 +565,39 @@ const NewTrade = () => {
     return uploadedUrls;
   };
 
+  const uploadNewScreenshots = async (newFiles: File[]): Promise<string[]> => {
+    if (newFiles.length === 0) return [];
+    
+    setUploadingScreenshots(true);
+    const uploadedUrls: string[] = [];
+    
+    try {
+      for (const file of newFiles) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user!.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        
+        const { error } = await supabase.storage
+          .from('trade-screenshots')
+          .upload(fileName, file);
+          
+        if (error) throw error;
+        
+        const { data } = supabase.storage
+          .from('trade-screenshots')
+          .getPublicUrl(fileName);
+          
+        uploadedUrls.push(data.publicUrl);
+      }
+    } catch (error) {
+      console.error('Error uploading new screenshots:', error);
+      throw error;
+    } finally {
+      setUploadingScreenshots(false);
+    }
+    
+    return uploadedUrls;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !entryDate) return;
@@ -575,8 +614,27 @@ const NewTrade = () => {
     setLoading(true);
 
     try {
-      // Upload screenshots first
-      const screenshotUrls = await uploadScreenshots();
+      // Handle screenshots for editing vs creating
+      let screenshotUrls: string[] = [];
+      
+      if (isEditing) {
+        // For editing, preserve existing screenshot URLs and upload only new files
+        const existingUrls = screenshots
+          .filter(file => (file as any).url) // Files with URLs are existing screenshots
+          .map(file => (file as any).url);
+        
+        const newFiles = screenshots.filter(file => !(file as any).url); // Files without URLs are new
+        
+        if (newFiles.length > 0) {
+          const newUrls = await uploadNewScreenshots(newFiles);
+          screenshotUrls = [...existingUrls, ...newUrls];
+        } else {
+          screenshotUrls = existingUrls;
+        }
+      } else {
+        // For creating new trades, upload all screenshots
+        screenshotUrls = await uploadScreenshots();
+      }
       
       // Prepare entry date with optional time
       let entryDateWithTime = entryDate;
