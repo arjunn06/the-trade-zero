@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,6 +60,7 @@ interface CopyTradeDialogProps {
 export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: CopyTradeDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [tradingAccounts, setTradingAccounts] = useState<TradingAccount[]>([]);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -263,8 +265,11 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
 
   const navigateToEditTrade = () => {
     if (!trade) return;
-    // Use navigate instead of window.open to preserve screenshots
-    window.location.href = `/new-trade?copy=${trade.id}`;
+    onOpenChange(false);
+    // Use navigate to preserve React state
+    setTimeout(() => {
+      navigate(`/new-trade?copy=${trade.id}`);
+    }, 100);
   };
 
   if (!trade) return null;

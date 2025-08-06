@@ -1,14 +1,13 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, TrendingUp, TrendingDown, Target, DollarSign, Calendar, BarChart3 } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, DollarSign, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/DashboardLayout';
-
+import { MetricCard } from '@/components/MetricCard';
 
 interface TradingAccount {
   id: string;
@@ -20,47 +19,28 @@ interface TradingAccount {
   current_equity: number;
   currency: string;
   is_active: boolean;
-  created_at: string;
   equity_goal?: number;
 }
 
-interface Trade {
-  id: string;
-  symbol: string;
-  trade_type: string;
-  entry_price: number;
-  exit_price?: number;
-  quantity: number;
-  status: string;
-  pnl?: number;
-  entry_date: string;
-  exit_date?: string;
-  commission?: number;
-  swap?: number;
-}
-
-interface AccountStats {
+interface TradeStats {
   totalTrades: number;
   winningTrades: number;
   losingTrades: number;
-  winRate: number;
   totalPnL: number;
-  averageWin: number;
-  averageLoss: number;
-  profitFactor: number;
-  currentEquity: number;
-  equityProgress: number;
+  averagePnL: number;
+  bestTrade: number;
+  worstTrade: number;
+  winRate: number;
 }
 
 const AccountPerformance = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
   const [account, setAccount] = useState<TradingAccount | null>(null);
-  const [trades, setTrades] = useState<Trade[]>([]);
-  const [stats, setStats] = useState<AccountStats | null>(null);
+  const [stats, setStats] = useState<TradeStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [recentTrades, setRecentTrades] = useState<any[]>([]);
 
   useEffect(() => {
     if (user && id) {
@@ -83,7 +63,7 @@ const AccountPerformance = () => {
       if (accountError) throw accountError;
       setAccount(accountData);
 
-      // Fetch account trades
+      // Fetch trades for this account
       const { data: tradesData, error: tradesError } = await supabase
         .from('trades')
         .select('*')
@@ -92,92 +72,62 @@ const AccountPerformance = () => {
         .order('entry_date', { ascending: false });
 
       if (tradesError) throw tradesError;
-      setTrades(tradesData || []);
 
       // Calculate statistics
-      calculateStats(accountData, tradesData || []);
+      if (tradesData) {
+        const closedTrades = tradesData.filter(trade => trade.status === 'closed');
+        const totalPnL = closedTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+        const winningTrades = closedTrades.filter(trade => (trade.pnl || 0) > 0);
+        const losingTrades = closedTrades.filter(trade => (trade.pnl || 0) < 0);
+        const pnlValues = closedTrades.map(trade => trade.pnl || 0);
+
+        setStats({
+          totalTrades: tradesData.length,
+          winningTrades: winningTrades.length,
+          losingTrades: losingTrades.length,
+          totalPnL,
+          averagePnL: closedTrades.length > 0 ? totalPnL / closedTrades.length : 0,
+          bestTrade: pnlValues.length > 0 ? Math.max(...pnlValues) : 0,
+          worstTrade: pnlValues.length > 0 ? Math.min(...pnlValues) : 0,
+          winRate: closedTrades.length > 0 ? (winningTrades.length / closedTrades.length) * 100 : 0
+        });
+
+        setRecentTrades(tradesData.slice(0, 10));
+      }
+
     } catch (error) {
       console.error('Error fetching account data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch account performance data",
-        variant: "destructive"
-      });
-      navigate('/accounts');
     } finally {
       setLoading(false);
     }
   };
 
-  const calculateStats = (account: TradingAccount, trades: Trade[]) => {
-    const closedTrades = trades.filter(trade => trade.status === 'closed' && trade.pnl !== null);
-    
-    const totalTrades = closedTrades.length;
-    const winningTrades = closedTrades.filter(trade => trade.pnl! > 0).length;
-    const losingTrades = closedTrades.filter(trade => trade.pnl! < 0).length;
-    const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
-    
-    const totalPnL = closedTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
-    const totalCommission = closedTrades.reduce((sum, trade) => sum + (trade.commission || 0), 0);
-    const totalSwap = closedTrades.reduce((sum, trade) => sum + (trade.swap || 0), 0);
-    
-    const wins = closedTrades.filter(trade => trade.pnl! > 0);
-    const losses = closedTrades.filter(trade => trade.pnl! < 0);
-    
-    const averageWin = wins.length > 0 ? wins.reduce((sum, trade) => sum + trade.pnl!, 0) / wins.length : 0;
-    const averageLoss = losses.length > 0 ? Math.abs(losses.reduce((sum, trade) => sum + trade.pnl!, 0) / losses.length) : 0;
-    
-    const grossProfit = wins.reduce((sum, trade) => sum + trade.pnl!, 0);
-    const grossLoss = Math.abs(losses.reduce((sum, trade) => sum + trade.pnl!, 0));
-    const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
-    
-    const currentEquity = account.initial_balance + totalPnL;
-    const equityProgress = account.equity_goal ? (currentEquity / account.equity_goal) * 100 : 0;
-
-    setStats({
-      totalTrades,
-      winningTrades,
-      losingTrades,
-      winRate,
-      totalPnL,
-      averageWin,
-      averageLoss,
-      profitFactor,
-      currentEquity,
-      equityProgress
-    });
-  };
-
   const formatCurrency = (amount: number, currency: string = 'USD') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency
+      currency: currency,
     }).format(amount);
   };
 
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`;
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
   };
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-96">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">Loading account performance...</div>
         </div>
       </DashboardLayout>
     );
   }
 
-  if (!account || !stats) {
+  if (!account) {
     return (
       <DashboardLayout>
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold mb-4">Account not found</h2>
-          <Button onClick={() => navigate('/accounts')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Accounts
-          </Button>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">Account not found</div>
         </div>
       </DashboardLayout>
     );
@@ -185,248 +135,183 @@ const AccountPerformance = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate('/accounts')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Accounts
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              {account.name}
-              <Badge variant={account.is_active ? 'default' : 'secondary'}>
-                {account.is_active ? 'Active' : 'Inactive'}
-              </Badge>
-            </h1>
-            <p className="text-muted-foreground">
-              {account.account_type} • {account.broker} • {account.currency}
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/trading-accounts')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft size={16} />
+              Back to Accounts
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">{account.name}</h1>
+              <p className="text-muted-foreground">
+                {account.account_type} • {account.broker}
+              </p>
+            </div>
           </div>
+          <Badge variant={account.is_active ? "default" : "secondary"}>
+            {account.is_active ? "Active" : "Inactive"}
+          </Badge>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Current Equity</p>
-                  <p className="text-2xl font-bold">{formatCurrency(stats.currentEquity, account.currency)}</p>
-                  <p className="text-xs text-muted-foreground">Started with {formatCurrency(account.initial_balance, account.currency)}</p>
-                </div>
-                <DollarSign className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total P&L</p>
-                  <p className={`text-2xl font-bold ${stats.totalPnL >= 0 ? 'text-profit' : 'text-loss'}`}>
-                    {formatCurrency(stats.totalPnL, account.currency)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">From {stats.totalTrades} trades</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Win Rate</p>
-                  <p className={`text-2xl font-bold ${stats.winRate >= 50 ? 'text-profit' : 'text-loss'}`}>
-                    {formatPercentage(stats.winRate)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{stats.winningTrades} wins, {stats.losingTrades} losses</p>
-                </div>
-                <Target className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Profit Factor</p>
-                  <p className={`text-2xl font-bold ${stats.profitFactor >= 1 ? 'text-profit' : 'text-loss'}`}>
-                    {stats.profitFactor === Infinity ? '∞' : stats.profitFactor.toFixed(2)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Gross profit / Gross loss</p>
-                </div>
-                <BarChart3 className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
+        {/* Account Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <MetricCard
+            title="Current Balance"
+            value={formatCurrency(account.current_balance, account.currency)}
+            icon={<DollarSign />}
+            change={{
+              value: account.current_balance - account.initial_balance,
+              percentage: `${((account.current_balance - account.initial_balance) / account.initial_balance * 100).toFixed(1)}%`,
+              isPositive: account.current_balance > account.initial_balance
+            }}
+          />
+          <MetricCard
+            title="Current Equity"
+            value={formatCurrency(account.current_equity, account.currency)}
+            icon={<TrendingUp />}
+          />
+          <MetricCard
+            title="Initial Balance"
+            value={formatCurrency(account.initial_balance, account.currency)}
+            icon={<DollarSign />}
+          />
+          {account.equity_goal && (
+            <MetricCard
+              title="Equity Goal"
+              value={formatCurrency(account.equity_goal, account.currency)}
+              icon={<TrendingUp />}
+              change={{
+                value: account.current_equity - account.equity_goal,
+                percentage: `${((account.current_equity / account.equity_goal) * 100).toFixed(1)}%`,
+                isPositive: account.current_equity >= account.equity_goal
+              }}
+            />
+          )}
         </div>
 
-        {/* Equity Goal Progress */}
-        {account.equity_goal && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Equity Goal Progress
-              </CardTitle>
-              <CardDescription>
-                Track your progress towards your equity target
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span>Current: {formatCurrency(stats.currentEquity, account.currency)}</span>
-                  <span>Goal: {formatCurrency(account.equity_goal, account.currency)}</span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-3">
-                  <div
-                    className={`h-3 rounded-full transition-all duration-300 ${
-                      stats.equityProgress >= 100 ? 'bg-profit' : 'bg-primary'
-                    }`}
-                    style={{ width: `${Math.min(stats.equityProgress, 100)}%` }}
-                  />
-                </div>
-                <div className="text-center text-sm text-muted-foreground">
-                  {formatPercentage(stats.equityProgress)} complete
-                  {stats.equityProgress >= 100 && (
-                    <span className="text-profit font-medium"> - Goal Achieved! 🎉</span>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Trading Statistics */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <MetricCard
+              title="Total Trades"
+              value={stats.totalTrades.toString()}
+              icon={<Calendar />}
+            />
+            <MetricCard
+              title="Win Rate"
+              value={`${stats.winRate.toFixed(1)}%`}
+              icon={<TrendingUp />}
+            />
+            <MetricCard
+              title="Total P&L"
+              value={formatCurrency(stats.totalPnL, account.currency)}
+              icon={<DollarSign />}
+            />
+            <MetricCard
+              title="Average P&L"
+              value={formatCurrency(stats.averagePnL, account.currency)}
+              icon={<DollarSign />}
+            />
+          </div>
         )}
 
-        {/* Performance Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Trading Performance</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Trades</span>
-                <span className="font-medium">{stats.totalTrades}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Winning Trades</span>
-                <span className="font-medium text-profit">{stats.winningTrades}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Losing Trades</span>
-                <span className="font-medium text-loss">{stats.losingTrades}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Average Win</span>
-                <span className="font-medium text-profit">
-                  {formatCurrency(stats.averageWin, account.currency)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Average Loss</span>
-                <span className="font-medium text-loss">
-                  {formatCurrency(stats.averageLoss, account.currency)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Account Type</span>
-                <span className="font-medium">{account.account_type}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Broker</span>
-                <span className="font-medium">{account.broker}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Currency</span>
-                <span className="font-medium">{account.currency}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Initial Balance</span>
-                <span className="font-medium">
-                  {formatCurrency(account.initial_balance, account.currency)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Created</span>
-                <span className="font-medium">
-                  {new Date(account.created_at).toLocaleDateString()}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Best/Worst Trades */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="text-green-500" size={20} />
+                  Best Trade
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-500">
+                  {formatCurrency(stats.bestTrade, account.currency)}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingDown className="text-red-500" size={20} />
+                  Worst Trade
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-500">
+                  {formatCurrency(stats.worstTrade, account.currency)}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Recent Trades */}
-        {trades.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Recent Trades
-              </CardTitle>
-              <CardDescription>
-                Latest trading activity for this account
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {trades.slice(0, 10).map((trade) => (
-                  <div key={trade.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Trades</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentTrades.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                No trades found for this account
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {recentTrades.slice(0, 5).map((trade) => (
+                  <div
+                    key={trade.id}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
+                    <div className="flex items-center gap-4">
+                      <Badge variant="outline">{trade.symbol}</Badge>
                       <Badge variant={trade.trade_type === 'buy' ? 'default' : 'secondary'}>
-                        {trade.trade_type === 'buy' ? (
-                          <TrendingUp className="h-3 w-3 mr-1" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3 mr-1" />
-                        )}
-                        {trade.trade_type.toUpperCase()}
+                        {trade.trade_type}
                       </Badge>
-                      <div>
-                        <p className="font-medium">{trade.symbol}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(trade.entry_date).toLocaleDateString()}
-                        </p>
-                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {formatDate(trade.entry_date)}
+                      </span>
                     </div>
-                    <div className="text-right">
-                      <Badge 
-                        variant={trade.status === 'open' ? 'outline' : 'secondary'}
+                    <div className="flex items-center gap-4">
+                      <Badge
+                        variant={trade.status === 'closed' ? 'default' : 'secondary'}
                       >
                         {trade.status}
                       </Badge>
                       {trade.pnl !== null && (
-                        <p className={`text-sm font-medium ${trade.pnl >= 0 ? 'text-profit' : 'text-loss'}`}>
+                        <span
+                          className={`font-medium ${
+                            trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'
+                          }`}
+                        >
                           {formatCurrency(trade.pnl, account.currency)}
-                        </p>
+                        </span>
                       )}
                     </div>
                   </div>
                 ))}
+                {recentTrades.length > 5 && (
+                  <div className="text-center pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate(`/trades?account=${account.id}`)}
+                    >
+                      View All Trades
+                    </Button>
+                  </div>
+                )}
               </div>
-              {trades.length > 10 && (
-                <div className="mt-4 text-center">
-                  <Button variant="outline" onClick={() => navigate('/trades')}>
-                    View All Trades
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
