@@ -24,7 +24,7 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     {
       global: {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${session.access_token}` }
       }
     }
   );
