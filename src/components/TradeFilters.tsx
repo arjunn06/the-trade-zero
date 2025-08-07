@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
+import { AccountFilter } from '@/components/AccountFilter';
 
 interface TradeFiltersProps {
   onFiltersChange: (filters: TradeFilters) => void;
@@ -53,19 +54,11 @@ export function TradeFilters({ onFiltersChange, accountOptions }: TradeFiltersPr
       <div className="flex flex-wrap gap-4">
         {/* Account Filter */}
         <div className="min-w-[200px]">
-          <Select value={filters.accountId || 'all'} onValueChange={(value) => updateFilters({ accountId: value === 'all' ? '' : value })}>
-            <SelectTrigger>
-              <SelectValue placeholder="All accounts" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All accounts</SelectItem>
-              {accountOptions.map((account) => (
-                <SelectItem key={account.id} value={account.id}>
-                  {account.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <AccountFilter
+            value={filters.accountId || 'all'}
+            onValueChange={(value) => updateFilters({ accountId: value === 'all' ? '' : value })}
+            placeholder="All accounts"
+          />
         </div>
 
         {/* Status Filter */}

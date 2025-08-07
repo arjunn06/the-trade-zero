@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subWeeks, subMonths, isWithinInterval } from 'date-fns';
 import { TrendingUp, TrendingDown, Calendar as CalendarIcon, Target, DollarSign, BarChart3 } from 'lucide-react';
+import { AccountFilter } from '@/components/AccountFilter';
 
 interface DayPnL {
   date: string;
@@ -70,7 +71,6 @@ export default function CalendarPage() {
         .from('trading_accounts')
         .select('id, name')
         .eq('user_id', user.id)
-        .eq('is_active', true)
         .order('name');
 
       if (error) throw error;
@@ -278,19 +278,11 @@ export default function CalendarPage() {
             <p className="text-muted-foreground">Track your daily trading performance</p>
           </div>
           <div className="min-w-[200px]">
-            <Select value={selectedAccount || 'all'} onValueChange={(value) => setSelectedAccount(value === 'all' ? '' : value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="All accounts" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All accounts</SelectItem>
-                {tradingAccounts.map((account) => (
-                  <SelectItem key={account.id} value={account.id}>
-                    {account.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <AccountFilter
+              value={selectedAccount || 'all'}
+              onValueChange={(value) => setSelectedAccount(value === 'all' ? '' : value)}
+              placeholder="All accounts"
+            />
           </div>
         </div>
 

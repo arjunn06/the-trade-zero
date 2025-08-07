@@ -13,6 +13,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { MetricCard } from '@/components/MetricCard';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { SmartSuggestions } from '@/components/SmartSuggestions';
+import { AccountFilter } from '@/components/AccountFilter';
 
 interface AccountGoalsSectionProps {
   accounts: any[];
@@ -180,7 +181,6 @@ const Dashboard = () => {
           .from('trading_accounts')
           .select('*')
           .eq('user_id', user.id)
-          .eq('is_active', true)
       ]);
 
       if (tradesResult.error) throw tradesResult.error;
@@ -401,41 +401,15 @@ const Dashboard = () => {
             </div>
             
             {/* Account Selector */}
-            {accounts.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground">Account:</span>
-                <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                  <SelectTrigger className="w-[180px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                    <SelectValue placeholder="Select account" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border border-border shadow-lg">
-                    <SelectItem value="all" className="hover:bg-muted/50">All Accounts</SelectItem>
-                    {accounts.map((account) => (
-                      <SelectItem key={account.id} value={account.id} className="hover:bg-muted/50">
-                        <div className="flex items-center justify-between w-full">
-                          <span>{account.name}</span>
-                          <div
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleStarAccount(account.id, e);
-                            }}
-                            className="ml-2 p-1 hover:bg-muted rounded cursor-pointer"
-                            role="button"
-                            tabIndex={0}
-                            aria-label={`${primaryAccountId === account.id ? 'Unstar' : 'Star'} ${account.name}`}
-                          >
-                            <Star 
-                              className={`h-3 w-3 ${primaryAccountId === account.id ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground hover:text-yellow-400'}`} 
-                            />
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">Account:</span>
+              <AccountFilter
+                value={selectedAccountId}
+                onValueChange={setSelectedAccountId}
+                className="w-[180px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                placeholder="All Accounts"
+              />
+            </div>
             <Button onClick={() => navigate('/trades/new')} className="gap-2">
               <Plus className="h-4 w-4" />
               New Trade Entry
