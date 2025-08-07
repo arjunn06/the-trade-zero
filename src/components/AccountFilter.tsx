@@ -77,7 +77,7 @@ export function AccountFilter({ value, onValueChange, className, placeholder = "
         <SelectValue placeholder={getSelectedAccountName()} />
       </SelectTrigger>
       <SelectContent className="w-[280px]">
-        <SelectItem value="all" className="font-medium">
+        <SelectItem value="all" className="font-medium hover:bg-white hover:text-black focus:bg-white focus:text-black">
           All accounts
         </SelectItem>
         
@@ -92,7 +92,7 @@ export function AccountFilter({ value, onValueChange, className, placeholder = "
               <SelectItem 
                 key={account.id} 
                 value={account.id}
-                className="pl-6 hover:bg-accent/50 focus:bg-accent/50"
+                className="pl-6 hover:bg-white hover:text-black focus:bg-white focus:text-black"
               >
                 <div className="flex items-center justify-between w-full">
                   <span>{account.name}</span>
@@ -108,36 +108,32 @@ export function AccountFilter({ value, onValueChange, className, placeholder = "
         {inactiveAccounts.length > 0 && (
           <>
             <Separator className="my-1" />
-            <Button
-              variant="ghost"
-              size="sm"
+            <div 
+              className="w-full px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-white hover:text-black cursor-pointer flex items-center gap-2 rounded-sm transition-colors"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 setShowInactive(!showInactive);
               }}
-              className="w-full justify-start px-2 py-1.5 h-auto text-sm font-medium text-muted-foreground hover:bg-muted/50"
             >
-              <div className="flex items-center gap-2">
-                {showInactive ? (
-                  <ChevronDown className="h-3 w-3" />
-                ) : (
-                  <ChevronRight className="h-3 w-3" />
-                )}
-                <EyeOff className="h-3 w-3" />
-                Inactive Accounts ({inactiveAccounts.length})
-              </div>
-            </Button>
+              {showInactive ? (
+                <ChevronDown className="h-3 w-3" />
+              ) : (
+                <ChevronRight className="h-3 w-3" />
+              )}
+              <EyeOff className="h-3 w-3" />
+              Inactive Accounts ({inactiveAccounts.length})
+            </div>
             
             {showInactive && inactiveAccounts.map((account) => (
               <SelectItem 
                 key={account.id} 
                 value={account.id}
-                className="pl-8 hover:bg-muted/30 focus:bg-muted/30"
+                className="pl-8 hover:bg-white hover:text-black focus:bg-white focus:text-black"
               >
                 <div className="flex items-center justify-between w-full">
-                  <span className="text-muted-foreground">{account.name}</span>
-                  <Badge variant="outline" className="ml-2 text-xs border-muted-foreground/30 text-muted-foreground">
+                  <span className="text-muted-foreground group-hover:text-black">{account.name}</span>
+                  <Badge variant="outline" className="ml-2 text-xs border-muted-foreground/30 text-muted-foreground group-hover:text-black group-hover:border-black/30">
                     View Only
                   </Badge>
                 </div>
