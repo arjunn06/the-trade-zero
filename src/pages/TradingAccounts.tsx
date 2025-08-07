@@ -25,6 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface TradingAccount {
@@ -508,11 +509,31 @@ const TradingAccounts = () => {
                   <p className="text-xs text-muted-foreground mt-1">
                     Set a target profit goal to track your progress
                   </p>
-                </div>
-                
+                 </div>
+
+                 {editingAccount && (
+                   <div className="flex items-center justify-between p-4 border rounded-lg">
+                     <div>
+                       <Label htmlFor="is_active">Account Status</Label>
+                       <p className="text-sm text-muted-foreground">
+                         Inactive accounts are hidden from trade entry but statistics remain viewable
+                       </p>
+                     </div>
+                     <div className="flex items-center space-x-2">
+                       <span className="text-sm text-muted-foreground">Inactive</span>
+                       <Switch
+                         id="is_active"
+                         checked={editingAccount.is_active}
+                         onCheckedChange={(checked) => setEditingAccount({ ...editingAccount, is_active: checked })}
+                       />
+                       <span className="text-sm text-muted-foreground">Active</span>
+                     </div>
+                   </div>
+                 )}
                  
-                  {/* CSV Import Section - only show for existing accounts */}
-                  {editingAccount && (
+                  
+                   {/* CSV Import Section - only show for existing accounts */}
+                   {editingAccount && (
                     <div className="pt-4 border-t space-y-4">
                       <div>
                         <h3 className="text-sm font-medium mb-3">CSV Import</h3>
