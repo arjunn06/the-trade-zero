@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Building2, Edit, Trash2 } from 'lucide-react';
+import { Plus, Building2, Edit, Trash2, DollarSign, History } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +14,8 @@ import { CsvImportSection } from '@/components/CsvImportSection';
 import { CTraderIntegration } from '@/components/CTraderIntegration';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useUndoToast } from '@/components/UndoToast';
+import { AccountTransactionDialog } from '@/components/AccountTransactionDialog';
+import { AccountTransactionHistory } from '@/components/AccountTransactionHistory';
 import {
   Dialog,
   DialogContent,
@@ -55,6 +57,9 @@ const TradingAccounts = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<TradingAccount | null>(null);
   const [accountEquities, setAccountEquities] = useState<Record<string, number>>({});
+  const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<TradingAccount | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     account_type: '',
@@ -90,7 +95,7 @@ const TradingAccounts = () => {
     if (!user) return;
 
     try {
-      const [accountsResult, tradesResult] = await Promise.all([
+      const [accountsResult, tradesResult, transactionsResult] = await Promise.all([
         supabase
           .from('trading_accounts')
           .select('*')
@@ -100,21 +105,33 @@ const TradingAccounts = () => {
           .from('trades')
           .select('trading_account_id, pnl')
           .eq('user_id', user.id)
-          .not('pnl', 'is', null)
+          .not('pnl', 'is', null),
+        supabase
+          .from('account_transactions')
+          .select('trading_account_id, amount, transaction_type')
+          .eq('user_id', user.id)
       ]);
 
       if (accountsResult.error) throw accountsResult.error;
       if (tradesResult.error) throw tradesResult.error;
+      if (transactionsResult.error) throw transactionsResult.error;
 
       const accounts = accountsResult.data || [];
       const trades = tradesResult.data || [];
+      const transactions = transactionsResult.data || [];
 
-      // Calculate equity for each account
+      // Calculate equity for each account including transactions
       const equities: Record<string, number> = {};
       accounts.forEach(account => {
         const accountTrades = trades.filter(trade => trade.trading_account_id === account.id);
         const totalPnl = accountTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
-        equities[account.id] = account.initial_balance + totalPnl;
+        
+        const accountTransactions = transactions.filter(tx => tx.trading_account_id === account.id);
+        const totalTransactions = accountTransactions.reduce((sum, tx) => {
+          return sum + (tx.transaction_type === 'deposit' ? tx.amount : -tx.amount);
+        }, 0);
+        
+        equities[account.id] = account.current_balance + totalPnl;
       });
 
       setAccounts(accounts);
@@ -656,7 +673,31 @@ const TradingAccounts = () => {
                     >
                       Account Performance
                     </Button>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          setSelectedAccount(account);
+                          setTransactionDialogOpen(true);
+                        }}
+                        className="flex-1"
+                        title="Add Transaction"
+                      >
+                        <DollarSign className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          setSelectedAccount(account);
+                          setHistoryDialogOpen(true);
+                        }}
+                        className="flex-1"
+                        title="Transaction History"
+                      >
+                        <History className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(account)} className="flex-1">
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -681,6 +722,28 @@ const TradingAccounts = () => {
         onConfirm={handleConfirmDelete}
         variant="destructive"
       />
+
+      {selectedAccount && (
+        <>
+          <AccountTransactionDialog
+            open={transactionDialogOpen}
+            onOpenChange={setTransactionDialogOpen}
+            accountId={selectedAccount.id}
+            accountName={selectedAccount.name}
+            currency={selectedAccount.currency}
+            onTransactionAdded={fetchAccounts}
+          />
+          
+          <AccountTransactionHistory
+            open={historyDialogOpen}
+            onOpenChange={setHistoryDialogOpen}
+            accountId={selectedAccount.id}
+            accountName={selectedAccount.name}
+            currency={selectedAccount.currency}
+            onTransactionDeleted={fetchAccounts}
+          />
+        </>
+      )}
 
       </div>
     </DashboardLayout>
