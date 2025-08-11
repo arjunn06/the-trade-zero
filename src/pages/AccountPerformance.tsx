@@ -94,8 +94,17 @@ const AccountPerformance = () => {
       if (tradesError) throw tradesError;
       setTrades(tradesData || []);
 
+      // Fetch account transactions
+      const { data: transactionsData, error: transactionsError } = await supabase
+        .from('account_transactions')
+        .select('*')
+        .eq('trading_account_id', id)
+        .eq('user_id', user.id);
+
+      if (transactionsError) throw transactionsError;
+
       // Calculate statistics
-      calculateStats(accountData, tradesData || []);
+      calculateStats(accountData, tradesData || [], transactionsData || []);
     } catch (error) {
       console.error('Error fetching account data:', error);
       toast({
@@ -109,7 +118,7 @@ const AccountPerformance = () => {
     }
   };
 
-  const calculateStats = (account: TradingAccount, trades: Trade[]) => {
+  const calculateStats = (account: TradingAccount, trades: Trade[], transactions: any[] = []) => {
     const closedTrades = trades.filter(trade => trade.status === 'closed' && trade.pnl !== null);
     
     const totalTrades = closedTrades.length;
@@ -131,7 +140,14 @@ const AccountPerformance = () => {
     const grossLoss = Math.abs(losses.reduce((sum, trade) => sum + trade.pnl!, 0));
     const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
     
-    const currentEquity = account.initial_balance + totalPnL;
+    // Calculate net transactions (deposits - withdrawals)
+    const totalTransactions = transactions.reduce((sum, tx) => {
+      return sum + (tx.transaction_type === 'deposit' ? tx.amount : -tx.amount);
+    }, 0);
+    
+    // Current equity includes initial balance, PnL from trades, and net transactions
+    // But PnL calculations exclude transactions (only trade results)
+    const currentEquity = account.initial_balance + totalPnL + totalTransactions;
     const equityProgress = account.equity_goal ? (currentEquity / account.equity_goal) * 100 : 0;
 
     setStats({

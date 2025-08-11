@@ -131,7 +131,8 @@ const TradingAccounts = () => {
           return sum + (tx.transaction_type === 'deposit' ? tx.amount : -tx.amount);
         }, 0);
         
-        equities[account.id] = account.current_balance + totalPnl;
+        // Equity = initial balance + PnL + net transactions (deposits - withdrawals)
+        equities[account.id] = account.initial_balance + totalPnl + totalTransactions;
       });
 
       setAccounts(accounts);
