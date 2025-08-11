@@ -154,7 +154,7 @@ const Dashboard = () => {
   const [equityData, setEquityData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<any[]>([]);
-  const [selectedAccountId, setSelectedAccountId] = useState<string>('all');
+  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>(['all']);
   const [primaryAccountId, setPrimaryAccountId] = useState<string | null>(null);
   const [allTrades, setAllTrades] = useState<any[]>([]);
   const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest');
@@ -164,7 +164,7 @@ const Dashboard = () => {
     if (user) {
       fetchDashboardData();
     }
-  }, [user, selectedAccountId, sortOrder, timeFilter]); // Add timeFilter dependency
+  }, [user, selectedAccountIds, sortOrder, timeFilter]); // Add timeFilter dependency
 
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -181,6 +181,7 @@ const Dashboard = () => {
           .from('trading_accounts')
           .select('*')
           .eq('user_id', user.id)
+          .eq('is_active', true) // Only fetch active accounts by default
       ]);
 
       if (tradesResult.error) throw tradesResult.error;
@@ -192,18 +193,18 @@ const Dashboard = () => {
       setAccounts(allAccounts);
 
       // Set primary account on first login if not already set
-      if (allAccounts.length > 0 && selectedAccountId === 'all' && !primaryAccountId) {
+      if (allAccounts.length > 0 && selectedAccountIds.includes('all') && !primaryAccountId) {
         const savedPrimaryId = localStorage.getItem('primaryAccountId');
         if (savedPrimaryId && allAccounts.find(acc => acc.id === savedPrimaryId)) {
           setPrimaryAccountId(savedPrimaryId);
-          setSelectedAccountId(savedPrimaryId);
+          setSelectedAccountIds([savedPrimaryId]);
         }
       }
 
-      // Filter trades by selected account
-      let filteredTrades = selectedAccountId === 'all' 
+      // Filter trades by selected accounts
+      let filteredTrades = selectedAccountIds.includes('all') 
         ? allTrades 
-        : allTrades.filter(trade => trade.trading_account_id === selectedAccountId);
+        : allTrades.filter(trade => selectedAccountIds.includes(trade.trading_account_id));
 
       // Apply time filter
       if (timeFilter !== 'all') {
@@ -235,10 +236,10 @@ const Dashboard = () => {
 
       const trades = filteredTrades;
 
-      // Filter accounts by selected account for balance calculations
-      const accounts = selectedAccountId === 'all'
+      // Filter accounts by selected accounts for balance calculations
+      const accounts = selectedAccountIds.includes('all')
         ? allAccounts
-        : allAccounts.filter(account => account.id === selectedAccountId);
+        : allAccounts.filter(account => selectedAccountIds.includes(account.id));
 
       // Calculate account totals from trades
       const totalInitialBalance = accounts.reduce((sum, account) => sum + (account.initial_balance || 0), 0);
@@ -345,7 +346,7 @@ const Dashboard = () => {
     setPrimaryAccountId(newPrimaryId);
     if (newPrimaryId) {
       localStorage.setItem('primaryAccountId', newPrimaryId);
-      setSelectedAccountId(newPrimaryId);
+      setSelectedAccountIds([newPrimaryId]);
     } else {
       localStorage.removeItem('primaryAccountId');
     }
@@ -402,12 +403,13 @@ const Dashboard = () => {
             
             {/* Account Selector */}
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Account:</span>
+              <span className="text-sm font-medium text-muted-foreground">Accounts:</span>
               <AccountFilter
-                value={selectedAccountId}
-                onValueChange={setSelectedAccountId}
+                values={selectedAccountIds}
+                onValuesChange={setSelectedAccountIds}
                 className="w-[180px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-                placeholder="All Accounts"
+                placeholder="All Active Accounts"
+                multiSelect={true}
               />
             </div>
             <Button onClick={() => navigate('/trades/new')} className="gap-2">
