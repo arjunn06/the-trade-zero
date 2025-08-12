@@ -170,8 +170,8 @@ const Dashboard = () => {
     if (!user) return;
 
     try {
-      // Fetch trades, trading accounts, and transactions simultaneously
-      const [tradesResult, accountsResult, transactionsResult] = await Promise.all([
+      // Fetch trades and trading accounts simultaneously
+      const [tradesResult, accountsResult] = await Promise.all([
         supabase
           .from('trades')
           .select('*')
@@ -181,20 +181,14 @@ const Dashboard = () => {
           .from('trading_accounts')
           .select('*')
           .eq('user_id', user.id)
-          .eq('is_active', true), // Only fetch active accounts by default
-        supabase
-          .from('account_transactions')
-          .select('trading_account_id, amount, transaction_type')
-          .eq('user_id', user.id)
+          .eq('is_active', true) // Only fetch active accounts by default
       ]);
 
       if (tradesResult.error) throw tradesResult.error;
       if (accountsResult.error) throw accountsResult.error;
-      if (transactionsResult.error) throw transactionsResult.error;
 
       const allTrades = tradesResult.data || [];
       const allAccounts = accountsResult.data || [];
-      const allTransactions = transactionsResult.data || [];
       
       setAccounts(allAccounts);
 
@@ -257,14 +251,7 @@ const Dashboard = () => {
       accounts.forEach(account => {
         const accountTrades = filteredTrades.filter(trade => trade.trading_account_id === account.id);
         const accountPnl = accountTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
-        
-        const accountTransactions = allTransactions.filter(tx => tx.trading_account_id === account.id);
-        const totalTransactions = accountTransactions.reduce((sum, tx) => {
-          return sum + (tx.transaction_type === 'deposit' ? tx.amount : -tx.amount);
-        }, 0);
-        
-        // Equity = initial balance + PnL + net transactions (deposits - withdrawals)
-        const equity = account.initial_balance + accountPnl + totalTransactions;
+        const equity = account.initial_balance + accountPnl;
         accountEquities[account.id] = equity;
         totalCurrentEquity += equity;
       });
