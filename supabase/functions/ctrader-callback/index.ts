@@ -1,30 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Simple encryption for tokens using Web Crypto API
-async function encryptToken(token: string): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode('your-32-char-secret-key-here!!!'),
-    { name: 'AES-GCM' },
-    false,
-    ['encrypt']
-  );
-  
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encrypted = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
-    key,
-    new TextEncoder().encode(token)
-  );
-  
-  const combined = new Uint8Array(iv.length + encrypted.byteLength);
-  combined.set(iv);
-  combined.set(new Uint8Array(encrypted), iv.length);
-  
-  return btoa(String.fromCharCode(...combined));
-}
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -110,10 +86,6 @@ serve(async (req) => {
 
     const { access_token, refresh_token, expires_in } = tokenData;
 
-    // Encrypt tokens before storing
-    const encryptedAccessToken = await encryptToken(access_token);
-    const encryptedRefreshToken = await encryptToken(refresh_token);
-
     // Store connection in the ctrader_connections table
     const { error: connectionError } = await supabase
       .from("ctrader_connections")
@@ -121,8 +93,8 @@ serve(async (req) => {
         user_id: stateRow.user_id,
         trading_account_id: stateRow.trading_account_id,
         account_number: stateRow.account_number,
-        access_token: encryptedAccessToken,
-        refresh_token: encryptedRefreshToken,
+        access_token,
+        refresh_token,
         expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
       });
 
