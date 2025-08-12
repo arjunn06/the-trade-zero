@@ -30,49 +30,64 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
     try {
       setIsLoading(true);
-      
-      // Check subscription status from database
+
+      const email = user.email.toLowerCase().trim();
+
       const { data, error } = await supabase
         .from('subscribers')
         .select('subscribed, subscription_tier, subscription_end')
-        .eq('email', user.email)
+        .eq('email', email)
         .maybeSingle();
 
       if (error) {
         console.error('Error checking subscription:', error);
-        setIsPremium(false);
-        setSubscriptionTier('basic');
-        setSubscriptionEnd(null);
+        // Do not downgrade on error — keep current state
         return;
       }
 
       if (data) {
-        const isActive = data.subscribed && 
-          (!data.subscription_end || new Date(data.subscription_end) > new Date());
-        
+        console.log('Fetched subscription data:', data);
+
+        // Parse subscription_end in UTC correctly
+        const now = new Date();
+        const endDate = data.subscription_end
+          ? new Date(data.subscription_end + 'Z')
+          : null;
+
+        const isActive = Boolean(
+          data.subscribed &&
+          (!endDate || endDate > now)
+        );
+
         setIsPremium(isActive);
         setSubscriptionTier(data.subscription_tier || 'basic');
         setSubscriptionEnd(data.subscription_end);
+
       } else {
-        // User not in subscribers table - create basic entry
-        await supabase
+        // No row found — only insert if not existing, don’t overwrite
+        console.log('No subscription row found, creating basic entry.');
+        const { error: insertError } = await supabase
           .from('subscribers')
-          .upsert({
+          .insert({
             user_id: user.id,
-            email: user.email,
+            email,
             subscribed: false,
-            subscription_tier: 'basic'
-          }, { onConflict: 'email' });
-        
+            subscription_tier: 'basic',
+            subscription_end: null
+          });
+
+        if (insertError) {
+          console.error('Error creating subscription entry:', insertError);
+        }
+
         setIsPremium(false);
         setSubscriptionTier('basic');
         setSubscriptionEnd(null);
       }
-    } catch (error) {
-      console.error('Error in checkSubscription:', error);
-      setIsPremium(false);
-      setSubscriptionTier('basic');
-      setSubscriptionEnd(null);
+
+    } catch (err) {
+      console.error('Unexpected error in checkSubscription:', err);
+      // Do not force downgrade if something blows up
     } finally {
       setIsLoading(false);
     }
@@ -82,10 +97,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     checkSubscription();
   }, [user]);
 
-  // Check subscription every 5 minutes
+  // Auto-check every 5 min
   useEffect(() => {
     if (!user) return;
-    
     const interval = setInterval(checkSubscription, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [user]);
