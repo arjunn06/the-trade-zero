@@ -1,6 +1,55 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// Token encryption/decryption functions
+async function decryptToken(encryptedToken: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode('your-32-char-secret-key-here!!!'),
+    { name: 'AES-GCM' },
+    false,
+    ['decrypt']
+  );
+  
+  const combined = new Uint8Array(
+    atob(encryptedToken).split('').map(char => char.charCodeAt(0))
+  );
+  
+  const iv = combined.slice(0, 12);
+  const encrypted = combined.slice(12);
+  
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encrypted
+  );
+  
+  return new TextDecoder().decode(decrypted);
+}
+
+async function encryptToken(token: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode('your-32-char-secret-key-here!!!'),
+    { name: 'AES-GCM' },
+    false,
+    ['encrypt']
+  );
+  
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    new TextEncoder().encode(token)
+  );
+  
+  const combined = new Uint8Array(iv.length + encrypted.byteLength);
+  combined.set(iv);
+  combined.set(new Uint8Array(encrypted), iv.length);
+  
+  return btoa(String.fromCharCode(...combined));
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -193,6 +242,9 @@ async function refreshAccessToken(supabaseClient: any, connection: any) {
   console.log('Refreshing access token...');
   
   try {
+    // Decrypt the refresh token
+    const refreshToken = await decryptToken(connection.refresh_token);
+    
     const response = await fetch('https://openapi.ctrader.com/apps/token', {
       method: 'POST',
       headers: {
@@ -200,7 +252,7 @@ async function refreshAccessToken(supabaseClient: any, connection: any) {
       },
       body: new URLSearchParams({
         grant_type: 'refresh_token',
-        refresh_token: connection.refresh_token,
+        refresh_token: refreshToken,
         client_id: Deno.env.get('CTRADER_CLIENT_ID') ?? '',
         client_secret: Deno.env.get('CTRADER_CLIENT_SECRET') ?? '',
       }),
@@ -212,17 +264,27 @@ async function refreshAccessToken(supabaseClient: any, connection: any) {
 
     const tokenData = await response.json();
     
-    // Update connection with new tokens
+    // Encrypt the new tokens
+    const encryptedAccessToken = await encryptToken(tokenData.access_token);
+    const encryptedRefreshToken = await encryptToken(tokenData.refresh_token || refreshToken);
+    
+    // Update connection with new encrypted tokens
     await supabaseClient
       .from('ctrader_connections')
       .update({
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token || connection.refresh_token,
+        access_token: encryptedAccessToken,
+        refresh_token: encryptedRefreshToken,
         expires_at: new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString()
       })
       .eq('id', connection.id);
 
     console.log('Access token refreshed successfully');
+    
+    return {
+      ...connection,
+      access_token: encryptedAccessToken,
+      refresh_token: encryptedRefreshToken,
+    };
     
   } catch (error) {
     console.error('Failed to refresh token:', error);
@@ -230,7 +292,9 @@ async function refreshAccessToken(supabaseClient: any, connection: any) {
   }
 }
 
-async function fetchAccountInfo(accessToken: string, accountNumber: string): Promise<AccountInfo> {
+async function fetchAccountInfo(encryptedAccessToken: string, accountNumber: string): Promise<AccountInfo> {
+  // Decrypt the access token before use
+  const accessToken = await decryptToken(encryptedAccessToken);
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       if (ws) ws.close();
@@ -318,7 +382,9 @@ async function fetchAccountInfo(accessToken: string, accountNumber: string): Pro
   });
 }
 
-async function fetchOpenPositions(accessToken: string, accountNumber: string): Promise<Position[]> {
+async function fetchOpenPositions(encryptedAccessToken: string, accountNumber: string): Promise<Position[]> {
+  // Decrypt the access token before use
+  const accessToken = await decryptToken(encryptedAccessToken);
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       if (ws) ws.close();
