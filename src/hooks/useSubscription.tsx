@@ -50,6 +50,14 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         const isActive = data.subscribed && 
           (!data.subscription_end || new Date(data.subscription_end) > new Date());
         
+        console.log('Subscription check:', {
+          email: user.email,
+          subscribed: data.subscribed,
+          subscription_end: data.subscription_end,
+          isActive,
+          subscription_tier: data.subscription_tier
+        });
+        
         setIsPremium(isActive);
         setSubscriptionTier(data.subscription_tier || 'basic');
         setSubscriptionEnd(data.subscription_end);
