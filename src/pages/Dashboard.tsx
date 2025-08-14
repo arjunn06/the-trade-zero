@@ -13,6 +13,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { MetricCard } from '@/components/MetricCard';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { SmartSuggestions } from '@/components/SmartSuggestions';
+import { QuickTradeWidget } from '@/components/QuickTradeWidget';
 import { AccountFilter } from '@/components/AccountFilter';
 
 interface AccountGoalsSectionProps {
@@ -617,8 +618,11 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Smart Suggestions Section */}
-        <SmartSuggestions trades={allTrades} />
+        {/* Quick Trade Widget and Smart Suggestions */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <QuickTradeWidget />
+          <SmartSuggestions trades={allTrades} />
+        </div>
 
         {/* Additional Performance Metrics */}
         <Card className="metric-card">
