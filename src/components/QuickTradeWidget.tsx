@@ -34,6 +34,8 @@ export function QuickTradeWidget() {
     quantity: '',
     stop_loss: '',
     take_profit: '',
+    exit_price: '',
+    pnl: '',
     notes: ''
   });
 
@@ -100,7 +102,11 @@ export function QuickTradeWidget() {
         quantity: parseFloat(formData.quantity),
         ...(formData.stop_loss && { stop_loss: parseFloat(formData.stop_loss) }),
         ...(formData.take_profit && { take_profit: parseFloat(formData.take_profit) }),
+        ...(formData.exit_price && { exit_price: parseFloat(formData.exit_price) }),
+        ...(formData.pnl && { pnl: parseFloat(formData.pnl) }),
         entry_date: entryDate.toISOString(),
+        status: formData.exit_price ? 'closed' : 'open',
+        ...(formData.exit_price && { exit_date: entryDate.toISOString() }),
         notes: formData.notes
       };
 
@@ -132,6 +138,8 @@ export function QuickTradeWidget() {
         quantity: '',
         stop_loss: '',
         take_profit: '',
+        exit_price: '',
+        pnl: '',
         notes: ''
       });
       setEntryDate(new Date());
@@ -271,6 +279,33 @@ export function QuickTradeWidget() {
                   />
                 </PopoverContent>
               </Popover>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="exit_price">Exit Price (Optional)</Label>
+              <Input
+                id="exit_price"
+                type="number"
+                step="0.00001"
+                value={formData.exit_price}
+                onChange={(e) => handleInputChange('exit_price', e.target.value)}
+                placeholder="Exit price"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="pnl">P&L (Optional)</Label>
+              <Input
+                id="pnl"
+                type="number"
+                step="0.01"
+                value={formData.pnl}
+                onChange={(e) => handleInputChange('pnl', e.target.value)}
+                placeholder="Profit/Loss amount"
+                className={formData.pnl && parseFloat(formData.pnl) >= 0 ? 'text-profit' : formData.pnl && parseFloat(formData.pnl) < 0 ? 'text-loss' : ''}
+              />
             </div>
           </div>
 
