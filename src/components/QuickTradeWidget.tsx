@@ -3,11 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface TradingAccount {
   id: string;
@@ -20,14 +25,16 @@ export function QuickTradeWidget() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
+  const [entryDate, setEntryDate] = useState<Date>(new Date());
   const [formData, setFormData] = useState({
     trading_account_id: '',
     symbol: '',
     trade_type: '',
     entry_price: '',
     quantity: '',
-    exit_price: '',
-    pnl: ''
+    stop_loss: '',
+    take_profit: '',
+    notes: ''
   });
 
   useEffect(() => {
@@ -62,36 +69,14 @@ export function QuickTradeWidget() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const calculatePnL = () => {
-    const entry = parseFloat(formData.entry_price);
-    const exit = parseFloat(formData.exit_price);
-    const quantity = parseFloat(formData.quantity);
-
-    if (entry && exit && quantity && formData.trade_type) {
-      let pnl = 0;
-      if (formData.trade_type === 'buy') {
-        pnl = (exit - entry) * quantity;
-      } else {
-        pnl = (entry - exit) * quantity;
-      }
-      setFormData(prev => ({ ...prev, pnl: pnl.toFixed(2) }));
-    }
-  };
-
-  useEffect(() => {
-    if (formData.entry_price && formData.exit_price && formData.quantity && formData.trade_type) {
-      calculatePnL();
-    }
-  }, [formData.entry_price, formData.exit_price, formData.quantity, formData.trade_type]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.trading_account_id || !formData.symbol || !formData.trade_type || 
-        !formData.entry_price || !formData.quantity) {
+        !formData.entry_price || !formData.quantity || !formData.notes.trim()) {
       toast({
         title: "Missing required fields",
-        description: "Please fill in all required fields",
+        description: "Please fill in all required fields including notes",
         variant: "destructive"
       });
       return;
@@ -113,12 +98,10 @@ export function QuickTradeWidget() {
         trade_type: formData.trade_type,
         entry_price: parseFloat(formData.entry_price),
         quantity: parseFloat(formData.quantity),
-        ...(formData.exit_price && { exit_price: parseFloat(formData.exit_price) }),
-        ...(formData.pnl && { pnl: parseFloat(formData.pnl) }),
-        entry_date: new Date().toISOString(),
-        status: formData.exit_price ? 'closed' : 'open',
-        ...(formData.exit_price && { exit_date: new Date().toISOString() }),
-        notes: 'Quick trade entry'
+        ...(formData.stop_loss && { stop_loss: parseFloat(formData.stop_loss) }),
+        ...(formData.take_profit && { take_profit: parseFloat(formData.take_profit) }),
+        entry_date: entryDate.toISOString(),
+        notes: formData.notes
       };
 
       const response = await fetch(`https://dynibyqrcbxneiwjyahn.supabase.co/functions/v1/create-trade`, {
@@ -147,9 +130,11 @@ export function QuickTradeWidget() {
         trade_type: '',
         entry_price: '',
         quantity: '',
-        exit_price: '',
-        pnl: ''
+        stop_loss: '',
+        take_profit: '',
+        notes: ''
       });
+      setEntryDate(new Date());
 
       // Trigger a page refresh to update dashboard data
       window.location.reload();
@@ -262,32 +247,69 @@ export function QuickTradeWidget() {
             </div>
             
             <div>
-              <Label htmlFor="exit_price">Exit Price (Optional)</Label>
+              <Label htmlFor="entry_date">Entry Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !entryDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {entryDate ? format(entryDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={entryDate}
+                    onSelect={(date) => date && setEntryDate(date)}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="stop_loss">Stop Loss (Optional)</Label>
               <Input
-                id="exit_price"
+                id="stop_loss"
                 type="number"
                 step="0.00001"
-                value={formData.exit_price}
-                onChange={(e) => handleInputChange('exit_price', e.target.value)}
-                placeholder="Exit price"
+                value={formData.stop_loss}
+                onChange={(e) => handleInputChange('stop_loss', e.target.value)}
+                placeholder="Stop loss price"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="take_profit">Take Profit (Optional)</Label>
+              <Input
+                id="take_profit"
+                type="number"
+                step="0.00001"
+                value={formData.take_profit}
+                onChange={(e) => handleInputChange('take_profit', e.target.value)}
+                placeholder="Take profit price"
               />
             </div>
           </div>
 
-          {formData.pnl && (
-            <div>
-              <Label htmlFor="pnl">P&L</Label>
-              <Input
-                id="pnl"
-                type="number"
-                step="0.01"
-                value={formData.pnl}
-                onChange={(e) => handleInputChange('pnl', e.target.value)}
-                className={parseFloat(formData.pnl) >= 0 ? 'text-profit' : 'text-loss'}
-                readOnly
-              />
-            </div>
-          )}
+          <div>
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => handleInputChange('notes', e.target.value)}
+              placeholder="Trade notes, setup, reasoning..."
+              rows={3}
+            />
+          </div>
 
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? 'Creating...' : 'Add Trade'}
