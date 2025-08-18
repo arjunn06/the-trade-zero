@@ -212,13 +212,13 @@ export function QuickTradeWidget() {
                   <SelectValue placeholder="Buy/Sell" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="buy">
+                  <SelectItem value="long">
                     <div className="flex items-center gap-2">
                       <TrendingUp className="h-4 w-4 text-profit" />
                       Buy
                     </div>
                   </SelectItem>
-                  <SelectItem value="sell">
+                  <SelectItem value="short">
                     <div className="flex items-center gap-2">
                       <TrendingDown className="h-4 w-4 text-loss" />
                       Sell
