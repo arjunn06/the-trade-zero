@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, TrendingUp, TrendingDown, ImageIcon, Eye, X, Copy, MoreHorizontal } from 'lucide-react';
+import { Plus, Edit, Trash2, TrendingUp, TrendingDown, ImageIcon, Eye, X, Copy, MoreHorizontal, Grid3X3, List } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -80,6 +80,7 @@ const Trades = () => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [tradingAccounts, setTradingAccounts] = useState<{ id: string; name: string; }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [screenshotDialog, setScreenshotDialog] = useState(false);
@@ -428,6 +429,25 @@ const Trades = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const getTradeOutcome = (trade: Trade) => {
+    if (trade.status === 'open') return 'Open';
+    if (!trade.pnl) return 'Break Even';
+    
+    if (trade.pnl > 0) {
+      if (trade.exit_price === trade.take_profit) return 'Take Profit';
+      return 'Partial Profit';
+    } else {
+      if (trade.exit_price === trade.stop_loss) return 'Stop Loss';
+      return 'Loss';
+    }
+  };
+
+  const getOutcomeColor = (trade: Trade) => {
+    if (trade.status === 'open') return 'text-muted-foreground';
+    if (!trade.pnl) return 'text-muted-foreground';
+    return trade.pnl > 0 ? 'text-profit' : 'text-loss';
+  };
+
   const openScreenshotDialog = (screenshots: string[]) => {
     setSelectedScreenshots(screenshots);
     setScreenshotDialog(true);
@@ -499,24 +519,46 @@ const Trades = () => {
             <h1 className="text-3xl font-bold">Trade History</h1>
             <p className="text-muted-foreground">View and manage your trading history</p>
           </div>
-          {hasExceededLimit ? (
-            <PremiumFeature
-              feature="Unlimited Trades"
-              description="You've reached the 50 trade limit for basic users. Upgrade to premium for unlimited trade tracking."
-              showUpgrade={false}
-              fallback={
-                <Button disabled variant="outline">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Upgrade for More Trades
-                </Button>
-              }
-            />
-          ) : (
-            <Button onClick={() => navigate('/trades/new')}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Trade
-            </Button>
-          )}
+          <div className="flex items-center gap-3">
+            {/* View Toggle */}
+            <div className="flex items-center border rounded-lg p-1">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className="h-8 px-3"
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="h-8 px-3"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {hasExceededLimit ? (
+              <PremiumFeature
+                feature="Unlimited Trades"
+                description="You've reached the 50 trade limit for basic users. Upgrade to premium for unlimited trade tracking."
+                showUpgrade={false}
+                fallback={
+                  <Button disabled variant="outline">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Upgrade for More Trades
+                  </Button>
+                }
+              />
+            ) : (
+              <Button onClick={() => navigate('/trades/new')}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Trade
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Search */}
@@ -561,21 +603,74 @@ const Trades = () => {
           </Card>
         ) : (
           <>
-            {/* Mobile View - Cards */}
-            <div className="block lg:hidden space-y-4">
-              {filteredAndSortedTrades.map((trade) => (
-                <TradeCard
-                  key={trade.id}
-                  trade={trade}
-                  onClose={openCloseDialog}
-                  onDelete={(id) => handleDeleteConfirm(id, trade.symbol)}
-                  onDuplicate={() => handleCopyTrade(trade.id)}
-                  onViewScreenshots={openScreenshotDialog}
-                />
-              ))}
-            </div>
+            {/* Grid View */}
+            {viewMode === 'grid' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filteredAndSortedTrades.map((trade, index) => (
+                  <Card 
+                    key={trade.id} 
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/trades/${trade.id}`)}
+                  >
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="text-sm text-muted-foreground">
+                          Trade #{String(index + 1).padStart(2, '0')}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg">{trade.symbol}</span>
+                          <Badge 
+                            variant={trade.trade_type === 'long' ? 'default' : 'secondary'}
+                            className={`text-xs ${
+                              trade.trade_type === 'long' 
+                                ? 'bg-profit/10 text-profit border-profit/20' 
+                                : 'bg-loss/10 text-loss border-loss/20'
+                            }`}
+                          >
+                            {trade.trade_type === 'long' ? 'Long' : 'Short'}
+                          </Badge>
+                        </div>
+                        
+                        <div className="text-sm text-muted-foreground">
+                          {getTradeOutcome(trade)}
+                        </div>
+                        
+                        <div className={`text-xl font-bold ${getOutcomeColor(trade)}`}>
+                          {trade.status === 'open' 
+                            ? 'Open'
+                            : trade.pnl 
+                              ? formatCurrency(trade.pnl, trade.trading_accounts?.currency)
+                              : 'Break Even'
+                          }
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
 
-            {/* Desktop View - Table */}
+            {/* Mobile View - Cards (when in list mode) */}
+            {viewMode === 'list' && (
+              <div className="block lg:hidden space-y-4">
+                {filteredAndSortedTrades.map((trade) => (
+                  <TradeCard
+                    key={trade.id}
+                    trade={trade}
+                    onClose={openCloseDialog}
+                    onDelete={(id) => handleDeleteConfirm(id, trade.symbol)}
+                    onDuplicate={() => handleCopyTrade(trade.id)}
+                    onViewScreenshots={openScreenshotDialog}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Desktop View - Table (when in list mode) */}
+            {viewMode === 'list' && (
             <Card className="hidden lg:block">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
@@ -727,6 +822,7 @@ const Trades = () => {
                 </Table>
               </CardContent>
             </Card>
+            )}
           </>
         )}
 
