@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, TrendingUp, TrendingDown, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { ScreenshotAnalyzer } from './ScreenshotAnalyzer';
 
 interface TradingAccount {
   id: string;
@@ -69,6 +70,18 @@ export function QuickTradeWidget() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleDataExtracted = (extractedData: any) => {
+    setFormData(prev => ({
+      ...prev,
+      ...extractedData
+    }));
+    
+    toast({
+      title: "Data imported successfully",
+      description: "Trade details have been filled from the screenshot",
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,14 +173,18 @@ export function QuickTradeWidget() {
   };
 
   return (
-    <Card className="quick-trade-widget">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Plus className="h-5 w-5" />
-          Quick Add Trade
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="space-y-6">
+      {/* AI Screenshot Analyzer */}
+      <ScreenshotAnalyzer onDataExtracted={handleDataExtracted} />
+      
+      <Card className="quick-trade-widget">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Plus className="h-5 w-5" />
+            Quick Add Trade
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -352,5 +369,6 @@ export function QuickTradeWidget() {
         </form>
       </CardContent>
     </Card>
+    </div>
   );
 }
