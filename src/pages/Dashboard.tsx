@@ -334,14 +334,14 @@ const Dashboard = () => {
       // Calculate max drawdown
       let peak = totalInitialBalance;
       let maxDrawdown = 0;
-      let runningBalance = totalInitialBalance;
+      let drawdownBalance = totalInitialBalance;
       
       closedTrades.forEach(trade => {
-        runningBalance += (trade.pnl || 0);
-        if (runningBalance > peak) {
-          peak = runningBalance;
+        drawdownBalance += (trade.pnl || 0);
+        if (drawdownBalance > peak) {
+          peak = drawdownBalance;
         }
-        const currentDrawdown = (peak - runningBalance) / peak * 100;
+        const currentDrawdown = (peak - drawdownBalance) / peak * 100;
         maxDrawdown = Math.max(maxDrawdown, currentDrawdown);
       });
 
