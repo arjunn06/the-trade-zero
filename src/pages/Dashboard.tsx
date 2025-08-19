@@ -6,10 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { TrendingUp, TrendingDown, DollarSign, Target, Calendar, Plus, Activity, BarChart3, Star } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Target, Calendar, Plus, Activity, BarChart3, Star, PieChart, Clock, Shield, TrendingDown as LossIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart as RechartsPieChart, Cell, BarChart, Bar } from 'recharts';
 import { MetricCard } from '@/components/MetricCard';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { SmartSuggestions } from '@/components/SmartSuggestions';
@@ -133,6 +133,12 @@ interface DashboardStats {
   currentBalance: number;
   initialBalance: number;
   mostTradedAsset: string;
+  profitFactor: number;
+  expectancy: number;
+  sharpeRatio: number;
+  maxDrawdown: number;
+  consecutiveWins: number;
+  consecutiveLosses: number;
 }
 
 const Dashboard = () => {
@@ -149,7 +155,13 @@ const Dashboard = () => {
     avgLoss: 0,
     currentBalance: 0,
     initialBalance: 0,
-    mostTradedAsset: ''
+    mostTradedAsset: '',
+    profitFactor: 0,
+    expectancy: 0,
+    sharpeRatio: 0,
+    maxDrawdown: 0,
+    consecutiveWins: 0,
+    consecutiveLosses: 0
   });
   const [recentTrades, setRecentTrades] = useState<any[]>([]);
   const [equityData, setEquityData] = useState<any[]>([]);
@@ -160,6 +172,9 @@ const Dashboard = () => {
   const [allTrades, setAllTrades] = useState<any[]>([]);
   const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest');
   const [timeFilter, setTimeFilter] = useState<string>('all');
+  const [assetPerformance, setAssetPerformance] = useState<any[]>([]);
+  const [monthlyPerformance, setMonthlyPerformance] = useState<any[]>([]);
+  const [riskMetrics, setRiskMetrics] = useState<any>({});
 
   useEffect(() => {
     if (user) {
@@ -292,6 +307,78 @@ const Dashboard = () => {
         ? Object.entries(symbolCounts).sort(([,a], [,b]) => b - a)[0][0] 
         : '';
 
+      // Calculate advanced metrics
+      const totalWins = winningTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+      const totalLosses = Math.abs(losingTrades.reduce((sum, t) => sum + (t.pnl || 0), 0));
+      const profitFactor = totalLosses > 0 ? totalWins / totalLosses : 0;
+      const expectancy = closedTrades.length > 0 ? totalPnl / closedTrades.length : 0;
+
+      // Calculate consecutive wins/losses
+      let maxConsecutiveWins = 0;
+      let maxConsecutiveLosses = 0;
+      let currentWinStreak = 0;
+      let currentLossStreak = 0;
+
+      closedTrades.forEach(trade => {
+        if ((trade.pnl || 0) > 0) {
+          currentWinStreak++;
+          currentLossStreak = 0;
+          maxConsecutiveWins = Math.max(maxConsecutiveWins, currentWinStreak);
+        } else {
+          currentLossStreak++;
+          currentWinStreak = 0;
+          maxConsecutiveLosses = Math.max(maxConsecutiveLosses, currentLossStreak);
+        }
+      });
+
+      // Calculate max drawdown
+      let peak = totalInitialBalance;
+      let maxDrawdown = 0;
+      let runningBalance = totalInitialBalance;
+      
+      closedTrades.forEach(trade => {
+        runningBalance += (trade.pnl || 0);
+        if (runningBalance > peak) {
+          peak = runningBalance;
+        }
+        const currentDrawdown = (peak - runningBalance) / peak * 100;
+        maxDrawdown = Math.max(maxDrawdown, currentDrawdown);
+      });
+
+      // Calculate asset performance
+      const assetStats = Object.keys(symbolCounts).map(symbol => {
+        const symbolTrades = closedTrades.filter(t => t.symbol === symbol);
+        const symbolPnl = symbolTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+        const symbolWins = symbolTrades.filter(t => (t.pnl || 0) > 0).length;
+        const symbolWinRate = symbolTrades.length > 0 ? (symbolWins / symbolTrades.length) * 100 : 0;
+        
+        return {
+          symbol,
+          trades: symbolTrades.length,
+          pnl: symbolPnl,
+          winRate: symbolWinRate,
+          avgPnl: symbolTrades.length > 0 ? symbolPnl / symbolTrades.length : 0
+        };
+      }).sort((a, b) => b.pnl - a.pnl).slice(0, 8);
+
+      // Calculate monthly performance
+      const monthlyStats: Record<string, { pnl: number; trades: number }> = {};
+      closedTrades.forEach(trade => {
+        const month = new Date(trade.exit_date || trade.entry_date).toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short' 
+        });
+        if (!monthlyStats[month]) {
+          monthlyStats[month] = { pnl: 0, trades: 0 };
+        }
+        monthlyStats[month].pnl += trade.pnl || 0;
+        monthlyStats[month].trades += 1;
+      });
+
+      const monthlyData = Object.entries(monthlyStats)
+        .map(([month, data]) => ({ month, ...data }))
+        .slice(-12); // Last 12 months
+
       setStats({
         totalPnl,
         winRate,
@@ -303,8 +390,17 @@ const Dashboard = () => {
         avgLoss,
         currentBalance: totalCurrentEquity,
         initialBalance: totalInitialBalance,
-        mostTradedAsset
+        mostTradedAsset,
+        profitFactor,
+        expectancy,
+        sharpeRatio: 0, // Would need more complex calculation
+        maxDrawdown,
+        consecutiveWins: maxConsecutiveWins,
+        consecutiveLosses: maxConsecutiveLosses
       });
+
+      setAssetPerformance(assetStats);
+      setMonthlyPerformance(monthlyData);
 
       // Sort trades based on current sort order
       const sortedTrades = [...trades].sort((a, b) => {
@@ -318,19 +414,19 @@ const Dashboard = () => {
 
       // Generate equity curve data showing progression to current balance
       const equitySortedTrades = closedTrades.sort((a, b) => new Date(a.exit_date || a.entry_date).getTime() - new Date(b.exit_date || b.entry_date).getTime());
-      let runningBalance = totalInitialBalance || 0;
-      const equityCurve = [{ date: 'Start', balance: runningBalance }];
+      let equityBalance = totalInitialBalance || 0;
+      const equityCurve = [{ date: 'Start', balance: equityBalance }];
       
       equitySortedTrades.forEach((trade) => {
-        runningBalance += (trade.pnl || 0);
+        equityBalance += (trade.pnl || 0);
         equityCurve.push({
           date: new Date(trade.exit_date || trade.entry_date).toLocaleDateString(),
-          balance: runningBalance
+          balance: equityBalance
         });
       });
 
       // Add current balance as the final point if different from calculated
-      if (equitySortedTrades.length > 0 && Math.abs(runningBalance - totalCurrentEquity) > 0.01) {
+      if (equitySortedTrades.length > 0 && Math.abs(equityBalance - totalCurrentEquity) > 0.01) {
         equityCurve.push({
           date: 'Current',
           balance: totalCurrentEquity
@@ -624,39 +720,197 @@ const Dashboard = () => {
           <SmartSuggestions trades={allTrades} />
         </div>
 
-        {/* Additional Performance Metrics */}
-        <Card className="metric-card">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-semibold">Your Top Assets</CardTitle>
-            <CardDescription>Most traded asset performance</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-              <div className="text-center">
-                <div className="text-sm text-muted-foreground mb-1">Most Traded</div>
-                <div className="text-lg font-semibold">{stats.mostTradedAsset || 'N/A'}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-muted-foreground mb-1">Average Win</div>
-                <div className="text-lg font-semibold text-profit">{formatCurrency(stats.avgWin)}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-muted-foreground mb-1">Average Loss</div>
-                <div className="text-lg font-semibold text-loss">{formatCurrency(Math.abs(stats.avgLoss))}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-muted-foreground mb-1">Best Trade</div>
-                <div className="text-lg font-semibold text-profit">{formatCurrency(stats.bestTrade)}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-muted-foreground mb-1">Risk/Reward</div>
-                <div className="text-lg font-semibold">
-                  {stats.avgLoss !== 0 ? (Math.abs(stats.avgWin / stats.avgLoss)).toFixed(2) : 'N/A'}
+        {/* Advanced Performance Metrics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Risk Metrics */}
+          <Card className="metric-card">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center text-lg font-semibold">
+                <Shield className="h-5 w-5 mr-2" />
+                Risk & Performance Metrics
+              </CardTitle>
+              <CardDescription>Advanced trading performance indicators</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground mb-1">Profit Factor</div>
+                    <div className={`text-xl font-bold ${stats.profitFactor >= 1.5 ? 'text-profit' : stats.profitFactor >= 1 ? 'text-warning' : 'text-loss'}`}>
+                      {stats.profitFactor.toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground mb-1">Expectancy</div>
+                    <div className={`text-xl font-bold ${stats.expectancy >= 0 ? 'text-profit' : 'text-loss'}`}>
+                      {formatCurrency(stats.expectancy)}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground mb-1">Max Drawdown</div>
+                    <div className="text-xl font-bold text-loss">
+                      {stats.maxDrawdown.toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground mb-1">Best Streak</div>
+                    <div className="text-xl font-bold text-profit">
+                      {stats.consecutiveWins} wins
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground mb-1">Worst Streak</div>
+                    <div className="text-xl font-bold text-loss">
+                      {stats.consecutiveLosses} losses
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground mb-1">Risk/Reward</div>
+                    <div className="text-xl font-bold">
+                      {stats.avgLoss !== 0 ? (Math.abs(stats.avgWin / stats.avgLoss)).toFixed(2) : 'N/A'}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Asset Performance Breakdown */}
+          <Card className="metric-card">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center text-lg font-semibold">
+                <PieChart className="h-5 w-5 mr-2" />
+                Top Assets Performance
+              </CardTitle>
+              <CardDescription>Your best and worst performing symbols</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {assetPerformance.length > 0 ? (
+                <div className="space-y-3">
+                  {assetPerformance.slice(0, 6).map((asset, index) => (
+                    <div key={asset.symbol} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 rounded-full ${index === 0 ? 'bg-profit' : index === 1 ? 'bg-primary' : 'bg-muted'}`} />
+                        <div>
+                          <p className="font-medium text-sm">{asset.symbol}</p>
+                          <p className="text-xs text-muted-foreground">{asset.trades} trades</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-semibold text-sm ${asset.pnl >= 0 ? 'text-profit' : 'text-loss'}`}>
+                          {formatCurrency(asset.pnl)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {asset.winRate.toFixed(0)}% WR
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <PieChart className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>No asset data available</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Monthly Performance Chart */}
+        {monthlyPerformance.length > 0 && (
+          <Card className="metric-card">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center text-lg font-semibold">
+                <Calendar className="h-5 w-5 mr-2" />
+                Monthly Performance Trend
+              </CardTitle>
+              <CardDescription>Track your trading consistency over time</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={monthlyPerformance}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis 
+                    dataKey="month" 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                  />
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                  />
+                  <Tooltip 
+                    formatter={(value: number, name: string) => [
+                      name === 'pnl' ? formatCurrency(value) : value,
+                      name === 'pnl' ? 'P&L' : 'Trades'
+                    ]}
+                    labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Bar 
+                    dataKey="pnl" 
+                    fill="hsl(var(--primary))"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Key Insights Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <MetricCard
+            title="Profit Factor"
+            value={stats.profitFactor.toFixed(2)}
+            change={{
+              value: stats.profitFactor,
+              percentage: stats.profitFactor >= 1.5 ? "Excellent" : stats.profitFactor >= 1 ? "Good" : "Needs Work",
+              isPositive: stats.profitFactor >= 1
+            }}
+            icon={<TrendingUp className="h-5 w-5" />}
+          />
+          
+          <MetricCard
+            title="Average Return"
+            value={formatCurrency(stats.expectancy)}
+            change={{
+              value: stats.expectancy,
+              percentage: "Per trade",
+              isPositive: stats.expectancy >= 0
+            }}
+            icon={<DollarSign className="h-5 w-5" />}
+          />
+          
+          <MetricCard
+            title="Max Drawdown"
+            value={`${stats.maxDrawdown.toFixed(1)}%`}
+            change={{
+              value: stats.maxDrawdown,
+              percentage: stats.maxDrawdown < 10 ? "Low Risk" : stats.maxDrawdown < 20 ? "Moderate" : "High Risk",
+              isPositive: stats.maxDrawdown < 15
+            }}
+            icon={<LossIcon className="h-5 w-5" />}
+          />
+          
+          <MetricCard
+            title="Best Streak"
+            value={`${stats.consecutiveWins} wins`}
+            change={{
+              value: stats.consecutiveWins,
+              percentage: "Consecutive",
+              isPositive: true
+            }}
+            icon={<Target className="h-5 w-5" />}
+          />
+        </div>
       </div>
     </DashboardLayout>
   );
