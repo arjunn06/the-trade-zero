@@ -37,6 +37,65 @@ interface ZohoWebhookRequest {
   }
 }
 
+function normalizeTradeType(type: any): 'buy' | 'sell' | undefined {
+  if (!type) return undefined;
+  const t = String(type).toLowerCase();
+  if (t.includes('long') || t.includes('buy')) return 'buy';
+  if (t.includes('short') || t.includes('sell')) return 'sell';
+  if (t === 'buy' || t === 'sell') return t as 'buy' | 'sell';
+  return undefined;
+}
+
+function toNumber(val: any): number | undefined {
+  if (val === null || val === undefined || val === '') return undefined;
+  const n = typeof val === 'number' ? val : parseFloat(String(val).replace(/,/g, ''));
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function parseGCDate(value?: string): string | undefined {
+  if (!value) return undefined;
+  const m = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (m) {
+    const [, d, mo, y, h, mi, ap] = m;
+    let hour = parseInt(h, 10);
+    const minute = parseInt(mi, 10);
+    if (ap.toUpperCase() === 'PM' && hour < 12) hour += 12;
+    if (ap.toUpperCase() === 'AM' && hour === 12) hour = 0;
+    const date = new Date(parseInt(y,10), parseInt(mo,10)-1, parseInt(d,10), hour, minute);
+    return new Date(date.getTime() - date.getTimezoneOffset()*60000).toISOString();
+  }
+  const d2 = new Date(value);
+  if (!isNaN(d2.getTime())) return d2.toISOString();
+  return undefined;
+}
+
+function normalizeTradeDataFromRoot(payload: any): ZohoWebhookRequest['trade_data'] | undefined {
+  if (!payload) return undefined;
+  const symbol = payload.symbol || payload.Symbol;
+  const trade_type = normalizeTradeType(payload.trade_type || payload.Trade_type);
+  const entry_price = toNumber(payload.entry_price ?? payload.Entry_price);
+  const quantity = toNumber(payload.quantity ?? payload.Quantity);
+  const stop_loss = toNumber(payload.stop_loss ?? payload.Stoploss);
+  const take_profit = toNumber(payload.take_profit ?? payload.Take_Profit);
+  const entry_date = payload.entry_date ?? payload.Entry_date;
+  const trading_account_name = payload.trading_account_name ?? payload.Account;
+  const notes = payload.notes ?? payload.Notes;
+  const emotions = payload.emotions;
+  if (!symbol || !trade_type || entry_price == null || quantity == null) return undefined;
+  return {
+    symbol,
+    trade_type,
+    entry_price,
+    quantity,
+    stop_loss: stop_loss ?? undefined,
+    take_profit: take_profit ?? undefined,
+    entry_date,
+    trading_account_name,
+    notes,
+    emotions,
+  } as any;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -57,9 +116,11 @@ Deno.serve(async (req) => {
     const { action, user_email, trade_data, query, session_id, selected_account_id, trade_id, update_data } = payload
 
     switch (action) {
-      case 'create_trade':
-        return await handleCreateTrade(user_email, trade_data, selected_account_id)
-      
+      case 'create_trade': {
+        const effectiveEmail = user_email || (payload as any).email || ((payload as any as any).user && (payload as any as any).user.email) || undefined;
+        const normalizedTrade = trade_data ?? normalizeTradeDataFromRoot(payload as any);
+        return await handleCreateTrade(effectiveEmail, normalizedTrade, selected_account_id)
+      }
       case 'get_trading_accounts':
         return await handleGetTradingAccounts(user_email, true) // true for dynamic buttons format
       
@@ -143,8 +204,11 @@ async function handleCreateTrade(user_email?: string, trade_data?: ZohoWebhookRe
 
     const userId = await getUserByEmail(user_email)
 
-    // Validate required trade fields
-    if (!trade_data.symbol || !trade_data.trade_type || !trade_data.entry_price || !trade_data.quantity) {
+    // Validate required trade fields (allow string numbers and GC labels)
+    const validType = normalizeTradeType((trade_data as any).trade_type);
+    const validEntry = toNumber((trade_data as any).entry_price);
+    const validQty = toNumber((trade_data as any).quantity);
+    if (!trade_data.symbol || !validType || validEntry == null || validQty == null) {
       return new Response(
         JSON.stringify({ 
           error: 'Missing required trade fields: symbol, trade_type, entry_price, quantity',
@@ -209,19 +273,28 @@ async function handleCreateTrade(user_email?: string, trade_data?: ZohoWebhookRe
     }
 
     // Create the trade
+    const normalizedType = normalizeTradeType((trade_data as any).trade_type);
+    const entryPriceNum = toNumber((trade_data as any).entry_price)!;
+    const quantityNum = toNumber((trade_data as any).quantity)!;
+    const stopLossNum = toNumber((trade_data as any).stop_loss);
+    const takeProfitNum = toNumber((trade_data as any).take_profit);
+    const entryDateIso = trade_data.entry_date
+      ? (parseGCDate(trade_data.entry_date) || new Date(trade_data.entry_date).toISOString())
+      : new Date().toISOString();
+
     const { data: trade, error: tradeError } = await supabase
       .from('trades')
       .insert({
         user_id: userId,
         trading_account_id: trading_account_id,
         symbol: trade_data.symbol.toUpperCase(),
-        trade_type: trade_data.trade_type,
-        entry_price: trade_data.entry_price,
-        quantity: trade_data.quantity,
+        trade_type: normalizedType,
+        entry_price: entryPriceNum,
+        quantity: quantityNum,
         strategy_id: strategy_id,
-        stop_loss: trade_data.stop_loss || null,
-        take_profit: trade_data.take_profit || null,
-        entry_date: trade_data.entry_date ? new Date(trade_data.entry_date).toISOString() : new Date().toISOString(),
+        stop_loss: stopLossNum ?? null,
+        take_profit: takeProfitNum ?? null,
+        entry_date: entryDateIso,
         notes: trade_data.notes || null,
         emotions: trade_data.emotions || null,
         status: 'open',
