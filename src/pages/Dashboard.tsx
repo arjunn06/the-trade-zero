@@ -18,6 +18,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { SmartSuggestions } from '@/components/SmartSuggestions';
 import { QuickTradeWidget } from '@/components/QuickTradeWidget';
 import { AccountFilter } from '@/components/AccountFilter';
+import { PropFirmDashboard } from '@/components/PropFirmDashboard';
 
 interface AccountGoalsSectionProps {
   accounts: any[];
@@ -122,6 +123,8 @@ interface TradingAccount {
   current_equity: number;
   currency: string;
   equity_goal?: number;
+  is_prop_firm?: boolean;
+  is_active: boolean;
 }
 
 interface DashboardStats {
@@ -657,6 +660,9 @@ const Dashboard = () => {
 
         {/* WIDGETS SECTION - LOWER PRIORITY */}
         <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          {/* Prop Firm Challenges Progress */}
+          <PropFirmDashboard accounts={accounts} user={user} formatCurrency={formatCurrency} />
+          
           {/* Account Goals Progress */}
           <AccountGoalsSection accounts={accounts} user={user} formatCurrency={formatCurrency} />
           
