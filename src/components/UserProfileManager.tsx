@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { User, Settings, LogOut, Crown, Mail, Lock, Camera, Plus } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { User, Settings, LogOut, Crown, Mail, Lock, Camera, Plus, Key, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useToast } from '@/hooks/use-toast';
@@ -44,6 +44,60 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [uploading, setUploading] = useState(false);
   const [updating, setUpdating] = useState(false);
+  
+  // OpenAI API key management
+  const [openAIKey, setOpenAIKey] = useState('');
+  const [showOpenAIKey, setShowOpenAIKey] = useState(false);
+  const [openAIKeyExists, setOpenAIKeyExists] = useState(false);
+
+  // Check if OpenAI key exists on component mount
+  useEffect(() => {
+    const existingKey = localStorage.getItem('openai_api_key');
+    if (existingKey) {
+      setOpenAIKeyExists(true);
+      setOpenAIKey(existingKey.substring(0, 8) + '...' + existingKey.substring(existingKey.length - 4));
+    }
+  }, []);
+
+  const handleSaveOpenAIKey = () => {
+    if (!openAIKey.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter a valid OpenAI API key."
+      });
+      return;
+    }
+
+    localStorage.setItem('openai_api_key', openAIKey);
+    setOpenAIKeyExists(true);
+    const maskedKey = openAIKey.substring(0, 8) + '...' + openAIKey.substring(openAIKey.length - 4);
+    setOpenAIKey(maskedKey);
+    setShowOpenAIKey(false);
+    
+    toast({
+      title: "API Key saved",
+      description: "Your OpenAI API key has been saved successfully."
+    });
+  };
+
+  const handleDeleteOpenAIKey = () => {
+    localStorage.removeItem('openai_api_key');
+    setOpenAIKey('');
+    setOpenAIKeyExists(false);
+    setShowOpenAIKey(false);
+    
+    toast({
+      title: "API Key removed",
+      description: "Your OpenAI API key has been removed."
+    });
+  };
+
+  const handleEditOpenAIKey = () => {
+    const existingKey = localStorage.getItem('openai_api_key');
+    setOpenAIKey(existingKey || '');
+    setShowOpenAIKey(true);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -428,6 +482,87 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
                     </Button>
                   )}
                 </div>
+              </div>
+
+              {/* OpenAI API Key Management */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Key className="h-4 w-4" />
+                  <Label className="text-sm font-medium">OpenAI API Key</Label>
+                  <Badge variant="secondary" className="text-xs">
+                    For Screenshot Analysis
+                  </Badge>
+                </div>
+                
+                {openAIKeyExists && !showOpenAIKey ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 px-3 py-2 bg-muted rounded-md text-sm font-mono">
+                      {openAIKey}
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleEditOpenAIKey}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleDeleteOpenAIKey}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Input
+                        type={showOpenAIKey ? "text" : "password"}
+                        placeholder="sk-..."
+                        value={openAIKey}
+                        onChange={(e) => setOpenAIKey(e.target.value)}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                        onClick={() => setShowOpenAIKey(!showOpenAIKey)}
+                      >
+                        {showOpenAIKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleSaveOpenAIKey}
+                        disabled={!openAIKey.trim()}
+                      >
+                        {openAIKeyExists ? 'Update Key' : 'Save Key'}
+                      </Button>
+                      {openAIKeyExists && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            setShowOpenAIKey(false);
+                            const existingKey = localStorage.getItem('openai_api_key');
+                            if (existingKey) {
+                              setOpenAIKey(existingKey.substring(0, 8) + '...' + existingKey.substring(existingKey.length - 4));
+                            }
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Your API key is stored locally on your device and used for screenshot analysis features.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3 pt-4 border-t">
