@@ -1,5 +1,8 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { renderAsync } from "npm:@react-email/components@0.0.22";
+import React from "npm:react@18.3.1";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -14,6 +17,276 @@ interface InvitationRequest {
   token: string;
   inviterName: string;
 }
+
+// Inline React Email template with consistent branding
+const InvitationEmail = ({ email, token, inviterName, inviteUrl }: { 
+  email: string; 
+  token: string; 
+  inviterName: string; 
+  inviteUrl: string; 
+}) => {
+  const {
+    Body,
+    Container,
+    Head,
+    Heading,
+    Html,
+    Link,
+    Preview,
+    Text,
+    Button,
+    Section
+  } = require('npm:@react-email/components@0.0.22');
+
+  return React.createElement(Html, null,
+    React.createElement(Head, null),
+    React.createElement(Preview, null, "You're invited to join TradeZero Beta - Professional Trading Analytics"),
+    React.createElement(Body, { style: main },
+      React.createElement(Container, { style: container },
+        // Header with branding
+        React.createElement(Section, { style: header },
+          React.createElement('div', { style: logoContainer },
+            React.createElement('div', { style: logoIcon }, '🎉'),
+            React.createElement(Text, { style: logoText }, 'TradeZero')
+          ),
+          React.createElement(Text, { style: tagline }, 'Beta Trading Platform')
+        ),
+        
+        // Main content
+        React.createElement(Section, { style: content },
+          React.createElement(Heading, { style: h1 }, "You're Invited to TradeZero Beta!"),
+          
+          React.createElement(Text, { style: greeting }, 'Hello!'),
+          
+          React.createElement(Text, { style: paragraph }, 
+            `${inviterName} has invited you to join the exclusive beta of TradeZero - our advanced trading journal and analytics platform.`
+          ),
+          
+          React.createElement(Section, { style: inviteBox },
+            React.createElement(Text, { style: inviteTitle }, '🎉 Welcome to the Future of Trading'),
+            React.createElement(Text, { style: inviteText }, 
+              'TradeZero helps professional traders track, analyze, and optimize their trading performance with advanced analytics and AI-powered insights.'
+            ),
+            React.createElement(Text, { style: inviteEmail }, 
+              `Your invitation email: ${email}`
+            ),
+            React.createElement(Button, { href: inviteUrl, style: ctaButton }, 
+              'Accept Invitation & Join Beta'
+            )
+          ),
+          
+          React.createElement(Section, { style: urgencyBox },
+            React.createElement(Text, { style: urgencyTitle }, '⏰ This invitation expires in 7 days'),
+            React.createElement(Text, { style: urgencyText }, 
+              "Don't wait - secure your spot in our exclusive beta program!"
+            )
+          ),
+          
+          React.createElement(Text, { style: featuresTitle }, 'What you\'ll get:'),
+          React.createElement('div', { style: featuresList },
+            React.createElement(Text, { style: featureItem }, '📊 Advanced trade journaling and analytics'),
+            React.createElement(Text, { style: featureItem }, '🤖 AI-powered trading insights'),
+            React.createElement(Text, { style: featureItem }, '📈 Real-time performance tracking'),
+            React.createElement(Text, { style: featureItem }, '🎯 Risk management tools'),
+            React.createElement(Text, { style: featureItem }, '👥 Early access to new features')
+          ),
+          
+          React.createElement(Text, { style: paragraph }, 
+            'If you have any questions, feel free to reach out to our team. We\'re excited to have you on board!'
+          )
+        ),
+        
+        // Footer
+        React.createElement(Section, { style: footer },
+          React.createElement(Text, { style: footerText }, 'This invitation was sent to ' + email),
+          React.createElement(Text, { style: footerText }, 
+            'If you didn\'t expect this invitation, you can safely ignore this email.'
+          ),
+          React.createElement(Text, { style: footerSmall }, '© 2024 TradeZero. All rights reserved.')
+        )
+      )
+    )
+  );
+};
+
+// Styles matching the landing page
+const main = {
+  backgroundColor: '#0a0a0a',
+  fontFamily: 'Proxima Nova, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  color: '#ffffff',
+};
+
+const container = {
+  margin: '0 auto',
+  padding: '0',
+  maxWidth: '600px',
+  backgroundColor: '#ffffff',
+};
+
+const header = {
+  backgroundColor: '#0a0a0a',
+  padding: '40px 30px',
+  textAlign: 'center',
+  borderBottom: '1px solid #1a1a1a',
+};
+
+const logoContainer = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '12px',
+  marginBottom: '8px',
+};
+
+const logoIcon = {
+  fontSize: '28px',
+};
+
+const logoText = {
+  fontSize: '32px',
+  fontWeight: '700',
+  color: '#ffffff',
+  margin: '0',
+  fontFamily: 'Proxima Nova, sans-serif',
+};
+
+const tagline = {
+  color: '#888888',
+  fontSize: '14px',
+  margin: '0',
+  fontWeight: '500',
+};
+
+const content = {
+  backgroundColor: '#ffffff',
+  padding: '40px 30px',
+  color: '#1a1a1a',
+};
+
+const h1 = {
+  color: '#1a1a1a',
+  fontSize: '32px',
+  fontWeight: '700',
+  margin: '0 0 24px',
+  textAlign: 'center',
+  fontFamily: 'Proxima Nova, sans-serif',
+};
+
+const greeting = {
+  fontSize: '18px',
+  fontWeight: '600',
+  color: '#1a1a1a',
+  margin: '0 0 20px',
+};
+
+const paragraph = {
+  color: '#4a4a4a',
+  fontSize: '16px',
+  lineHeight: '24px',
+  margin: '16px 0',
+};
+
+const inviteBox = {
+  backgroundColor: '#f8f9fa',
+  borderRadius: '12px',
+  padding: '30px',
+  textAlign: 'center',
+  margin: '30px 0',
+};
+
+const inviteTitle = {
+  color: '#1a1a1a',
+  fontSize: '20px',
+  fontWeight: '600',
+  margin: '0 0 15px',
+};
+
+const inviteText = {
+  color: '#4a4a4a',
+  fontSize: '16px',
+  lineHeight: '24px',
+  margin: '0 0 20px',
+};
+
+const inviteEmail = {
+  color: '#4a4a4a',
+  fontSize: '16px',
+  fontWeight: '600',
+  margin: '0 0 20px',
+};
+
+const ctaButton = {
+  backgroundColor: '#000000',
+  borderRadius: '8px',
+  color: '#ffffff',
+  fontSize: '16px',
+  fontWeight: '600',
+  textDecoration: 'none',
+  textAlign: 'center',
+  display: 'inline-block',
+  padding: '16px 32px',
+  border: 'none',
+  fontFamily: 'Proxima Nova, sans-serif',
+};
+
+const urgencyBox = {
+  backgroundColor: '#fff8dc',
+  border: '1px solid #f0e68c',
+  borderRadius: '8px',
+  padding: '20px',
+  margin: '30px 0',
+  textAlign: 'center',
+};
+
+const urgencyTitle = {
+  color: '#b45309',
+  fontSize: '16px',
+  fontWeight: '600',
+  margin: '0',
+};
+
+const urgencyText = {
+  color: '#92400e',
+  fontSize: '14px',
+  margin: '10px 0 0',
+};
+
+const featuresTitle = {
+  color: '#1a1a1a',
+  fontSize: '18px',
+  fontWeight: '600',
+  margin: '30px 0 16px',
+};
+
+const featuresList = {
+  margin: '0 0 30px',
+};
+
+const featureItem = {
+  color: '#4a4a4a',
+  fontSize: '16px',
+  lineHeight: '28px',
+  margin: '8px 0',
+};
+
+const footer = {
+  backgroundColor: '#0a0a0a',
+  padding: '30px',
+  textAlign: 'center',
+  color: '#ffffff',
+};
+
+const footerText = {
+  color: '#ffffff',
+  fontSize: '14px',
+  margin: '0 0 10px',
+};
+
+const footerSmall = {
+  color: '#666666',
+  fontSize: '12px',
+  margin: '0',
+};
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -36,81 +309,21 @@ const handler = async (req: Request): Promise<Response> => {
 
     const inviteUrl = `https://thetradezero.com/invite/${token}`;
 
+    // Render the React email template
+    const emailHtml = await renderAsync(
+      React.createElement(InvitationEmail, {
+        email,
+        token,
+        inviterName: inviterName || 'Someone',
+        inviteUrl
+      })
+    );
+
     const emailResponse = await resend.emails.send({
       from: "TradeZero <noreply@thetradezero.com>",
       to: [email],
-      subject: "You're invited to TradeZero Beta!",
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>TradeZero Beta Invitation</title>
-          <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f8fafc; }
-            .container { max-width: 600px; margin: 0 auto; background-color: white; }
-            .header { background: linear-gradient(135deg, #3b82f6, #1d4ed8); padding: 40px 30px; text-align: center; }
-            .header h1 { color: white; margin: 0; font-size: 28px; font-weight: 700; }
-            .content { padding: 40px 30px; }
-            .invite-box { background-color: #f1f5f9; border-radius: 12px; padding: 30px; text-align: center; margin: 30px 0; }
-            .btn { display: inline-block; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: 600; margin: 20px 0; }
-            .footer { background-color: #f8fafc; padding: 30px; text-align: center; color: #64748b; font-size: 14px; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>TradeZero</h1>
-              <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Beta Trading Platform</p>
-            </div>
-            
-            <div class="content">
-              <h2 style="color: #1e293b; margin-bottom: 20px;">You're Invited to Join TradeZero Beta!</h2>
-              
-              <p style="color: #475569; line-height: 1.6; margin-bottom: 20px;">
-                Hello! ${inviterName} has invited you to join the exclusive beta of TradeZero - our advanced trading journal and analytics platform.
-              </p>
-              
-              <div class="invite-box">
-                <h3 style="color: #1e293b; margin-bottom: 15px;">🎉 Welcome to the Future of Trading</h3>
-                <p style="color: #64748b; margin-bottom: 20px;">
-                  TradeZero helps professional traders track, analyze, and optimize their trading performance with advanced analytics and AI-powered insights.
-                </p>
-                <p style="color: #475569; font-weight: 600; margin-bottom: 20px;">
-                  Your invitation email: <strong>${email}</strong>
-                </p>
-                <a href="${inviteUrl}" class="btn">Accept Invitation & Join Beta</a>
-              </div>
-              
-              <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 30px 0; border-radius: 4px;">
-                <p style="color: #92400e; margin: 0; font-weight: 600;">⏰ This invitation expires in 7 days</p>
-                <p style="color: #d97706; margin: 10px 0 0 0; font-size: 14px;">Don't wait - secure your spot in our exclusive beta program!</p>
-              </div>
-              
-              <h3 style="color: #1e293b; margin-top: 30px;">What you'll get:</h3>
-              <ul style="color: #475569; line-height: 1.8;">
-                <li>📊 Advanced trade journaling and analytics</li>
-                <li>🤖 AI-powered trading insights</li>
-                <li>📈 Real-time performance tracking</li>
-                <li>🎯 Risk management tools</li>
-                <li>👥 Early access to new features</li>
-              </ul>
-              
-              <p style="color: #475569; line-height: 1.6; margin-top: 30px;">
-                If you have any questions, feel free to reach out to our team. We're excited to have you on board!
-              </p>
-            </div>
-            
-            <div class="footer">
-              <p>This invitation was sent to ${email}</p>
-              <p style="margin: 10px 0;">If you didn't expect this invitation, you can safely ignore this email.</p>
-              <p style="margin: 0;">© 2024 TradeZero. All rights reserved.</p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
+      subject: "You're invited to TradeZero Beta - Professional Trading Analytics",
+      html: emailHtml,
     });
 
     console.log("Invitation email sent successfully:", emailResponse);

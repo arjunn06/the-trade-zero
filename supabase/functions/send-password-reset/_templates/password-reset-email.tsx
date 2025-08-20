@@ -1,3 +1,4 @@
+
 import {
   Body,
   Container,
@@ -27,34 +28,41 @@ export const PasswordResetEmail = ({
 }: PasswordResetEmailProps) => (
   <Html>
     <Head />
-    <Preview>Reset your TradeZero password</Preview>
+    <Preview>Reset your TradeZero password - Secure access to your trading analytics</Preview>
     <Body style={main}>
       <Container style={container}>
+        {/* Header with branding */}
         <Section style={header}>
-          <Heading style={h1}>Password Reset</Heading>
-          <Text style={subtitle}>TradeZero Account Security</Text>
+          <div style={logoContainer}>
+            <div style={logoIcon}>🔒</div>
+            <Text style={logoText}>TradeZero</Text>
+          </div>
+          <Text style={tagline}>Account Security</Text>
         </Section>
         
+        {/* Main content */}
         <Section style={content}>
+          <Heading style={h1}>Password Reset Request</Heading>
+          
           <Text style={greeting}>
-            Hello {userDisplayName || 'Trader'}!
+            Hello {userDisplayName || 'Trader'},
           </Text>
           
-          <Text style={text}>
-            We received a request to reset the password for your TradeZero account associated with {userEmail}.
+          <Text style={paragraph}>
+            We received a request to reset the password for your TradeZero account associated with <strong>{userEmail}</strong>.
           </Text>
           
-          <Text style={text}>
+          <Text style={paragraph}>
             If you made this request, click the button below to reset your password. This link will expire in 1 hour for security reasons.
           </Text>
           
-          <Section style={buttonContainer}>
-            <Button href={resetUrl} style={button}>
-              Reset Password
+          <Section style={ctaSection}>
+            <Button href={resetUrl} style={ctaButton}>
+              Reset My Password
             </Button>
           </Section>
           
-          <Text style={text}>
+          <Text style={alternativeText}>
             Or copy and paste this link into your browser:
           </Text>
           <Text style={linkText}>
@@ -67,13 +75,13 @@ export const PasswordResetEmail = ({
           </Section>
           
           <Section style={securityNotice}>
-            <Text style={securityTitle}>🔒 Security Notice</Text>
-            <Text style={securityText}>
-              • This password reset link will expire in 1 hour<br/>
-              • If you didn't request this reset, please ignore this email<br/>
-              • Your password will remain unchanged unless you click the link above<br/>
-              • For security, never share this email or link with anyone
-            </Text>
+            <Text style={securityTitle}>🛡️ Security Notice</Text>
+            <div style={securityList}>
+              <Text style={securityItem}>• This password reset link expires in 1 hour</Text>
+              <Text style={securityItem}>• If you didn't request this reset, please ignore this email</Text>
+              <Text style={securityItem}>• Your password remains unchanged unless you click the link above</Text>
+              <Text style={securityItem}>• Never share this email or link with anyone</Text>
+            </div>
           </Section>
           
           <Text style={helpText}>
@@ -83,13 +91,14 @@ export const PasswordResetEmail = ({
           </Text>
         </Section>
         
+        {/* Footer */}
         <Section style={footer}>
           <Text style={footerText}>
-            Best regards,<br />
-            The TradeZero Security Team
+            Stay Secure,<br />
+            <strong>The TradeZero Security Team</strong>
           </Text>
           <Text style={footerLink}>
-            Visit us at <Link href="https://thetradezero.com" style={link}>thetradezero.com</Link>
+            <Link href="https://thetradezero.com" style={link}>thetradezero.com</Link>
           </Text>
           <Text style={footerSmall}>
             This email was sent to {userEmail}
@@ -102,65 +111,89 @@ export const PasswordResetEmail = ({
 
 export default PasswordResetEmail;
 
-// Styles
+// Consistent styling matching landing page
 const main = {
-  backgroundColor: '#f8fafc',
-  fontFamily: '-apple-system, BlinkMacSystemFont, "Segue UI", Roboto, sans-serif',
+  backgroundColor: '#0a0a0a',
+  fontFamily: 'Proxima Nova, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  color: '#ffffff',
 };
 
 const container = {
   margin: '0 auto',
-  padding: '20px 0 48px',
+  padding: '0',
   maxWidth: '600px',
+  backgroundColor: '#ffffff',
 };
 
 const header = {
-  backgroundColor: '#ffffff',
-  borderRadius: '12px 12px 0 0',
-  padding: '40px 30px 30px',
+  backgroundColor: '#0a0a0a',
+  padding: '40px 30px',
   textAlign: 'center' as const,
-  background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+  borderBottom: '1px solid #1a1a1a',
 };
 
-const h1 = {
-  color: '#ffffff',
+const logoContainer = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '12px',
+  marginBottom: '8px',
+};
+
+const logoIcon = {
   fontSize: '28px',
-  fontWeight: '700',
-  margin: '0 0 10px',
 };
 
-const subtitle = {
-  color: 'rgba(255,255,255,0.9)',
-  fontSize: '16px',
+const logoText = {
+  fontSize: '32px',
+  fontWeight: '700',
+  color: '#ffffff',
   margin: '0',
+  fontFamily: 'Proxima Nova, sans-serif',
+};
+
+const tagline = {
+  color: '#888888',
+  fontSize: '14px',
+  margin: '0',
+  fontWeight: '500',
 };
 
 const content = {
   backgroundColor: '#ffffff',
   padding: '40px 30px',
-  borderRadius: '0 0 12px 12px',
+  color: '#1a1a1a',
+};
+
+const h1 = {
+  color: '#1a1a1a',
+  fontSize: '32px',
+  fontWeight: '700',
+  margin: '0 0 24px',
+  textAlign: 'center' as const,
+  fontFamily: 'Proxima Nova, sans-serif',
 };
 
 const greeting = {
   fontSize: '18px',
   fontWeight: '600',
-  color: '#1e293b',
+  color: '#1a1a1a',
   margin: '0 0 20px',
 };
 
-const text = {
-  color: '#475569',
+const paragraph = {
+  color: '#4a4a4a',
   fontSize: '16px',
   lineHeight: '24px',
   margin: '16px 0',
 };
 
-const buttonContainer = {
+const ctaSection = {
   textAlign: 'center' as const,
   margin: '32px 0',
 };
 
-const button = {
+const ctaButton = {
   backgroundColor: '#dc2626',
   borderRadius: '8px',
   color: '#ffffff',
@@ -171,22 +204,31 @@ const button = {
   display: 'inline-block',
   padding: '16px 32px',
   border: 'none',
+  fontFamily: 'Proxima Nova, sans-serif',
+};
+
+const alternativeText = {
+  color: '#666666',
+  fontSize: '14px',
+  textAlign: 'center' as const,
+  margin: '24px 0 8px',
 };
 
 const linkText = {
-  color: '#3b82f6',
+  color: '#0066cc',
   fontSize: '14px',
   fontFamily: 'monospace',
   wordBreak: 'break-all' as const,
-  backgroundColor: '#f1f5f9',
+  backgroundColor: '#f8f9fa',
   padding: '12px',
   borderRadius: '6px',
-  margin: '16px 0',
+  margin: '8px 0 24px',
+  textAlign: 'center' as const,
 };
 
 const codeSection = {
-  backgroundColor: '#f8fafc',
-  border: '1px solid #e2e8f0',
+  backgroundColor: '#f8f9fa',
+  border: '1px solid #e9ecef',
   borderRadius: '8px',
   padding: '20px',
   margin: '24px 0',
@@ -194,7 +236,7 @@ const codeSection = {
 };
 
 const codeLabel = {
-  color: '#64748b',
+  color: '#666666',
   fontSize: '14px',
   margin: '0 0 8px',
 };
@@ -202,7 +244,7 @@ const codeLabel = {
 const code = {
   fontSize: '24px',
   fontWeight: '700',
-  color: '#1e293b',
+  color: '#1a1a1a',
   fontFamily: 'monospace',
   letterSpacing: '2px',
   margin: '0',
@@ -221,53 +263,58 @@ const securityTitle = {
   fontSize: '16px',
   fontWeight: '600',
   margin: '0 0 12px',
+  textAlign: 'center' as const,
 };
 
-const securityText = {
-  color: '#7f1d1d',
-  fontSize: '14px',
-  lineHeight: '20px',
+const securityList = {
   margin: '0',
 };
 
+const securityItem = {
+  color: '#7f1d1d',
+  fontSize: '14px',
+  lineHeight: '20px',
+  margin: '4px 0',
+};
+
 const helpText = {
-  color: '#64748b',
+  color: '#888888',
   fontSize: '14px',
   lineHeight: '20px',
   margin: '32px 0 0',
   padding: '16px',
-  backgroundColor: '#fef3c7',
+  backgroundColor: '#fff8dc',
   borderRadius: '6px',
-  border: '1px solid #fbbf24',
+  border: '1px solid #f0e68c',
+  textAlign: 'center' as const,
 };
 
 const footer = {
-  backgroundColor: '#f8fafc',
+  backgroundColor: '#0a0a0a',
   padding: '30px',
   textAlign: 'center' as const,
-  marginTop: '20px',
-  borderRadius: '12px',
+  color: '#ffffff',
 };
 
 const footerText = {
-  color: '#475569',
+  color: '#ffffff',
   fontSize: '16px',
   margin: '0 0 16px',
 };
 
 const footerLink = {
-  color: '#64748b',
+  color: '#888888',
   fontSize: '14px',
   margin: '0 0 16px',
 };
 
 const link = {
-  color: '#3b82f6',
+  color: '#ffffff',
   textDecoration: 'underline',
 };
 
 const footerSmall = {
-  color: '#94a3b8',
+  color: '#666666',
   fontSize: '12px',
   margin: '0',
 };

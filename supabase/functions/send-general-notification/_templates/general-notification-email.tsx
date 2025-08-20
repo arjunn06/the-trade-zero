@@ -1,3 +1,4 @@
+
 import {
   Body,
   Button,
@@ -39,19 +40,20 @@ export const GeneralNotificationEmail = ({
     <Preview>{subject}</Preview>
     <Body style={main}>
       <Container style={container}>
-        {/* Header */}
+        {/* Header with branding */}
         <Section style={header}>
           <div style={logoContainer}>
             <div style={logoIcon}>📧</div>
-            <Text style={logoText}>The Trade Zero</Text>
+            <Text style={logoText}>TradeZero</Text>
           </div>
+          <Text style={tagline}>Professional Trading Analytics</Text>
         </Section>
 
-        {/* Content */}
+        {/* Main content */}
         <Section style={content}>
           <Heading style={h1}>{heading}</Heading>
           
-          <Text style={paragraph}>
+          <Text style={greeting}>
             Hi {userDisplayName},
           </Text>
 
@@ -61,8 +63,8 @@ export const GeneralNotificationEmail = ({
 
           {/* CTA Button (if provided) */}
           {buttonText && buttonUrl && (
-            <Section style={buttonContainer}>
-              <Button style={button} href={buttonUrl}>
+            <Section style={ctaSection}>
+              <Button style={ctaButton} href={buttonUrl}>
                 {buttonText}
               </Button>
             </Section>
@@ -79,24 +81,27 @@ export const GeneralNotificationEmail = ({
 
           <Text style={paragraph}>
             If you have any questions, feel free to contact our support team at{' '}
-            <Link href="mailto:support@thetradezero.com" style={link}>
+            <Link href="mailto:support@thetradezero.com" style={inlineLink}>
               support@thetradezero.com
             </Link>
           </Text>
 
           <Text style={paragraph}>
             Best regards,<br />
-            <strong>The Trade Zero Team</strong>
+            <strong>The TradeZero Team</strong>
           </Text>
         </Section>
 
         {/* Footer */}
         <Section style={footer}>
           <Text style={footerText}>
-            This email was sent to {userEmail}.
+            This email was sent to {userEmail}
           </Text>
-          <Text style={footerText}>
-            © 2024 The Trade Zero. All rights reserved.
+          <Text style={footerLink}>
+            <Link href="https://thetradezero.com" style={link}>thetradezero.com</Link>
+          </Text>
+          <Text style={footerSmall}>
+            © 2024 TradeZero. All rights reserved.
           </Text>
         </Section>
       </Container>
@@ -106,23 +111,25 @@ export const GeneralNotificationEmail = ({
 
 export default GeneralNotificationEmail;
 
-// Styles
+// Consistent styling matching landing page
 const main = {
-  backgroundColor: '#f6f9fc',
-  fontFamily: '-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif',
+  backgroundColor: '#0a0a0a',
+  fontFamily: 'Proxima Nova, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  color: '#ffffff',
 };
 
 const container = {
   margin: '0 auto',
-  padding: '20px 0 48px',
-  maxWidth: '560px',
+  padding: '0',
+  maxWidth: '600px',
+  backgroundColor: '#ffffff',
 };
 
 const header = {
-  backgroundColor: '#ffffff',
-  borderRadius: '8px 8px 0 0',
-  padding: '24px',
-  borderBottom: '1px solid #e6e8eb',
+  backgroundColor: '#0a0a0a',
+  padding: '40px 30px',
+  textAlign: 'center' as const,
+  borderBottom: '1px solid #1a1a1a',
 };
 
 const logoContainer = {
@@ -130,47 +137,64 @@ const logoContainer = {
   alignItems: 'center',
   justifyContent: 'center',
   gap: '12px',
+  marginBottom: '8px',
 };
 
 const logoIcon = {
-  fontSize: '24px',
+  fontSize: '28px',
 };
 
 const logoText = {
-  fontSize: '24px',
-  fontWeight: 'bold',
-  color: '#1f2937',
+  fontSize: '32px',
+  fontWeight: '700',
+  color: '#ffffff',
   margin: '0',
+  fontFamily: 'Proxima Nova, sans-serif',
+};
+
+const tagline = {
+  color: '#888888',
+  fontSize: '14px',
+  margin: '0',
+  fontWeight: '500',
 };
 
 const content = {
   backgroundColor: '#ffffff',
-  padding: '32px',
-  borderRadius: '0 0 8px 8px',
+  padding: '40px 30px',
+  color: '#1a1a1a',
 };
 
 const h1 = {
-  color: '#1f2937',
-  fontSize: '28px',
-  fontWeight: 'bold',
+  color: '#1a1a1a',
+  fontSize: '32px',
+  fontWeight: '700',
   margin: '0 0 24px',
   textAlign: 'center' as const,
+  fontFamily: 'Proxima Nova, sans-serif',
+};
+
+const greeting = {
+  fontSize: '18px',
+  fontWeight: '600',
+  color: '#1a1a1a',
+  margin: '0 0 20px',
 };
 
 const paragraph = {
-  color: '#4b5563',
+  color: '#4a4a4a',
   fontSize: '16px',
-  lineHeight: '26px',
-  margin: '0 0 16px',
+  lineHeight: '24px',
+  margin: '16px 0',
 };
 
-const buttonContainer = {
+const ctaSection = {
   textAlign: 'center' as const,
   margin: '32px 0',
 };
 
-const button = {
-  backgroundColor: '#3b82f6',
+const ctaButton = {
+  backgroundColor: '#000000',
   borderRadius: '8px',
   color: '#ffffff',
   fontSize: '16px',
@@ -178,32 +202,47 @@ const button = {
   textDecoration: 'none',
   textAlign: 'center' as const,
   display: 'inline-block',
-  padding: '14px 32px',
+  padding: '16px 32px',
   border: 'none',
-  cursor: 'pointer',
+  fontFamily: 'Proxima Nova, sans-serif',
 };
 
-const link = {
-  color: '#3b82f6',
+const inlineLink = {
+  color: '#0066cc',
   textDecoration: 'underline',
 };
 
 const hr = {
-  borderColor: '#e6e8eb',
+  borderColor: '#e9ecef',
   margin: '24px 0',
 };
 
 const footer = {
-  backgroundColor: '#f8fafc',
-  padding: '24px',
-  borderRadius: '8px',
-  marginTop: '24px',
+  backgroundColor: '#0a0a0a',
+  padding: '30px',
+  textAlign: 'center' as const,
+  color: '#ffffff',
 };
 
 const footerText = {
-  color: '#6b7280',
+  color: '#ffffff',
   fontSize: '14px',
-  lineHeight: '20px',
   margin: '0 0 8px',
-  textAlign: 'center' as const,
+};
+
+const footerLink = {
+  color: '#888888',
+  fontSize: '14px',
+  margin: '0 0 16px',
+};
+
+const link = {
+  color: '#ffffff',
+  textDecoration: 'underline',
+};
+
+const footerSmall = {
+  color: '#666666',
+  fontSize: '12px',
+  margin: '0',
 };
