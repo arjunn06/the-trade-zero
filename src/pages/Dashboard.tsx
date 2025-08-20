@@ -486,102 +486,158 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 md:space-y-8 animate-fade-in">
+      <div className="space-y-6">
         {/* Header with Account Filter */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-in">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-fade-in">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">Performance Dashboard</h1>
-            <p className="text-muted-foreground transition-colors duration-300 hover:text-foreground/80">Monitor your trading performance and analytics</p>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Trading Dashboard
+            </h1>
+            <p className="text-muted-foreground">Monitor your trading performance and analytics</p>
           </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             {/* Time Filter */}
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Period:</span>
+              <span className="text-sm font-medium">Period:</span>
               <Select value={timeFilter} onValueChange={setTimeFilter}>
-                <SelectTrigger className="w-[140px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hover:bg-background transition-all duration-200 hover:border-primary/50">
+                <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="Select period" />
                 </SelectTrigger>
-                <SelectContent className="dropdown-content animate-scale-in">
-                  <SelectItem value="all" className="dropdown-item">All Time</SelectItem>
-                  <SelectItem value="7d" className="dropdown-item">Last 7 Days</SelectItem>
-                  <SelectItem value="30d" className="dropdown-item">Last 30 Days</SelectItem>
-                  <SelectItem value="90d" className="dropdown-item">Last 3 Months</SelectItem>
-                  <SelectItem value="6m" className="dropdown-item">Last 6 Months</SelectItem>
-                  <SelectItem value="1y" className="dropdown-item">Last Year</SelectItem>
+                <SelectContent className="dropdown-content">
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="7d">Last 7 Days</SelectItem>
+                  <SelectItem value="30d">Last 30 Days</SelectItem>
+                  <SelectItem value="90d">Last 3 Months</SelectItem>
+                  <SelectItem value="6m">Last 6 Months</SelectItem>
+                  <SelectItem value="1y">Last Year</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             {/* Account Selector */}
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Accounts:</span>
+              <span className="text-sm font-medium">Account:</span>
               <AccountFilter
                 values={selectedAccountIds}
                 onValuesChange={setSelectedAccountIds}
-                className="w-[180px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hover:bg-background transition-all duration-200 hover:border-primary/50"
-                placeholder="All Active Accounts"
+                className="min-w-[180px]"
                 multiSelect={true}
+                placeholder="All Active Accounts"
               />
             </div>
-            <Button onClick={() => navigate('/trades/new')} className="gap-2 btn-primary hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
-              <Plus className="h-4 w-4" />
-              New Trade Entry
+            <Button onClick={() => navigate('/trades/new')} className="hover-scale">
+              <Plus className="h-4 w-4 mr-2" />
+              New Trade
             </Button>
           </div>
         </div>
 
-        {/* Key Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-          <MetricCard
-            title="Current Balance"
-            value={formatCurrency(stats.currentBalance)}
-            change={{
-              value: stats.currentBalance - stats.initialBalance,
-              percentage: stats.initialBalance > 0 ? `${(((stats.currentBalance - stats.initialBalance) / stats.initialBalance) * 100).toFixed(1)}%` : "0.0%",
-              isPositive: stats.currentBalance >= stats.initialBalance
-            }}
-            icon={<DollarSign className="h-5 w-5" />}
-          />
-          
-          <MetricCard
-            title="Profit and Loss"
-            value={formatCurrency(stats.totalPnl)}
-            change={{
-              value: stats.totalPnl,
-              percentage: stats.initialBalance > 0 ? `${((stats.totalPnl / stats.initialBalance) * 100).toFixed(1)}%` : "0.0%",
-              isPositive: stats.totalPnl >= 0
-            }}
-            icon={<TrendingUp className="h-5 w-5" />}
-          />
-          
-          <MetricCard
-            title="Win Rate"
-            value={formatPercentage(stats.winRate)}
-            change={{
-              value: stats.winRate,
-              percentage: `${stats.totalTrades} trades`,
-              isPositive: stats.winRate >= 50
-            }}
-            icon={<Target className="h-5 w-5" />}
-          />
-          
-          <MetricCard
-            title="Active Trades"
-            value={stats.activeTrades}
-            change={{
-              value: stats.activeTrades,
-              percentage: "Currently open",
-              isPositive: true
-            }}
-            icon={<BarChart3 className="h-5 w-5" />}
-          />
+        {/* ANALYTICS SECTION - TOP PRIORITY */}
+        <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          {/* Primary KPI Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MetricCard
+              title="Total P&L"
+              value={formatCurrency(stats.totalPnl)}
+              change={{
+                value: stats.totalPnl,
+                percentage: stats.initialBalance > 0 ? `${((stats.totalPnl / stats.initialBalance) * 100).toFixed(1)}%` : "0.0%",
+                isPositive: stats.totalPnl >= 0
+              }}
+              icon={<DollarSign className="h-5 w-5" />}
+              className="stagger-fade"
+            />
+            <MetricCard
+              title="Win Rate"
+              value={`${stats.winRate.toFixed(1)}%`}
+              change={{
+                value: stats.winRate,
+                percentage: `${stats.totalTrades} trades`,
+                isPositive: stats.winRate >= 50
+              }}
+              icon={<Target className="h-5 w-5" />}
+              className="stagger-fade"
+            />
+            <MetricCard
+              title="Total Trades"
+              value={stats.totalTrades.toString()}
+              change={{
+                value: stats.totalTrades,
+                percentage: `${stats.activeTrades} active`,
+                isPositive: true
+              }}
+              icon={<Activity className="h-5 w-5" />}
+              className="stagger-fade"
+            />
+            <MetricCard
+              title="Current Balance"
+              value={formatCurrency(stats.currentBalance)}
+              change={{
+                value: stats.currentBalance - stats.initialBalance,
+                percentage: stats.initialBalance > 0 ? `${(((stats.currentBalance - stats.initialBalance) / stats.initialBalance) * 100).toFixed(1)}%` : "0.0%",
+                isPositive: stats.currentBalance >= stats.initialBalance
+              }}
+              icon={<TrendingUp className="h-5 w-5" />}
+              className="stagger-fade"
+            />
+          </div>
+
+          {/* Advanced Analytics Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MetricCard
+              title="Profit Factor"
+              value={stats.profitFactor > 0 ? stats.profitFactor.toFixed(2) : '0.00'}
+              change={{
+                value: stats.profitFactor,
+                percentage: stats.profitFactor >= 1.5 ? "Excellent" : stats.profitFactor >= 1 ? "Good" : "Needs Work",
+                isPositive: stats.profitFactor >= 1
+              }}
+              icon={<BarChart3 className="h-5 w-5" />}
+              className="stagger-fade"
+            />
+            <MetricCard
+              title="Max Drawdown"
+              value={`${stats.maxDrawdown.toFixed(1)}%`}
+              change={{
+                value: stats.maxDrawdown,
+                percentage: stats.maxDrawdown <= 5 ? "Low Risk" : stats.maxDrawdown <= 15 ? "Moderate" : "High Risk",
+                isPositive: stats.maxDrawdown <= 15
+              }}
+              icon={<TrendingDown className="h-5 w-5" />}
+              className="stagger-fade"
+            />
+            <MetricCard
+              title="Best Trade"
+              value={formatCurrency(stats.bestTrade)}
+              change={{
+                value: stats.bestTrade,
+                percentage: "Single trade",
+                isPositive: stats.bestTrade > 0
+              }}
+              icon={<Star className="h-5 w-5" />}
+              className="stagger-fade"
+            />
+            <MetricCard
+              title="Average Return"
+              value={formatCurrency(stats.expectancy)}
+              change={{
+                value: stats.expectancy,
+                percentage: "Per trade",
+                isPositive: stats.expectancy >= 0
+              }}
+              icon={<Clock className="h-5 w-5" />}
+              className="stagger-fade"
+            />
+          </div>
         </div>
 
-        {/* Account Progress Indicators */}
-        <AccountGoalsSection accounts={accounts} user={user} formatCurrency={formatCurrency} />
-
-        {/* Charts and Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+        {/* WIDGETS SECTION - LOWER PRIORITY */}
+        <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          {/* Account Goals Progress */}
+          <AccountGoalsSection accounts={accounts} user={user} formatCurrency={formatCurrency} />
+          
+          {/* Charts and Recent Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Equity Curve */}
           <Card className="metric-card">
             <CardHeader className="pb-2 sm:pb-4 p-3 sm:p-6">
@@ -713,12 +769,6 @@ const Dashboard = () => {
               )}
             </CardContent>
           </Card>
-        </div>
-
-        {/* Quick Trade Widget and Smart Suggestions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <QuickTradeWidget />
-          <SmartSuggestions trades={allTrades} />
         </div>
 
         {/* Advanced Performance Metrics */}
@@ -866,51 +916,11 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Key Insights Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <MetricCard
-            title="Profit Factor"
-            value={stats.profitFactor.toFixed(2)}
-            change={{
-              value: stats.profitFactor,
-              percentage: stats.profitFactor >= 1.5 ? "Excellent" : stats.profitFactor >= 1 ? "Good" : "Needs Work",
-              isPositive: stats.profitFactor >= 1
-            }}
-            icon={<TrendingUp className="h-5 w-5" />}
-          />
-          
-          <MetricCard
-            title="Average Return"
-            value={formatCurrency(stats.expectancy)}
-            change={{
-              value: stats.expectancy,
-              percentage: "Per trade",
-              isPositive: stats.expectancy >= 0
-            }}
-            icon={<DollarSign className="h-5 w-5" />}
-          />
-          
-          <MetricCard
-            title="Max Drawdown"
-            value={`${stats.maxDrawdown.toFixed(1)}%`}
-            change={{
-              value: stats.maxDrawdown,
-              percentage: stats.maxDrawdown < 10 ? "Low Risk" : stats.maxDrawdown < 20 ? "Moderate" : "High Risk",
-              isPositive: stats.maxDrawdown < 15
-            }}
-            icon={<LossIcon className="h-5 w-5" />}
-          />
-          
-          <MetricCard
-            title="Best Streak"
-            value={`${stats.consecutiveWins} wins`}
-            change={{
-              value: stats.consecutiveWins,
-              percentage: "Consecutive",
-              isPositive: true
-            }}
-            icon={<Target className="h-5 w-5" />}
-          />
+          {/* Additional Widgets */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <QuickTradeWidget />
+            <SmartSuggestions trades={allTrades} />
+          </div>
         </div>
       </div>
     </DashboardLayout>
