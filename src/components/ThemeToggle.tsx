@@ -28,19 +28,6 @@ export function ThemeToggle({ collapsed }: ThemeToggleProps) {
     }
   };
 
-  const getThemeLabel = () => {
-    switch (theme) {
-      case 'light':
-        return 'Light';
-      case 'dark':
-        return 'Dark';
-      case 'system':
-        return 'System';
-      default:
-        return 'System';
-    }
-  };
-
   if (collapsed) {
     return (
       <DropdownMenu>
@@ -51,16 +38,13 @@ export function ThemeToggle({ collapsed }: ThemeToggleProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setTheme('light')}>
-            <Sun className="mr-2 h-4 w-4" />
-            Light
+            <Sun className="h-4 w-4" />
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setTheme('dark')}>
-            <Moon className="mr-2 h-4 w-4" />
-            Dark
+            <Moon className="h-4 w-4" />
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setTheme('system')}>
-            <Monitor className="mr-2 h-4 w-4" />
-            System
+            <Monitor className="h-4 w-4" />
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -72,24 +56,21 @@ export function ThemeToggle({ collapsed }: ThemeToggleProps) {
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
-          className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+          size="icon"
+          className="h-8 w-8"
         >
           {getThemeIcon()}
-          <span className="ml-3">{getThemeLabel()}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setTheme('light')}>
-          <Sun className="mr-2 h-4 w-4" />
-          Light
+          <Sun className="h-4 w-4" />
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme('dark')}>
-          <Moon className="mr-2 h-4 w-4" />
-          Dark
+          <Moon className="h-4 w-4" />
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme('system')}>
-          <Monitor className="mr-2 h-4 w-4" />
-          System
+          <Monitor className="h-4 w-4" />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
