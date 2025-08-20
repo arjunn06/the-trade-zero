@@ -209,14 +209,14 @@ const Index = () => {
 
             <div className="group p-6 rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 hover:border-brand-blue/50">
               <div className="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-4 group-hover:bg-brand-blue/30 transition-colors">
-                <Brain className="h-6 w-6 text-brand-blue" />
+                <TrendingUp className="h-6 w-6 text-brand-blue" />
               </div>
               <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                AI Screenshot Analysis
+                Powerful Confluence Tool
                 <span className="text-xs px-2 py-1 bg-brand-blue/20 text-brand-blue rounded-full">Pro</span>
               </h3>
               <p className="text-muted-foreground leading-relaxed">
-                Automatically extract trade details from MT4, MT5, and broker screenshots using advanced AI.
+                Advanced pattern recognition and market confluence analysis to identify A+ trading setups with precision.
               </p>
             </div>
 
