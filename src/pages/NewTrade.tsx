@@ -793,7 +793,7 @@ const NewTrade = () => {
   return (
     <DashboardLayout>
       <div className="w-full space-y-6 overflow-hidden">
-        <div className="px-2 sm:px-0">
+        <div className="px-2 sm:px-0 hidden lg:block">
           <h1 className="text-3xl font-bold">{isEditing ? 'Edit Trade' : 'New Trade'}</h1>
           <p className="text-muted-foreground">{isEditing ? 'Update trading position details' : 'Record a new trading position'}</p>
         </div>
