@@ -77,16 +77,16 @@ serve(async (req) => {
     );
   }
 
-  // Return accounts with main heading and sub-headings
+  // Return accounts with main heading and sub-headings (values as objects for Zoho mapping)
   const accountsResponse = {
     account: (data || []).reduce((acc, account, index) => {
-      acc[`account ${index + 1}`] = account.name;
+      acc[`account ${index + 1}`] = { name: account.name };
       return acc;
-    }, {} as Record<string, string>)
+    }, {} as Record<string, { name: string }>)
   };
 
   return new Response(
-    JSON.stringify(accountsResponse), 
+    JSON.stringify(accountsResponse),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
 });
