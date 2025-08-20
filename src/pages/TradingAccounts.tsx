@@ -88,7 +88,6 @@ const TradingAccounts = () => {
     initial_balance: '',
     currency: 'USD',
     equity_goal: '',
-    is_prop_firm: false,
     profit_target: '',
     max_loss_limit: '',
     daily_loss_limit: '',
@@ -189,13 +188,13 @@ const TradingAccounts = () => {
         current_equity: parseFloat(formData.initial_balance),
         currency: formData.currency,
         equity_goal: formData.equity_goal ? parseFloat(formData.equity_goal) : null,
-        is_prop_firm: formData.is_prop_firm,
-        profit_target: formData.profit_target ? parseFloat(formData.profit_target) : null,
-        max_loss_limit: formData.max_loss_limit ? parseFloat(formData.max_loss_limit) : null,
-        daily_loss_limit: formData.daily_loss_limit ? parseFloat(formData.daily_loss_limit) : null,
-        minimum_trading_days: formData.minimum_trading_days ? parseInt(formData.minimum_trading_days) : null,
-        start_date: formData.is_prop_firm ? formData.start_date.toISOString() : null,
-        target_completion_date: formData.is_prop_firm && formData.minimum_trading_days 
+        is_prop_firm: formData.account_type === 'prop firm',
+        profit_target: formData.account_type === 'prop firm' && formData.profit_target ? parseFloat(formData.profit_target) : null,
+        max_loss_limit: formData.account_type === 'prop firm' && formData.max_loss_limit ? parseFloat(formData.max_loss_limit) : null,
+        daily_loss_limit: formData.account_type === 'prop firm' && formData.daily_loss_limit ? parseFloat(formData.daily_loss_limit) : null,
+        minimum_trading_days: formData.account_type === 'prop firm' && formData.minimum_trading_days ? parseInt(formData.minimum_trading_days) : null,
+        start_date: formData.account_type === 'prop firm' ? formData.start_date.toISOString() : null,
+        target_completion_date: formData.account_type === 'prop firm' && formData.minimum_trading_days 
           ? addDays(formData.start_date, parseInt(formData.minimum_trading_days)).toISOString() 
           : null,
         user_id: user.id
@@ -249,7 +248,6 @@ const TradingAccounts = () => {
       initial_balance: account.initial_balance.toString(),
       currency: account.currency,
       equity_goal: account.equity_goal?.toString() || '',
-      is_prop_firm: account.is_prop_firm || false,
       profit_target: account.profit_target?.toString() || '',
       max_loss_limit: account.max_loss_limit?.toString() || '',
       daily_loss_limit: account.daily_loss_limit?.toString() || '',
@@ -336,7 +334,6 @@ const TradingAccounts = () => {
       initial_balance: '',
       currency: 'USD',
       equity_goal: '',
-      is_prop_firm: false,
       profit_target: '',
       max_loss_limit: '',
       daily_loss_limit: '',
@@ -495,20 +492,18 @@ const TradingAccounts = () => {
                    </p>
                   </div>
 
-                  {/* Prop Firm Configuration */}
-                  <div className="space-y-4 border border-border rounded-lg p-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="is_prop_firm"
-                        checked={formData.is_prop_firm}
-                        onCheckedChange={(checked) => setFormData({ ...formData, is_prop_firm: !!checked })}
-                      />
-                      <Label htmlFor="is_prop_firm" className="font-medium">
-                        This is a Prop Firm Account
-                      </Label>
-                    </div>
-                    
-                    {formData.is_prop_firm && (
+                  {/* Prop Firm Configuration - only show when prop firm is selected */}
+                  {formData.account_type === 'prop firm' && (
+                    <div className="space-y-4 border border-border rounded-lg p-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="h-4 w-4 rounded bg-purple-100 flex items-center justify-center">
+                          <div className="h-2 w-2 rounded bg-purple-600"></div>
+                        </div>
+                        <Label className="font-medium text-purple-700">
+                          Prop Firm Challenge Settings
+                        </Label>
+                      </div>
+                      
                       <div className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
@@ -590,8 +585,8 @@ const TradingAccounts = () => {
                           </Popover>
                         </div>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                  {editingAccount && (
                    <div className="flex items-center justify-between p-4 border rounded-lg">
@@ -692,8 +687,8 @@ const TradingAccounts = () => {
                       )}
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center flex-wrap gap-2">
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center space-x-2">
                       <Badge variant={account.account_type === 'live' ? 'default' : 'secondary'}>
                         {account.account_type.toUpperCase()}
                       </Badge>
@@ -702,23 +697,38 @@ const TradingAccounts = () => {
                           {account.broker}
                         </Badge>
                       )}
-                      {account.is_prop_firm && (
+                      {account.account_type === 'prop firm' && (
                         <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
                           Prop Firm
                         </Badge>
                       )}
                     </div>
-                    <div className="flex flex-col gap-3 pt-4 border-t">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Initial Balance</span>
+                        <span className="font-medium">{formatCurrency(account.initial_balance, account.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Current Equity</span>
+                        <span className="font-medium">{formatCurrency(currentEquity, account.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">P&L</span>
+                        <span className={`font-medium ${currentEquity - account.initial_balance >= 0 ? 'text-profit' : 'text-loss'}`}>
+                          {formatCurrency(currentEquity - account.initial_balance, account.currency)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2 pt-2 border-t">
                       <Button 
                         variant="outline" 
                         onClick={() => navigate(`/account-performance/${account.id}`)}
                         size="sm"
                         className="w-full"
                       >
-                        <BarChart3 className="h-4 w-4 mr-2" />
-                        View Performance
+                        Account Performance
                       </Button>
-                      <div className="grid grid-cols-4 gap-1">
+                      <div className="flex space-x-1">
                         <Button 
                           variant="ghost" 
                           size="sm" 
@@ -743,10 +753,10 @@ const TradingAccounts = () => {
                         >
                           <History className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(account)} className="flex-1" title="Edit Account">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(account)} className="flex-1">
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account)} className="flex-1" title="Delete Account">
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account)} className="flex-1">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -754,16 +764,8 @@ const TradingAccounts = () => {
                   </CardContent>
                 </Card>
                 
-                {/* Prop Firm Progress Component */}
-                {account.is_prop_firm && (
-                  <PropFirmProgress
-                    account={account}
-                    currentEquity={currentEquity}
-                  />
-                )}
-                
-                {/* Drawdown Monitor Hook */}
-                {account.is_prop_firm && (
+                {/* Drawdown Monitor Hook - only for prop firms */}
+                {account.account_type === 'prop firm' && (
                   <DrawdownMonitor 
                     account={account}
                     currentEquity={currentEquity}

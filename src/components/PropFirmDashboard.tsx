@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
 import { Shield } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PropFirmProgress } from '@/components/PropFirmProgress';
 
 interface PropFirmDashboardProps {
@@ -50,26 +51,35 @@ const PropFirmDashboard = ({ accounts, user, formatCurrency }: PropFirmDashboard
     fetchAccountEquities();
   }, [accounts, user]);
 
-  const propFirmAccounts = accounts.filter(acc => acc.is_prop_firm && acc.is_active);
+  const propFirmAccounts = accounts.filter(acc => 
+    (acc.is_prop_firm || acc.account_type === 'prop firm') && acc.is_active
+  );
 
   if (propFirmAccounts.length === 0) return null;
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold flex items-center gap-2">
-        <Shield className="h-5 w-5" />
-        Prop Firm Challenges
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {propFirmAccounts.map((account) => (
-          <PropFirmProgress
-            key={account.id}
-            account={account}
-            currentEquity={accountEquities[account.id] || account.initial_balance}
-          />
-        ))}
-      </div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <Shield className="h-5 w-5" />
+          Prop Firm Challenges
+        </CardTitle>
+        <CardDescription>
+          Track your progress across all prop firm challenges
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {propFirmAccounts.map((account) => (
+            <PropFirmProgress
+              key={account.id}
+              account={account}
+              currentEquity={accountEquities[account.id] || account.initial_balance}
+            />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

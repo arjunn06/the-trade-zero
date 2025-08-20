@@ -4,7 +4,6 @@ import { useToast } from '@/hooks/use-toast';
 
 interface DrawdownMonitorOptions {
   accountId: string;
-  isActive: boolean;
   isPropFirm: boolean;
   maxLossLimit?: number;
   currentEquity: number;
@@ -13,7 +12,6 @@ interface DrawdownMonitorOptions {
 
 export const useDrawdownMonitor = ({
   accountId,
-  isActive,
   isPropFirm,
   maxLossLimit,
   currentEquity,
@@ -22,7 +20,7 @@ export const useDrawdownMonitor = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!isPropFirm || !isActive || !maxLossLimit) return;
+    if (!isPropFirm || !maxLossLimit) return;
 
     const checkDrawdown = async () => {
       const currentDrawdown = initialBalance - currentEquity;
@@ -69,5 +67,5 @@ export const useDrawdownMonitor = ({
     };
 
     checkDrawdown();
-  }, [accountId, isActive, isPropFirm, maxLossLimit, currentEquity, initialBalance, toast]);
+  }, [accountId, isPropFirm, maxLossLimit, currentEquity, initialBalance, toast]);
 };

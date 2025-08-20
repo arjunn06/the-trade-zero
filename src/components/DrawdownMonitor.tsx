@@ -3,8 +3,7 @@ import { useDrawdownMonitor } from '@/hooks/useDrawdownMonitor';
 interface DrawdownMonitorProps {
   account: {
     id: string;
-    is_active: boolean;
-    is_prop_firm: boolean;
+    account_type: string;
     max_loss_limit?: number;
     initial_balance: number;
   };
@@ -14,8 +13,7 @@ interface DrawdownMonitorProps {
 export const DrawdownMonitor = ({ account, currentEquity }: DrawdownMonitorProps) => {
   useDrawdownMonitor({
     accountId: account.id,
-    isActive: account.is_active,
-    isPropFirm: account.is_prop_firm,
+    isPropFirm: account.account_type === 'prop firm',
     maxLossLimit: account.max_loss_limit,
     currentEquity,
     initialBalance: account.initial_balance
