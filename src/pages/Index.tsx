@@ -81,27 +81,98 @@ const Index = () => {
         <GeometricElements />
         
         <section className="container mx-auto px-6 py-24 lg:py-32">
-          <div className="max-w-4xl">
-            <h1 className="text-5xl lg:text-7xl font-bold mb-8 leading-tight">
-              Trading journal
-              <br />
-              <span className="text-muted-foreground">for professionals</span>
-            </h1>
-            <p className="text-xl lg:text-2xl text-muted-foreground mb-12 max-w-2xl leading-relaxed">
-              The best way to track your trades instead of spreadsheets.
-              <br />
-              Analyze performance and improve your strategy at scale.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8 text-base font-medium" asChild>
-                <a href="/auth">
-                  Get Started
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </a>
-              </Button>
-              <Button size="lg" variant="outline" className="h-12 px-8 text-base font-medium border-border hover:bg-muted" asChild>
-                <a href="/auth">View Demo</a>
-              </Button>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left Content */}
+            <div>
+              <h1 className="text-5xl lg:text-7xl font-bold mb-8 leading-tight">
+                Trading journal
+                <br />
+                <span className="text-muted-foreground">for professionals</span>
+              </h1>
+              <p className="text-xl lg:text-2xl text-muted-foreground mb-12 leading-relaxed">
+                The best way to track your trades instead of spreadsheets.
+                <br />
+                Analyze performance and improve your strategy at scale.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8 text-base font-medium" asChild>
+                  <a href="/auth">
+                    Get Started
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </a>
+                </Button>
+                <Button size="lg" variant="outline" className="h-12 px-8 text-base font-medium border-border hover:bg-muted" asChild>
+                  <a href="/auth">View Demo</a>
+                </Button>
+              </div>
+            </div>
+
+            {/* Right Content - Dashboard Preview */}
+            <div className="relative">
+              <div className="relative z-10 bg-card border border-border rounded-2xl p-6 shadow-2xl">
+                {/* Mock Dashboard Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold">Dashboard Overview</h3>
+                  <div className="flex gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  </div>
+                </div>
+
+                {/* Mock Stats Cards */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <div className="text-xs text-muted-foreground mb-1">Total P&L</div>
+                    <div className="text-xl font-bold text-success">+$12,345</div>
+                    <div className="text-xs text-success">+23.4%</div>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <div className="text-xs text-muted-foreground mb-1">Win Rate</div>
+                    <div className="text-xl font-bold">68.5%</div>
+                    <div className="text-xs text-muted-foreground">142/207 trades</div>
+                  </div>
+                </div>
+
+                {/* Mock Chart */}
+                <div className="bg-muted/30 rounded-lg p-4 mb-4">
+                  <div className="flex items-end justify-between h-20 gap-1">
+                    {Array.from({ length: 12 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="bg-brand-blue/60 rounded-sm flex-1"
+                        style={{ height: `${Math.random() * 60 + 20}%` }}
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Mock Recent Trades */}
+                <div className="space-y-2">
+                  <div className="text-sm font-medium mb-3">Recent Trades</div>
+                  {[
+                    { symbol: 'EURUSD', pnl: '+$234', time: '2h ago' },
+                    { symbol: 'GBPJPY', pnl: '-$89', time: '4h ago' },
+                    { symbol: 'USDJPY', pnl: '+$156', time: '6h ago' }
+                  ].map((trade, i) => (
+                    <div key={i} className="flex items-center justify-between bg-muted/30 rounded px-3 py-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-brand-blue rounded-full"></div>
+                        <span className="text-sm font-medium">{trade.symbol}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-medium ${trade.pnl.startsWith('+') ? 'text-success' : 'text-destructive'}`}>
+                          {trade.pnl}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{trade.time}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Background Glow */}
+              <div className="absolute inset-0 bg-brand-blue/20 rounded-2xl blur-3xl transform scale-110 -z-10"></div>
             </div>
           </div>
         </section>
