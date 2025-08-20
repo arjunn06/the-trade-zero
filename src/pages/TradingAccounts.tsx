@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Building2, Edit, Trash2, DollarSign, History } from 'lucide-react';
+import { Plus, Building2, Edit, Trash2, DollarSign, History, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -692,8 +692,8 @@ const TradingAccounts = () => {
                       )}
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center space-x-2">
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center flex-wrap gap-2">
                       <Badge variant={account.account_type === 'live' ? 'default' : 'secondary'}>
                         {account.account_type.toUpperCase()}
                       </Badge>
@@ -708,32 +708,17 @@ const TradingAccounts = () => {
                         </Badge>
                       )}
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Initial Balance</span>
-                        <span className="font-medium">{formatCurrency(account.initial_balance, account.currency)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Current Equity</span>
-                        <span className="font-medium">{formatCurrency(currentEquity, account.currency)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">P&L</span>
-                        <span className={`font-medium ${currentEquity - account.initial_balance >= 0 ? 'text-profit' : 'text-loss'}`}>
-                          {formatCurrency(currentEquity - account.initial_balance, account.currency)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-2 pt-2 border-t">
+                    <div className="flex flex-col gap-3 pt-4 border-t">
                       <Button 
                         variant="outline" 
                         onClick={() => navigate(`/account-performance/${account.id}`)}
                         size="sm"
                         className="w-full"
                       >
-                        Account Performance
+                        <BarChart3 className="h-4 w-4 mr-2" />
+                        View Performance
                       </Button>
-                      <div className="flex space-x-1">
+                      <div className="grid grid-cols-4 gap-1">
                         <Button 
                           variant="ghost" 
                           size="sm" 
@@ -758,10 +743,10 @@ const TradingAccounts = () => {
                         >
                           <History className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(account)} className="flex-1">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(account)} className="flex-1" title="Edit Account">
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account)} className="flex-1">
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account)} className="flex-1" title="Delete Account">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
