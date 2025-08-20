@@ -63,22 +63,31 @@ serve(async (req) => {
     userId = profile.user_id;
   }
 
-  // Use the authenticated or resolved user's ID
+  // Use the authenticated or resolved user's ID - only fetch active accounts
   const { data, error } = await supabase
     .from("trading_accounts")
     .select("id, name")
-    .eq("user_id", userId);
-
+    .eq("user_id", userId)
+    .eq("is_active", true);
 
   if (error) {
     return new Response(
       JSON.stringify({ error: "Failed to fetch accounts" }), 
-      { status: 500, headers: corsHeaders }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 
+  // Return accounts as objects for GC variable usage
+  const accountsObject = (data || []).reduce((acc, account, index) => {
+    acc[`account_${index + 1}`] = {
+      id: account.id,
+      name: account.name
+    };
+    return acc;
+  }, {} as Record<string, any>);
+
   return new Response(
-    JSON.stringify({ accounts: data || [] }), 
-    { status: 200, headers: corsHeaders }
+    JSON.stringify(accountsObject), 
+    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
 });
