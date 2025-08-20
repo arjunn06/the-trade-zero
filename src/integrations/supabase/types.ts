@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -657,7 +657,7 @@ export type Database = {
         Returns: string
       }
       validate_numeric_input: {
-        Args: { input_value: number; min_val?: number; max_val?: number }
+        Args: { input_value: number; max_val?: number; min_val?: number }
         Returns: boolean
       }
     }
