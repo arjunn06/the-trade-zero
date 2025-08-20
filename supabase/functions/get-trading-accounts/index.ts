@@ -90,10 +90,19 @@ serve(async (req) => {
 
   const account_array = (data || []).map((account) => ({ name: account.name }));
 
+  // Also provide flattened keys so GC can map variables like @{account_list.account_1_name}
+  const account_list_flat = (data || []).reduce((acc, account, index) => {
+    acc[`account_list.account_${index + 1}_name`] = account.name;
+    // Legacy support for top-level numbered names
+    acc[`account_${index + 1}_name`] = account.name;
+    return acc;
+  }, {} as Record<string, string>);
+  
   const accountsResponse = {
     account: account_numbered,       // e.g. { "account 1": "Name" }
     account_list,                    // e.g. { account_1_name: "Name" }
-    account_array                    // e.g. [ { name: "Name" } ]
+    account_array,                   // e.g. [ { name: "Name" } ]
+    ...account_list_flat             // e.g. { "account_list.account_1_name": "Name" }
   };
 
   return new Response(
