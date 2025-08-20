@@ -46,6 +46,14 @@ function normalizeTradeType(type: any): 'buy' | 'sell' | undefined {
   return undefined;
 }
 
+function mapTradeTypeToDB(type: 'buy' | 'sell' | 'long' | 'short' | undefined): 'long' | 'short' | undefined {
+  if (!type) return undefined;
+  if (type === 'buy' || type === 'long') return 'long';
+  if (type === 'sell' || type === 'short') return 'short';
+  return undefined;
+}
+
+
 function toNumber(val: any): number | undefined {
   if (val === null || val === undefined || val === '') return undefined;
   const n = typeof val === 'number' ? val : parseFloat(String(val).replace(/,/g, ''));
@@ -288,7 +296,7 @@ async function handleCreateTrade(user_email?: string, trade_data?: ZohoWebhookRe
         user_id: userId,
         trading_account_id: trading_account_id,
         symbol: trade_data.symbol.toUpperCase(),
-        trade_type: normalizedType,
+        trade_type: mapTradeTypeToDB(normalizedType),
         entry_price: entryPriceNum,
         quantity: quantityNum,
         strategy_id: strategy_id,
@@ -765,7 +773,7 @@ async function handleCloseTrade(user_email?: string, trade_id?: string, update_d
     // Calculate PnL if exit_price is provided
     let calculatedPnl = null
     if (update_data?.exit_price && existingTrade.entry_price && existingTrade.quantity) {
-      const priceDiff = existingTrade.trade_type === 'buy' 
+      const priceDiff = (existingTrade.trade_type === 'long' || existingTrade.trade_type === 'buy') 
         ? update_data.exit_price - existingTrade.entry_price
         : existingTrade.entry_price - update_data.exit_price
       calculatedPnl = priceDiff * existingTrade.quantity

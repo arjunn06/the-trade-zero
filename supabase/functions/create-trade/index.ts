@@ -6,10 +6,17 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 )
 
+function mapTradeTypeToDB(type: 'buy' | 'sell' | 'long' | 'short'): 'long' | 'short' {
+  if (type === 'buy' || type === 'long') return 'long'
+  if (type === 'sell' || type === 'short') return 'short'
+  // Default to long to avoid constraint errors; should be validated earlier
+  return 'long'
+}
+
 interface TradeRequest {
   trading_account_id: string
   symbol: string
-  trade_type: 'buy' | 'sell'
+  trade_type: 'buy' | 'sell' | 'long' | 'short'
   entry_price: number
   quantity: number
   strategy_id?: string
@@ -105,7 +112,7 @@ Deno.serve(async (req) => {
         user_id: user.id,
         trading_account_id: tradeData.trading_account_id,
         symbol: tradeData.symbol,
-        trade_type: tradeData.trade_type,
+        trade_type: mapTradeTypeToDB(tradeData.trade_type),
         entry_price: tradeData.entry_price,
         quantity: tradeData.quantity,
         strategy_id: tradeData.strategy_id || null,
