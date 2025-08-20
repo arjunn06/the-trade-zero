@@ -96,9 +96,12 @@ CRITICAL: Only include fields that are clearly visible. Use exact numerical valu
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      return new Response(
+        JSON.stringify({ error: 'OpenAI API error', details: errorData }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: response.status }
+      );
     }
 
     const data = await response.json();

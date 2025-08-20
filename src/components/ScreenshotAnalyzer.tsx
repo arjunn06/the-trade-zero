@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Camera, Brain, Loader2, CheckCircle, Key, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -63,10 +63,19 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
   };
 
   const analyzeScreenshot = async () => {
-    if (!apiKey.trim()) {
+    const key = apiKey.trim();
+    if (!key) {
       toast({
         title: "API Key Required",
         description: "Please enter your OpenAI API key to analyze screenshots",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (!key.startsWith('sk-')) {
+      toast({
+        title: "Invalid API Key",
+        description: "The key should start with 'sk-'. Please paste a valid OpenAI API key.",
         variant: "destructive"
       });
       return;
@@ -239,6 +248,9 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
                   <Key className="h-5 w-5" />
                   OpenAI API Key Required
                 </DialogTitle>
+                <DialogDescription>
+                  Enter your OpenAI API key to run the AI analysis. It is used once and never stored.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="bg-muted/50 p-4 rounded-lg space-y-2">
