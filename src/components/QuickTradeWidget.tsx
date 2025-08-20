@@ -14,7 +14,7 @@ import { logger } from '@/lib/logger';
 import { Plus, TrendingUp, TrendingDown, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { ScreenshotAnalyzer } from './ScreenshotAnalyzer';
+
 
 interface TradingAccount {
   id: string;
@@ -73,17 +73,6 @@ export function QuickTradeWidget() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleDataExtracted = (extractedData: any) => {
-    setFormData(prev => ({
-      ...prev,
-      ...extractedData
-    }));
-    
-    toast({
-      title: "Data imported successfully",
-      description: "Trade details have been filled from the screenshot",
-    });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,11 +163,7 @@ export function QuickTradeWidget() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* AI Screenshot Analyzer */}
-      <ScreenshotAnalyzer onDataExtracted={handleDataExtracted} />
-      
-      <Card className="quick-trade-widget">
+    <Card className="quick-trade-widget">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Plus className="h-5 w-5" />
@@ -370,6 +355,5 @@ export function QuickTradeWidget() {
         </form>
       </CardContent>
     </Card>
-    </div>
   );
 }
