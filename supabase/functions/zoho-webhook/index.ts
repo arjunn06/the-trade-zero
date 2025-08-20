@@ -930,3 +930,4 @@ Use these templates to quickly create trades with your preferred settings!`
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
+}
