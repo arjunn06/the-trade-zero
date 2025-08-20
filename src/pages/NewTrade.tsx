@@ -792,18 +792,19 @@ const NewTrade = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">{isEditing ? 'Edit Trade' : 'New Trade'}</h1>
-        <p className="text-muted-foreground">{isEditing ? 'Update trading position details' : 'Record a new trading position'}</p>
-      </div>
+      <div className="w-full space-y-6 overflow-hidden">
+        <div className="px-2 sm:px-0">
+          <h1 className="text-3xl font-bold">{isEditing ? 'Edit Trade' : 'New Trade'}</h1>
+          <p className="text-muted-foreground">{isEditing ? 'Update trading position details' : 'Record a new trading position'}</p>
+        </div>
 
-      <Card>
+        <div className="w-full max-w-4xl mx-auto">
+          <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>Trade Details</CardTitle>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-8">
+        <CardContent className="px-4 sm:px-6">
+          <form onSubmit={handleSubmit} className="space-y-8 w-full overflow-hidden">
             {/* 1. ACCOUNT & BASIC SETUP */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold border-b pb-2">Account & Basic Setup</h3>
@@ -1483,7 +1484,7 @@ const NewTrade = () => {
                         </h4>
                         <div className="space-y-2">
                           {items.map((item) => (
-                            <div key={item.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
+                            <div key={item.id} className="flex items-start space-x-2 p-2 border rounded-lg hover:bg-muted/30 transition-colors">
                               <Checkbox
                                 id={`confluence-${item.id}`}
                                 checked={selectedConfluence[item.id] || false}
@@ -1647,6 +1648,7 @@ const NewTrade = () => {
           </form>
         </CardContent>
       </Card>
+        </div>
       </div>
     </DashboardLayout>
   );
