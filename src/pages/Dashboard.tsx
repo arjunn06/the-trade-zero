@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/lib/logger';
 import { userPreferences } from '@/utils/secureStorage';
 import { CurrencyFormatter, DateFormatter, TradeCalculations } from '@/utils/commonUtils';
-import { TrendingUp, TrendingDown, DollarSign, Target, Calendar, Plus, Activity, BarChart3, Star, PieChart, Clock, Shield, TrendingDown as LossIcon } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Target, Calendar, Plus, Activity, BarChart3, Star, PieChart, Clock, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart as RechartsPieChart, Cell, BarChart, Bar } from 'recharts';
