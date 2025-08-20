@@ -66,7 +66,7 @@ export function TradeCard({ trade, onClose, onDelete, onDuplicate, onViewScreens
 
   return (
     <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow duration-200 group relative"
+      className="interactive-card group relative animate-fade-in hover:shadow-xl transition-all duration-300"
       onClick={handleCardClick}
     >
       <CardContent className="p-4">
@@ -93,13 +93,13 @@ export function TradeCard({ trade, onClose, onDelete, onDuplicate, onViewScreens
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-auto"
+                  className="opacity-0 group-hover:opacity-100 transition-all duration-300 p-1 h-auto hover:bg-accent hover:scale-110"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="dropdown-content animate-scale-in">
                 <DropdownMenuItem onClick={(e) => handleActionClick(e, () => navigate(`/trades/${trade.id}`))}>
                   <Eye className="h-4 w-4 mr-2" />
                   View Details
@@ -147,7 +147,7 @@ export function TradeCard({ trade, onClose, onDelete, onDuplicate, onViewScreens
           <div>
             <p className="text-sm text-muted-foreground">P&L</p>
             {trade.pnl ? (
-              <p className={`font-medium ${trade.pnl >= 0 ? 'text-profit' : 'text-loss'}`}>
+              <p className={`font-medium transition-colors duration-300 ${trade.pnl >= 0 ? 'text-profit group-hover:animate-bounce-gentle' : 'text-loss group-hover:animate-bounce-gentle'}`}>
                 {formatCurrency(trade.pnl, trade.trading_accounts.currency)}
               </p>
             ) : (

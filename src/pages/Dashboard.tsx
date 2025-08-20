@@ -486,28 +486,28 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 md:space-y-8">
+      <div className="space-y-4 md:space-y-8 animate-fade-in">
         {/* Header with Account Filter */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-in">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight">Performance Dashboard</h1>
-            <p className="text-muted-foreground">Monitor your trading performance and analytics</p>
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">Performance Dashboard</h1>
+            <p className="text-muted-foreground transition-colors duration-300 hover:text-foreground/80">Monitor your trading performance and analytics</p>
           </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             {/* Time Filter */}
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-muted-foreground">Period:</span>
               <Select value={timeFilter} onValueChange={setTimeFilter}>
-                <SelectTrigger className="w-[140px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <SelectTrigger className="w-[140px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hover:bg-background transition-all duration-200 hover:border-primary/50">
                   <SelectValue placeholder="Select period" />
                 </SelectTrigger>
-                <SelectContent className="bg-background border border-border shadow-lg">
-                  <SelectItem value="all" className="hover:bg-muted/50">All Time</SelectItem>
-                  <SelectItem value="7d" className="hover:bg-muted/50">Last 7 Days</SelectItem>
-                  <SelectItem value="30d" className="hover:bg-muted/50">Last 30 Days</SelectItem>
-                  <SelectItem value="90d" className="hover:bg-muted/50">Last 3 Months</SelectItem>
-                  <SelectItem value="6m" className="hover:bg-muted/50">Last 6 Months</SelectItem>
-                  <SelectItem value="1y" className="hover:bg-muted/50">Last Year</SelectItem>
+                <SelectContent className="dropdown-content animate-scale-in">
+                  <SelectItem value="all" className="dropdown-item">All Time</SelectItem>
+                  <SelectItem value="7d" className="dropdown-item">Last 7 Days</SelectItem>
+                  <SelectItem value="30d" className="dropdown-item">Last 30 Days</SelectItem>
+                  <SelectItem value="90d" className="dropdown-item">Last 3 Months</SelectItem>
+                  <SelectItem value="6m" className="dropdown-item">Last 6 Months</SelectItem>
+                  <SelectItem value="1y" className="dropdown-item">Last Year</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -518,12 +518,12 @@ const Dashboard = () => {
               <AccountFilter
                 values={selectedAccountIds}
                 onValuesChange={setSelectedAccountIds}
-                className="w-[180px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                className="w-[180px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hover:bg-background transition-all duration-200 hover:border-primary/50"
                 placeholder="All Active Accounts"
                 multiSelect={true}
               />
             </div>
-            <Button onClick={() => navigate('/trades/new')} className="gap-2">
+            <Button onClick={() => navigate('/trades/new')} className="gap-2 btn-primary hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
               <Plus className="h-4 w-4" />
               New Trade Entry
             </Button>

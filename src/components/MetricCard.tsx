@@ -18,30 +18,32 @@ interface MetricCardProps {
 
 export function MetricCard({ title, value, change, icon, className }: MetricCardProps) {
   return (
-    <Card className={cn("metric-card", className)}>
+    <Card className={cn("metric-card group", className)}>
       <CardContent className="p-3 sm:p-4 md:p-6">
         <div className="flex items-start justify-between">
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1">
             <p className="metric-label">{title}</p>
             <div className="space-y-1">
-              <p className="metric-value">{value}</p>
+              <p className="metric-value group-hover:text-primary transition-colors duration-300">{value}</p>
               {change && (
                 <div className={cn(
                   "metric-change",
                   change.isPositive ? "profit-text" : "loss-text"
                 )}>
-                  {change.isPositive ? (
-                    <TrendingUp className="h-3 w-3" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3" />
-                  )}
-                  <span>{change.percentage}</span>
+                  <div className="flex items-center gap-1 transition-transform duration-200 group-hover:scale-105">
+                    {change.isPositive ? (
+                      <TrendingUp className="h-3 w-3 animate-bounce-gentle" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 animate-bounce-gentle" />
+                    )}
+                    <span>{change.percentage}</span>
+                  </div>
                 </div>
               )}
             </div>
           </div>
           {icon && (
-            <div className="text-muted-foreground">
+            <div className="text-muted-foreground transition-all duration-300 group-hover:text-primary group-hover:scale-110">
               {icon}
             </div>
           )}

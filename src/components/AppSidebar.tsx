@@ -55,8 +55,8 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path;
   const getNavCls = (isActive: boolean) =>
     isActive ? 
-      "bg-primary text-primary-foreground font-medium shadow-sm w-full justify-start rounded-md" : 
-      "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full justify-start rounded-md";
+      "bg-primary text-primary-foreground font-medium shadow-sm w-full justify-start rounded-md transition-all duration-200 scale-[1.02]" : 
+      "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 w-full justify-start rounded-md hover:scale-[1.02] hover:shadow-sm";
 
 
   return (
@@ -65,10 +65,10 @@ export function AppSidebar() {
       collapsible="icon"
       variant="sidebar"
     >
-      <SidebarHeader className="p-6 border-b border-sidebar-border">
+      <SidebarHeader className="p-6 border-b border-sidebar-border transition-all duration-300">
         {!collapsed && (
-          <div className="flex items-center gap-3">
-            <div className="bg-primary text-primary-foreground rounded-lg p-2">
+          <div className="flex items-center gap-3 animate-fade-in">
+            <div className="bg-primary text-primary-foreground rounded-lg p-2 hover:scale-110 transition-transform duration-200">
               <TrendingUp className="h-5 w-5" />
             </div>
             <div>
@@ -78,7 +78,7 @@ export function AppSidebar() {
           </div>
         )}
         {collapsed && (
-          <div className="bg-primary text-primary-foreground rounded-lg p-2 mx-auto">
+          <div className="bg-primary text-primary-foreground rounded-lg p-2 mx-auto hover:scale-110 transition-all duration-200 animate-fade-in">
             <TrendingUp className="h-5 w-5" />
           </div>
         )}
@@ -86,30 +86,31 @@ export function AppSidebar() {
 
       <SidebarContent className="px-3 py-4">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider mb-2">
+          <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider mb-2 transition-colors duration-200">
             Trading
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <div className="space-y-1">
-              {menuItems.map((item) => (
-                <Button
-                  key={item.title}
-                  variant="ghost"
-                  asChild
-                  className={getNavCls(currentPath === item.url)}
-                >
-                  <NavLink to={item.url} end>
-                    <item.icon className="h-4 w-4" />
-                    {!collapsed && <span className="ml-3">{item.title}</span>}
-                  </NavLink>
-                </Button>
+              {menuItems.map((item, index) => (
+                <div key={item.title} className="stagger-fade" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <Button
+                    variant="ghost"
+                    asChild
+                    className={getNavCls(currentPath === item.url)}
+                  >
+                    <NavLink to={item.url} end>
+                      <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                      {!collapsed && <span className="ml-3 transition-opacity duration-200">{item.title}</span>}
+                    </NavLink>
+                  </Button>
+                </div>
               ))}
             </div>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup className="mt-6">
-          <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider mb-2">
+          <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider mb-2 transition-colors duration-200">
             System
           </SidebarGroupLabel>
           <SidebarGroupContent>
