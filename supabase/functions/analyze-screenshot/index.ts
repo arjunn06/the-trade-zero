@@ -13,9 +13,9 @@ serve(async (req) => {
 
   try {
     console.log('Analyze screenshot function called');
-    const { image, openai_api_key } = await req.json();
+    const { image } = await req.json();
     
-    console.log('Request data received - has image:', !!image, 'has key:', !!openai_api_key);
+    console.log('Request data received - has image:', !!image);
     
     if (!image) {
       console.error('No image provided');
@@ -25,10 +25,13 @@ serve(async (req) => {
       );
     }
 
+    // Get OpenAI API key from Supabase secrets
+    const openai_api_key = Deno.env.get('OPENAI_API_KEY');
+    
     if (!openai_api_key) {
-      console.error('No OpenAI API key provided');
+      console.error('No OpenAI API key configured in Supabase secrets');
       return new Response(
-        JSON.stringify({ error: 'OpenAI API key not provided' }),
+        JSON.stringify({ error: 'OpenAI API key not configured' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }

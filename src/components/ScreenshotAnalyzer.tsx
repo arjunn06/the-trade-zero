@@ -32,16 +32,6 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
   const [analyzing, setAnalyzing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-
-  // Load saved API key on mount
-  useState(() => {
-    const savedKey = localStorage.getItem('openai_api_key');
-    if (savedKey) {
-      setApiKey(savedKey);
-    }
-  });
 
   const handleFileSelect = (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -68,40 +58,11 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
       return;
     }
     
-    // If we have a saved API key, use it directly
-    const savedKey = localStorage.getItem('openai_api_key');
-    if (savedKey && savedKey.startsWith('sk-')) {
-      setApiKey(savedKey);
-      analyzeScreenshot(savedKey);
-    } else {
-      setShowApiKeyDialog(true);
-    }
+    analyzeScreenshot();
   };
 
-  const analyzeScreenshot = async (providedKey?: string) => {
-    const key = providedKey || apiKey.trim();
-    if (!key) {
-      toast({
-        title: "API Key Required",
-        description: "Please enter your OpenAI API key to analyze screenshots",
-        variant: "destructive"
-      });
-      return;
-    }
-    if (!key.startsWith('sk-')) {
-      toast({
-        title: "Invalid API Key",
-        description: "The key should start with 'sk-'. Please paste a valid OpenAI API key.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Save the API key for future use
-    localStorage.setItem('openai_api_key', key);
-
+  const analyzeScreenshot = async () => {
     setAnalyzing(true);
-    setShowApiKeyDialog(false);
 
     try {
       // Convert image to base64
@@ -111,11 +72,10 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
         reader.readAsDataURL(selectedFile);
       });
 
-      // Call our edge function for analysis with the user's API key
+      // Call our edge function for analysis
       const { data, error } = await supabase.functions.invoke('analyze-screenshot', {
         body: { 
-          image: base64,
-          openai_api_key: key
+          image: base64
         },
       });
 
@@ -132,7 +92,6 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
           title: "Analysis complete",
           description: "Trade details extracted successfully!",
         });
-        // Don't clear the API key since we're storing it
       } else if (result?.error) {
         throw new Error(result.error);
       } else {
@@ -261,84 +220,6 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
               <li>Trade direction (Buy/Sell)</li>
             </ul>
           </div>
-
-          {/* API Key Dialog */}
-          <Dialog open={showApiKeyDialog} onOpenChange={setShowApiKeyDialog}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Key className="h-5 w-5" />
-                  OpenAI API Key Required
-                </DialogTitle>
-                <DialogDescription>
-                  Enter your OpenAI API key to run the AI analysis. It is used once and never stored.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-                  <p className="text-sm font-medium">How to get your OpenAI API Key:</p>
-                  <ol className="list-decimal list-inside text-xs text-muted-foreground space-y-1">
-                    <li>Visit <Button variant="link" className="h-auto p-0 text-xs" asChild>
-                      <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">
-                        OpenAI Platform <ExternalLink className="h-3 w-3 ml-1 inline" />
-                      </a>
-                    </Button></li>
-                    <li>Sign in or create an OpenAI account</li>
-                    <li>Click "Create new secret key"</li>
-                    <li>Copy the API key (starts with "sk-")</li>
-                    <li>Add credits to your OpenAI account if needed</li>
-                  </ol>
-                </div>
-                
-                <div>
-                  <Label htmlFor="api-key">Your OpenAI API Key</Label>
-                  <Input
-                    id="api-key"
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="sk-..."
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Your API key is stored locally and only used for analysis
-                  </p>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setShowApiKeyDialog(false)}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={() => analyzeScreenshot()}
-                    disabled={!apiKey.trim()}
-                    className="flex-1"
-                  >
-                    Analyze Screenshot
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      localStorage.removeItem('openai_api_key');
-                      setApiKey('');
-                      toast({
-                        title: "API Key cleared",
-                        description: "Your stored API key has been removed"
-                      });
-                    }}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs px-2"
-                  >
-                    Clear Key
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
         </CardContent>
       </Card>
     </PremiumFeature>
