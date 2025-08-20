@@ -102,7 +102,7 @@ const Index = () => {
                   </a>
                 </Button>
                 <Button size="lg" variant="outline" className="h-12 px-8 text-base font-medium border-border hover:bg-muted" asChild>
-                  <a href="/auth">View Demo</a>
+                  <a href="/auth">Sign In</a>
                 </Button>
               </div>
             </div>
