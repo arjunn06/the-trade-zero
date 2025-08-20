@@ -6,6 +6,7 @@ import { Upload, FileSpreadsheet } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface CsvImportSectionProps {
@@ -156,7 +157,7 @@ export function CsvImportSection({ accountId, onImportComplete, compact = false 
       setSelectedFile(null);
       onImportComplete?.();
     } catch (error) {
-      console.error('Error importing CSV:', error);
+      logger.apiError('CsvImportSection - importing CSV', error);
       toast({
         title: "Import failed",
         description: error instanceof Error ? error.message : "Failed to import CSV file.",

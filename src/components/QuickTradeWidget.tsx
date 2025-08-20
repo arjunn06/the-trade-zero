@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 import { Plus, TrendingUp, TrendingDown, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -64,7 +65,7 @@ export function QuickTradeWidget() {
         setFormData(prev => ({ ...prev, trading_account_id: data[0].id }));
       }
     } catch (error) {
-      console.error('Error fetching accounts:', error);
+      logger.apiError('QuickTradeWidget - fetching accounts', error);
     }
   };
 
@@ -161,7 +162,7 @@ export function QuickTradeWidget() {
       window.location.reload();
 
     } catch (error) {
-      console.error('Error creating trade:', error);
+      logger.apiError('QuickTradeWidget - creating trade', error);
       toast({
         title: "Error creating trade",
         description: error instanceof Error ? error.message : "Failed to create trade",

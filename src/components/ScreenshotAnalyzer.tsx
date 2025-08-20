@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 import { Upload, Camera, Brain, Loader2, CheckCircle, Key, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -80,7 +81,7 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
       });
 
       if (error) {
-        console.error('Edge function error:', error);
+        logger.apiError('ScreenshotAnalyzer - edge function error', error);
         throw new Error(error.message || 'Failed to analyze screenshot');
       }
 
@@ -103,7 +104,7 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
       }
 
     } catch (error) {
-      console.error('Error analyzing screenshot:', error);
+      logger.apiError('ScreenshotAnalyzer - analyzing screenshot', error);
       const errorMessage = error instanceof Error ? error.message : "Failed to analyze the screenshot. Please try again.";
       toast({
         title: "Analysis failed",

@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/lib/logger';
 import { userPreferences } from '@/utils/secureStorage';
+import { CurrencyFormatter, DateFormatter, TradeCalculations } from '@/utils/commonUtils';
 import { TrendingUp, TrendingDown, DollarSign, Target, Calendar, Plus, Activity, BarChart3, Star, PieChart, Clock, Shield, TrendingDown as LossIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -226,11 +227,16 @@ const Dashboard = () => {
       }
 
       // Filter trades by selected accounts
-      let filteredTrades = selectedAccountIds.includes('all') 
-        ? allTrades 
-        : allTrades.filter(trade => selectedAccountIds.includes(trade.trading_account_id));
+      let filteredTrades;
+      if (selectedAccountIds.includes('all') || selectedAccountIds.length === 0) {
+        // Only include trades from active accounts when "All Active Accounts" is selected
+        const activeAccountIds = allAccounts.filter(acc => acc.is_active).map(acc => acc.id);
+        filteredTrades = allTrades.filter(trade => activeAccountIds.includes(trade.trading_account_id));
+      } else {
+        filteredTrades = allTrades.filter(trade => selectedAccountIds.includes(trade.trading_account_id));
+      }
 
-      // Apply time filter
+      // Apply time filter to the filtered trades
       if (timeFilter !== 'all') {
         const now = new Date();
         const filterDate = new Date();
@@ -306,7 +312,7 @@ const Dashboard = () => {
         return acc;
       }, {} as Record<string, number>);
       const mostTradedAsset = Object.keys(symbolCounts).length > 0 
-        ? Object.entries(symbolCounts).sort(([,a], [,b]) => b - a)[0][0] 
+        ? Object.entries(symbolCounts).sort((a, b) => (b[1] as number) - (a[1] as number))[0][0] 
         : '';
 
       // Calculate advanced metrics
@@ -461,16 +467,12 @@ const Dashboard = () => {
     }
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency
-    }).format(amount);
-  };
+  // Use optimized currency formatter from utilities
+  const formatCurrency = (amount: number, currency: string = 'USD') => 
+    CurrencyFormatter.format(amount, currency);
 
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`;
-  };
+  const formatPercentage = (value: number) => 
+    CurrencyFormatter.formatPercentage(value);
 
   if (loading) {
     return (

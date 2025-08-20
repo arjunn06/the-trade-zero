@@ -82,15 +82,21 @@ export function AccountFilter({
 
     const currentValues = values || [];
     if (accountId === 'all') {
+      // When "All Active Accounts" is selected, clear other selections
       onValuesChange?.(['all']);
     } else {
+      // Remove 'all' if a specific account is being selected
       let newValues = [...currentValues.filter(v => v !== 'all')];
+      
       if (newValues.includes(accountId)) {
+        // Deselect the account
         newValues = newValues.filter(v => v !== accountId);
       } else {
+        // Select the account
         newValues.push(accountId);
       }
       
+      // If no accounts are selected, default back to "All Active Accounts"
       if (newValues.length === 0) {
         newValues = ['all'];
       }
