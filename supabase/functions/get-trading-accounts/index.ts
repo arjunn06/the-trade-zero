@@ -99,10 +99,8 @@ serve(async (req) => {
     value: account.name,
   }));
 
-  // Also provide flattened keys so GC can map variables like @{account_list.account_1_name}
-  const account_list_dotted = (data || []).reduce((acc, account, index) => {
-    acc[`account_list.account_${index + 1}_name`] = account.name;
-    // Legacy support for top-level numbered names
+  // Also provide flat top-level keys like account_1_name (no dotted keys)
+  const account_flat = (data || []).reduce((acc, account, index) => {
     acc[`account_${index + 1}_name`] = account.name;
     return acc;
   }, {} as Record<string, string>);
@@ -120,8 +118,8 @@ serve(async (req) => {
     account_list_array,                     // e.g. [ { key, label, value } ]
     account_array,                          // e.g. [ { name } ]
 
-    // Flattened keys for direct dotted access
-    ...account_list_dotted,
+    // Flattened top-level keys (account_1_name)
+    ...account_flat,
   };
 
   return new Response(
