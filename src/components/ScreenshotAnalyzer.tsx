@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Camera, Brain, Loader2, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ExtractedTradeData {
   symbol?: string;
@@ -65,22 +66,18 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
         reader.readAsDataURL(selectedFile);
       });
 
-      // Call our edge function for analysis
-      const response = await fetch(`https://dynibyqrcbxneiwjyahn.supabase.co/functions/v1/analyze-screenshot`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ image: base64 }),
+      // Call our edge function for analysis via Supabase client (adds auth automatically)
+      const { data, error } = await supabase.functions.invoke('analyze-screenshot', {
+        body: { image: base64 },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to analyze screenshot');
+      if (error) {
+        throw new Error(error.message || 'Failed to analyze screenshot');
       }
 
-      const result = await response.json();
+      const result = data as any;
       
-      if (result.tradeData) {
+      if (result?.tradeData) {
         onDataExtracted(result.tradeData);
         toast({
           title: "Analysis complete",
@@ -98,7 +95,7 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
       console.error('Error analyzing screenshot:', error);
       toast({
         title: "Analysis failed",
-        description: "Failed to analyze the screenshot. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to analyze the screenshot. Please try again.",
         variant: "destructive"
       });
     } finally {
