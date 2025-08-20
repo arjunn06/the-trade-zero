@@ -338,9 +338,7 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
               </DropdownMenuItem>
             </DialogTrigger>
           </Dialog>
-          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-            <ThemeToggle collapsed={true} />
-          </DropdownMenuItem>
+          <ThemeToggle collapsed={true} />
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>
             <LogOut className="h-4 w-4 mr-2" />
