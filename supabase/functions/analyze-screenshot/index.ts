@@ -21,7 +21,7 @@ serve(async (req) => {
       console.error('No image provided');
       return new Response(
         JSON.stringify({ error: 'No image provided' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
