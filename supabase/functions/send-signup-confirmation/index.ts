@@ -36,6 +36,8 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log("Webhook received for signup confirmation");
+    
     // Verify webhook signature
     const payloadText = await req.text();
     const headers = Object.fromEntries(req.headers);
