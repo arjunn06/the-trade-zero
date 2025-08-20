@@ -804,10 +804,39 @@ const NewTrade = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Basic Trade Information */}
+            {/* 1. ACCOUNT & BASIC SETUP */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold border-b pb-2">Basic Trade Information</h3>
+              <h3 className="text-lg font-semibold border-b pb-2">Account & Basic Setup</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="trading_account" className="flex items-center gap-1 text-sm font-medium">
+                    Trading Account <span className="text-destructive">*</span>
+                  </Label>
+                  <Select 
+                    value={formData.trading_account_id} 
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, trading_account_id: value });
+                      if (formErrors.trading_account_id) {
+                        setFormErrors({ ...formErrors, trading_account_id: '' });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className={formErrors.trading_account_id ? 'border-destructive focus:ring-destructive' : ''}>
+                      <SelectValue placeholder="Select account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.name} ({account.currency})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {formErrors.trading_account_id && (
+                    <p className="text-sm text-destructive mt-1">{formErrors.trading_account_id}</p>
+                  )}
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="symbol" className="flex items-center gap-1 text-sm font-medium">
                     Symbol <span className="text-destructive">*</span>
@@ -856,6 +885,28 @@ const NewTrade = () => {
                   )}
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="strategy" className="text-sm font-medium">Strategy (Optional)</Label>
+                  <Select value={formData.strategy_id} onValueChange={(value) => setFormData({ ...formData, strategy_id: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select strategy" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {strategies.map((strategy) => (
+                        <SelectItem key={strategy.id} value={strategy.id}>
+                          {strategy.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. POSITION & ENTRY DETAILS */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold border-b pb-2">Position & Entry Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="entry_price" className="flex items-center gap-1 text-sm font-medium">
                     Entry Price <span className="text-destructive">*</span>
@@ -927,91 +978,6 @@ const NewTrade = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="stop_loss" className="text-sm font-medium">Stop Loss</Label>
-                  <Input
-                    id="stop_loss"
-                    type="number"
-                    step="any"
-                    value={formData.stop_loss}
-                    onChange={(e) => setFormData({ ...formData, stop_loss: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="take_profit" className="text-sm font-medium">Take Profit</Label>
-                  <Input
-                    id="take_profit"
-                    type="number"
-                    step="any"
-                    value={formData.take_profit}
-                    onChange={(e) => setFormData({ ...formData, take_profit: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="trading_account" className="flex items-center gap-1 text-sm font-medium">
-                    Trading Account <span className="text-destructive">*</span>
-                  </Label>
-                  <Select 
-                    value={formData.trading_account_id} 
-                    onValueChange={(value) => {
-                      setFormData({ ...formData, trading_account_id: value });
-                      if (formErrors.trading_account_id) {
-                        setFormErrors({ ...formErrors, trading_account_id: '' });
-                      }
-                    }}
-                  >
-                    <SelectTrigger className={formErrors.trading_account_id ? 'border-destructive focus:ring-destructive' : ''}>
-                      <SelectValue placeholder="Select account" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {accounts.map((account) => (
-                        <SelectItem key={account.id} value={account.id}>
-                          {account.name} ({account.currency})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {formErrors.trading_account_id && (
-                    <p className="text-sm text-destructive mt-1">{formErrors.trading_account_id}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="strategy" className="text-sm font-medium">Strategy (Optional)</Label>
-                  <Select value={formData.strategy_id} onValueChange={(value) => setFormData({ ...formData, strategy_id: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select strategy" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {strategies.map((strategy) => (
-                        <SelectItem key={strategy.id} value={strategy.id}>
-                          {strategy.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="risk_amount" className="text-sm font-medium">Risk Amount</Label>
-                  <Input
-                    id="risk_amount"
-                    type="number"
-                    step="0.01"
-                    placeholder="Amount at risk"
-                    value={formData.risk_amount}
-                    onChange={(e) => setFormData({ ...formData, risk_amount: e.target.value })}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Entry Details */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold border-b pb-2">Entry Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
                   <Label className="text-sm font-medium">Entry Date</Label>
                   <Popover>
                     <PopoverTrigger asChild>
@@ -1061,6 +1027,54 @@ const NewTrade = () => {
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* 3. RISK MANAGEMENT */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold border-b pb-2">Risk Management</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="stop_loss" className="text-sm font-medium">Stop Loss</Label>
+                  <Input
+                    id="stop_loss"
+                    type="number"
+                    step="any"
+                    value={formData.stop_loss}
+                    onChange={(e) => setFormData({ ...formData, stop_loss: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="take_profit" className="text-sm font-medium">Take Profit</Label>
+                  <Input
+                    id="take_profit"
+                    type="number"
+                    step="any"
+                    value={formData.take_profit}
+                    onChange={(e) => setFormData({ ...formData, take_profit: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="risk_amount" className="text-sm font-medium">Risk Amount</Label>
+                  <Input
+                    id="risk_amount"
+                    type="number"
+                    step="0.01"
+                    placeholder="Amount at risk"
+                    value={formData.risk_amount}
+                    onChange={(e) => setFormData({ ...formData, risk_amount: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {calculateRiskReward() > 0 && (
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    Risk/Reward Ratio: <span className="font-medium">{calculateRiskReward().toFixed(2)}:1</span>
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Trade Status Section */}
