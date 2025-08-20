@@ -44,20 +44,37 @@ serve(async (req) => {
             role: 'system',
             content: `You are an expert trading screenshot analyzer. Extract trade details from trading platform screenshots (MT4, MT5, cTrader, TradingView, etc.).
 
-Return a JSON object with the following structure:
+Look for these specific patterns in screenshots:
+- Symbol/Pair: Often at the top (e.g., "EURUSD")
+- Direction: "buy" or "sell" keywords, or analyze price movement arrows
+- Quantity/Lot size: Numbers with decimal places near buy/sell
+- Entry price: First price in sequences like "1.16842 → 1.16795"
+- Exit price: Second price after arrow (→)
+- Entry/Exit times: Timestamps in format like "2025.08.18 11:20:01"
+- S/L (Stop Loss): Usually labeled as "S/L:" followed by price
+- T/P (Take Profit): Usually labeled as "T/P:" followed by price
+- P&L: Profit/Loss amount, often in red (negative) or green (positive)
+- Swap: Overnight fees
+- Charges/Commission: Trading fees
+
+Return a JSON object with this exact structure:
 {
-  "symbol": "EURUSD" (currency pair or instrument),
-  "trade_type": "long" or "short" (based on Buy/Sell),
-  "entry_price": "1.2345" (entry price as string),
-  "exit_price": "1.2400" (exit price if available),
-  "quantity": "0.10" (lot size or position size),
-  "stop_loss": "1.2300" (SL price if visible),
-  "take_profit": "1.2500" (TP price if visible),
-  "pnl": "100.50" (profit/loss amount if shown),
-  "notes": "Additional context or platform info"
+  "symbol": "EURUSD",
+  "trade_type": "long",
+  "entry_price": "1.16842",
+  "exit_price": "1.16795",
+  "quantity": "0.09",
+  "stop_loss": "1.16795",
+  "take_profit": "1.17032",
+  "pnl": "-4.23",
+  "entry_time": "2025.08.18 11:20:01",
+  "exit_time": "2025.08.18 11:55:56",
+  "swap": "0",
+  "charges": "-0.63",
+  "notes": "Extracted from trading platform screenshot"
 }
 
-Only include fields that are clearly visible in the screenshot. If a field is not visible or unclear, omit it from the response. Be precise with numerical values.`
+CRITICAL: Only include fields that are clearly visible. Use exact numerical values as shown. For trade_type, use "long" for buy orders and "short" for sell orders.`
           },
           {
             role: 'user',
@@ -130,12 +147,19 @@ Only include fields that are clearly visible in the screenshot. If a field is no
     }
     
     // Clean numerical fields
-    ['entry_price', 'exit_price', 'quantity', 'stop_loss', 'take_profit', 'pnl'].forEach(field => {
+    ['entry_price', 'exit_price', 'quantity', 'stop_loss', 'take_profit', 'pnl', 'swap', 'charges'].forEach(field => {
       if (tradeData[field]) {
         const numStr = String(tradeData[field]).replace(/[^0-9.-]/g, '');
         if (numStr && !isNaN(parseFloat(numStr))) {
           cleanedData[field] = numStr;
         }
+      }
+    });
+    
+    // Clean time fields
+    ['entry_time', 'exit_time'].forEach(field => {
+      if (tradeData[field] && typeof tradeData[field] === 'string') {
+        cleanedData[field] = tradeData[field].trim();
       }
     });
     
