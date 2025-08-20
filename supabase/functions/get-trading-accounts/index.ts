@@ -83,16 +83,21 @@ serve(async (req) => {
     return acc;
   }, {} as Record<string, string>);
 
-  // Object map as array of key-value pairs for Zoho GC compatibility
-  const account_list = (data || []).map((account, index) => ({
-    key: `account_${index + 1}_name`,
-    value: account.name,
-    name: account.name,
-    [`account_${index + 1}_name`]: account.name
-  }));
+  // Object map for direct key access like @{account_list.account_1_name}
+  const account_list = (data || []).reduce((acc, account, index) => {
+    acc[`account_${index + 1}_name`] = account.name;
+    return acc;
+  }, {} as Record<string, string>);
 
   // Simple array of objects for list rendering
   const account_array = (data || []).map((account) => ({ name: account.name }));
+
+  // Array form (useful if GC expects a "List of elements")
+  const account_list_array = (data || []).map((account, index) => ({
+    key: `account_${index + 1}_name`,
+    label: account.name,
+    value: account.name,
+  }));
 
   // Also provide flattened keys so GC can map variables like @{account_list.account_1_name}
   const account_list_dotted = (data || []).reduce((acc, account, index) => {
@@ -111,7 +116,8 @@ serve(async (req) => {
 
     // Maps and arrays for various GC configurations
     account_map: account_numbered,          // e.g. { "account 1": "Name" }
-    account_list,                           // e.g. [ { key, value, name, account_1_name } ]
+    account_list,                           // e.g. { "account_1_name": "Name" }
+    account_list_array,                     // e.g. [ { key, label, value } ]
     account_array,                          // e.g. [ { name } ]
 
     // Flattened keys for direct dotted access
