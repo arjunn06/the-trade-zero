@@ -77,17 +77,16 @@ serve(async (req) => {
     );
   }
 
-  // Return accounts as objects for GC variable usage
-  const accountsObject = (data || []).reduce((acc, account, index) => {
-    acc[`account_${index + 1}`] = {
-      id: account.id,
-      name: account.name
-    };
-    return acc;
-  }, {} as Record<string, any>);
+  // Return accounts with main heading and sub-headings
+  const accountsResponse = {
+    account: (data || []).reduce((acc, account, index) => {
+      acc[`account ${index + 1}`] = account.name;
+      return acc;
+    }, {} as Record<string, string>)
+  };
 
   return new Response(
-    JSON.stringify(accountsObject), 
+    JSON.stringify(accountsResponse), 
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
 });
