@@ -122,99 +122,6 @@ export type Database = {
         }
         Relationships: []
       }
-      ctrader_auth_states: {
-        Row: {
-          account_number: string
-          created_at: string
-          expires_at: string
-          id: string
-          state: string
-          trading_account_id: string
-          user_id: string
-        }
-        Insert: {
-          account_number: string
-          created_at?: string
-          expires_at: string
-          id?: string
-          state: string
-          trading_account_id: string
-          user_id: string
-        }
-        Update: {
-          account_number?: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          state?: string
-          trading_account_id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ctrader_connections: {
-        Row: {
-          access_token: string
-          account_number: string
-          connected_at: string
-          created_at: string
-          expires_at: string
-          id: string
-          refresh_token: string
-          trading_account_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          access_token: string
-          account_number: string
-          connected_at?: string
-          created_at?: string
-          expires_at: string
-          id?: string
-          refresh_token: string
-          trading_account_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          access_token?: string
-          account_number?: string
-          connected_at?: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          refresh_token?: string
-          trading_account_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ctrader_tokens: {
-        Row: {
-          access_token: string | null
-          expires_at: string | null
-          id: string
-          refresh_token: string | null
-          user_id: string | null
-        }
-        Insert: {
-          access_token?: string | null
-          expires_at?: string | null
-          id?: string
-          refresh_token?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          access_token?: string | null
-          expires_at?: string | null
-          id?: string
-          refresh_token?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       notes: {
         Row: {
           category: string | null
@@ -640,6 +547,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      audit_token_access: {
+        Args: { access_type: string; connection_id: string }
+        Returns: undefined
+      }
       cleanup_expired_auth_states: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -648,13 +559,38 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_ctrader_tokens: {
+        Args: { connection_id: string }
+        Returns: Json
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_encrypted_token: {
+        Args: { secret_id: string }
+        Returns: string
+      }
+      migrate_tokens_to_vault: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       sanitize_text_input: {
         Args: { input_text: string; max_length?: number }
         Returns: string
+      }
+      store_encrypted_token: {
+        Args: { token_name?: string; token_value: string }
+        Returns: string
+      }
+      update_ctrader_tokens: {
+        Args: {
+          connection_id: string
+          new_access_token: string
+          new_expires_at: string
+          new_refresh_token: string
+        }
+        Returns: boolean
       }
       validate_numeric_input: {
         Args: { input_value: number; max_val?: number; min_val?: number }
