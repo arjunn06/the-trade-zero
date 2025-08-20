@@ -213,3 +213,44 @@ All colors MUST be HSL.
     @apply transition-all duration-200 hover:bg-accent/80 hover:scale-105 active:scale-95;
   }
 }
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  /* Improve touch targets */
+  button, 
+  [role="button"],
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better spacing on mobile */
+  .space-y-6 > * + * {
+    margin-top: 1rem !important;
+  }
+  
+  /* Ensure text is readable on mobile */
+  body {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Improve form inputs on mobile */
+  input, 
+  textarea, 
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Card improvements for mobile */
+  .card {
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Table scrolling on mobile */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}

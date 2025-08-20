@@ -559,7 +559,7 @@ const Dashboard = () => {
         {/* ANALYTICS SECTION - TOP PRIORITY */}
         <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
           {/* Primary KPI Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
               title="Current Balance"
               value={formatCurrency(stats.currentBalance)}
@@ -607,7 +607,7 @@ const Dashboard = () => {
           </div>
 
           {/* Advanced Analytics Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
               title="Profit Factor"
               value={stats.profitFactor > 0 ? stats.profitFactor.toFixed(2) : '0.00'}

@@ -439,7 +439,7 @@ export default function CalendarPage() {
           </CardHeader>
           <CardContent>
             {periodMetrics ? (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <DollarSign className="h-4 w-4 text-muted-foreground" />

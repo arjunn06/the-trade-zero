@@ -640,7 +640,7 @@ const Trades = () => {
           <>
             {/* Grid View */}
             {viewMode === 'grid' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredAndSortedTrades.map((trade, index) => (
                   <Card 
                     key={trade.id} 
@@ -728,8 +728,9 @@ const Trades = () => {
                   }
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Table>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Symbol</TableHead>
@@ -855,6 +856,7 @@ const Trades = () => {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
             )}

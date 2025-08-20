@@ -807,7 +807,7 @@ const NewTrade = () => {
             {/* 1. ACCOUNT & BASIC SETUP */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold border-b pb-2">Account & Basic Setup</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="trading_account" className="flex items-center gap-1 text-sm font-medium">
                     Trading Account <span className="text-destructive">*</span>
@@ -906,7 +906,7 @@ const NewTrade = () => {
             {/* 2. POSITION & ENTRY DETAILS */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold border-b pb-2">Position & Entry Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="entry_price" className="flex items-center gap-1 text-sm font-medium">
                     Entry Price <span className="text-destructive">*</span>
@@ -1032,7 +1032,7 @@ const NewTrade = () => {
             {/* 3. RISK MANAGEMENT */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold border-b pb-2">Risk Management</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="stop_loss" className="text-sm font-medium">Stop Loss</Label>
                   <Input
@@ -1121,7 +1121,7 @@ const NewTrade = () => {
             {showAdvancedFields && (
               <div className="border rounded-lg p-6 bg-muted/30">
                 <h3 className="text-lg font-medium mb-4">Advanced Trade Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="order_type">Order Type</Label>
                     <Select value={formData.order_type} onValueChange={(value) => setFormData({ ...formData, order_type: value })}>
@@ -1241,7 +1241,7 @@ const NewTrade = () => {
             {/* Exit Details */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold border-b pb-2">Exit Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1 text-sm font-medium">
                     Exit Date {isClosedTrade && <span className="text-destructive">*</span>}
@@ -1462,7 +1462,7 @@ const NewTrade = () => {
                       Select the confluence factors that apply to this trade setup
                     </p>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {confluenceItems.reduce((acc, item) => {
                       const category = item.category || 'General';
                       if (!acc[category]) acc[category] = [];
@@ -1603,7 +1603,7 @@ const NewTrade = () => {
                       <p className="text-sm text-muted-foreground mb-3">
                         {screenshots.length} file{screenshots.length > 1 ? 's' : ''} selected
                       </p>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         {screenshots.map((file, index) => (
                           <div key={index} className="relative group">
                             <div className="aspect-square bg-muted rounded-lg overflow-hidden border">

@@ -172,7 +172,7 @@ export function QuickTradeWidget() {
         </CardHeader>
         <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="account">Account</Label>
               <Select 
@@ -204,7 +204,7 @@ export function QuickTradeWidget() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="direction">Direction</Label>
               <Select 
@@ -244,7 +244,7 @@ export function QuickTradeWidget() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="entry_price">Entry Price</Label>
               <Input
@@ -285,7 +285,7 @@ export function QuickTradeWidget() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="exit_price">Exit Price (Optional)</Label>
               <Input
@@ -312,7 +312,7 @@ export function QuickTradeWidget() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="stop_loss">Stop Loss (Optional)</Label>
               <Input
