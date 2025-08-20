@@ -697,11 +697,6 @@ const TradingAccounts = () => {
                           {account.broker}
                         </Badge>
                       )}
-                      {account.account_type === 'prop firm' && (
-                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                          Prop Firm
-                        </Badge>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <div className="flex justify-between">
