@@ -9,11 +9,14 @@ const supabase = createClient(
 interface ZohoWebhookRequest {
   action: string
   user_email?: string
+  session_id?: string
+  selected_account_id?: string
   trade_data?: {
     symbol: string
     trade_type: 'buy' | 'sell'
     entry_price: number
     quantity: number
+    trading_account_id?: string
     trading_account_name?: string
     strategy_name?: string
     stop_loss?: number
@@ -23,6 +26,15 @@ interface ZohoWebhookRequest {
     emotions?: string
   }
   query?: string
+  trade_id?: string
+  update_data?: {
+    exit_price?: number
+    exit_date?: string
+    status?: 'open' | 'closed'
+    notes?: string
+    emotions?: string
+    pnl?: number
+  }
 }
 
 Deno.serve(async (req) => {
@@ -42,14 +54,17 @@ Deno.serve(async (req) => {
     const payload: ZohoWebhookRequest = await req.json()
     console.log('Received Zoho webhook payload:', JSON.stringify(payload, null, 2))
 
-    const { action, user_email, trade_data, query } = payload
+    const { action, user_email, trade_data, query, session_id, selected_account_id, trade_id, update_data } = payload
 
     switch (action) {
       case 'create_trade':
-        return await handleCreateTrade(user_email, trade_data)
+        return await handleCreateTrade(user_email, trade_data, selected_account_id)
       
       case 'get_trading_accounts':
-        return await handleGetTradingAccounts(user_email)
+        return await handleGetTradingAccounts(user_email, true) // true for dynamic buttons format
+      
+      case 'select_account':
+        return await handleSelectAccount(user_email, selected_account_id, session_id)
       
       case 'get_strategies':
         return await handleGetStrategies(user_email)
@@ -60,11 +75,27 @@ Deno.serve(async (req) => {
       case 'search_trades':
         return await handleSearchTrades(user_email, query)
       
+      case 'update_trade':
+        return await handleUpdateTrade(user_email, trade_id, update_data)
+      
+      case 'close_trade':
+        return await handleCloseTrade(user_email, trade_id, update_data)
+      
+      case 'get_account_summary':
+        return await handleGetAccountSummary(user_email, selected_account_id)
+      
+      case 'get_quick_templates':
+        return await handleGetQuickTemplates(user_email)
+      
       default:
         return new Response(
           JSON.stringify({ 
             error: 'Unknown action',
-            available_actions: ['create_trade', 'get_trading_accounts', 'get_strategies', 'get_recent_trades', 'search_trades']
+            available_actions: [
+              'create_trade', 'get_trading_accounts', 'select_account', 'get_strategies', 
+              'get_recent_trades', 'search_trades', 'update_trade', 'close_trade',
+              'get_account_summary', 'get_quick_templates'
+            ]
           }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
@@ -98,7 +129,7 @@ async function getUserByEmail(email: string) {
   return profile.user_id
 }
 
-async function handleCreateTrade(user_email?: string, trade_data?: ZohoWebhookRequest['trade_data']) {
+async function handleCreateTrade(user_email?: string, trade_data?: ZohoWebhookRequest['trade_data'], selected_account_id?: string) {
   try {
     if (!user_email || !trade_data) {
       return new Response(
@@ -123,9 +154,14 @@ async function handleCreateTrade(user_email?: string, trade_data?: ZohoWebhookRe
       )
     }
 
-    // Get or create trading account
-    let trading_account_id = null
-    if (trade_data.trading_account_name) {
+    // Use selected account if provided (from session)
+    let trading_account_id = selected_account_id
+    
+    if (!trading_account_id && trade_data.trading_account_id) {
+      trading_account_id = trade_data.trading_account_id
+    }
+    
+    if (!trading_account_id && trade_data.trading_account_name) {
       const { data: account } = await supabase
         .from('trading_accounts')
         .select('id')
@@ -227,7 +263,7 @@ async function handleCreateTrade(user_email?: string, trade_data?: ZohoWebhookRe
   }
 }
 
-async function handleGetTradingAccounts(user_email?: string) {
+async function handleGetTradingAccounts(user_email?: string, forGC = false) {
   try {
     if (!user_email) {
       return new Response(
@@ -249,6 +285,26 @@ async function handleGetTradingAccounts(user_email?: string) {
 
     if (error) {
       throw error
+    }
+
+    // Format response for Zoho GC dynamic buttons if requested
+    if (forGC && accounts && accounts.length > 0) {
+      const gcButtons = accounts.map(account => ({
+        text: `${account.name} - ${account.broker} (${account.currency}${account.current_balance})`,
+        value: account.id,
+        action: 'select_account'
+      }))
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          accounts: accounts,
+          gc_buttons: gcButtons,
+          chatbot_message: 'Please select which trading account you want to use for journaling:',
+          next_action: 'account_selection'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     return new Response(
@@ -450,3 +506,427 @@ async function handleSearchTrades(user_email?: string, query?: string) {
     )
   }
 }
+
+// New enhanced handlers for interactive trade journaling
+
+async function handleSelectAccount(user_email?: string, selected_account_id?: string, session_id?: string) {
+  try {
+    if (!user_email || !selected_account_id) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'user_email and selected_account_id are required',
+          chatbot_message: 'Please provide your email and select an account to continue.'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const userId = await getUserByEmail(user_email)
+
+    // Verify the account belongs to the user
+    const { data: account, error } = await supabase
+      .from('trading_accounts')
+      .select('id, name, broker, current_balance, currency')
+      .eq('user_id', userId)
+      .eq('id', selected_account_id)
+      .eq('is_active', true)
+      .single()
+
+    if (error || !account) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Account not found or access denied',
+          chatbot_message: 'The selected account was not found or you don\'t have access to it.'
+        }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        selected_account: account,
+        session_id: session_id,
+        chatbot_message: `Perfect! You've selected "${account.name}" (${account.broker}) with ${account.currency}${account.current_balance}. Now you can start journaling your trades. What would you like to do? You can: 📝 Create a new trade, 📊 View recent trades, or 🔍 Search your trade history.`,
+        quick_actions: [
+          { text: '📝 Create New Trade', action: 'create_trade_wizard' },
+          { text: '📊 Recent Trades', action: 'get_recent_trades' },
+          { text: '🔍 Search Trades', action: 'search_trades_prompt' },
+          { text: '📈 Account Summary', action: 'get_account_summary' }
+        ]
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error in handleSelectAccount:', error)
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        chatbot_message: 'I encountered an issue while selecting your account. Please try again.'
+      }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+}
+
+async function handleUpdateTrade(user_email?: string, trade_id?: string, update_data?: ZohoWebhookRequest['update_data']) {
+  try {
+    if (!user_email || !trade_id || !update_data) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'user_email, trade_id, and update_data are required',
+          chatbot_message: 'I need your email, trade ID, and update information to modify the trade.'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const userId = await getUserByEmail(user_email)
+
+    // Verify the trade belongs to the user
+    const { data: existingTrade, error: fetchError } = await supabase
+      .from('trades')
+      .select('id, symbol, trade_type, status')
+      .eq('user_id', userId)
+      .eq('id', trade_id)
+      .single()
+
+    if (fetchError || !existingTrade) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Trade not found or access denied',
+          chatbot_message: 'The trade you\'re trying to update was not found or you don\'t have access to it.'
+        }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Update the trade
+    const { data: updatedTrade, error: updateError } = await supabase
+      .from('trades')
+      .update({
+        ...update_data,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', trade_id)
+      .eq('user_id', userId)
+      .select()
+      .single()
+
+    if (updateError) {
+      console.error('Trade update error:', updateError)
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to update trade', 
+          details: updateError.message,
+          chatbot_message: 'Sorry, I encountered an error while updating your trade. Please try again.'
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        trade: updatedTrade,
+        chatbot_message: `✅ Successfully updated your ${existingTrade.symbol} ${existingTrade.trade_type} trade. The changes have been saved to your journal.`
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error in handleUpdateTrade:', error)
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        chatbot_message: 'I encountered an issue while updating your trade. Please check the trade ID and try again.'
+      }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+}
+
+async function handleCloseTrade(user_email?: string, trade_id?: string, update_data?: ZohoWebhookRequest['update_data']) {
+  try {
+    if (!user_email || !trade_id) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'user_email and trade_id are required',
+          chatbot_message: 'I need your email and trade ID to close the trade.'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const userId = await getUserByEmail(user_email)
+
+    // Get the existing trade
+    const { data: existingTrade, error: fetchError } = await supabase
+      .from('trades')
+      .select('id, symbol, trade_type, entry_price, quantity, status')
+      .eq('user_id', userId)
+      .eq('id', trade_id)
+      .single()
+
+    if (fetchError || !existingTrade) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Trade not found or access denied',
+          chatbot_message: 'The trade you\'re trying to close was not found or you don\'t have access to it.'
+        }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (existingTrade.status === 'closed') {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Trade already closed',
+          chatbot_message: `This ${existingTrade.symbol} trade is already closed.`
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Calculate PnL if exit_price is provided
+    let calculatedPnl = null
+    if (update_data?.exit_price && existingTrade.entry_price && existingTrade.quantity) {
+      const priceDiff = existingTrade.trade_type === 'buy' 
+        ? update_data.exit_price - existingTrade.entry_price
+        : existingTrade.entry_price - update_data.exit_price
+      calculatedPnl = priceDiff * existingTrade.quantity
+    }
+
+    // Close the trade
+    const { data: closedTrade, error: updateError } = await supabase
+      .from('trades')
+      .update({
+        status: 'closed',
+        exit_price: update_data?.exit_price || null,
+        exit_date: update_data?.exit_date || new Date().toISOString(),
+        pnl: update_data?.pnl || calculatedPnl,
+        notes: update_data?.notes || existingTrade.notes,
+        emotions: update_data?.emotions || null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', trade_id)
+      .eq('user_id', userId)
+      .select()
+      .single()
+
+    if (updateError) {
+      console.error('Trade close error:', updateError)
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to close trade', 
+          details: updateError.message,
+          chatbot_message: 'Sorry, I encountered an error while closing your trade. Please try again.'
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const pnlText = closedTrade.pnl 
+      ? closedTrade.pnl > 0 
+        ? `🟢 Profit: +$${Math.abs(closedTrade.pnl).toFixed(2)}`
+        : `🔴 Loss: -$${Math.abs(closedTrade.pnl).toFixed(2)}`
+      : ''
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        trade: closedTrade,
+        chatbot_message: `🏁 Successfully closed your ${existingTrade.symbol} ${existingTrade.trade_type} trade at ${closedTrade.exit_price || 'market price'}. ${pnlText} The trade has been updated in your journal.`
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error in handleCloseTrade:', error)
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        chatbot_message: 'I encountered an issue while closing your trade. Please check the trade ID and try again.'
+      }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+}
+
+async function handleGetAccountSummary(user_email?: string, selected_account_id?: string) {
+  try {
+    if (!user_email) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'user_email is required',
+          chatbot_message: 'I need your email to get your account summary.'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const userId = await getUserByEmail(user_email)
+
+    // Get account info
+    let accountFilter = supabase
+      .from('trading_accounts')
+      .select('id, name, broker, current_balance, current_equity, currency, initial_balance')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+
+    if (selected_account_id) {
+      accountFilter = accountFilter.eq('id', selected_account_id)
+    }
+
+    const { data: accounts, error: accountError } = await accountFilter
+
+    if (accountError || !accounts || accounts.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'No accounts found',
+          chatbot_message: 'No trading accounts found. Please create an account first.'
+        }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const account = accounts[0]
+
+    // Get trade statistics for this account
+    const { data: trades, error: tradesError } = await supabase
+      .from('trades')
+      .select('pnl, status, trade_type, entry_date')
+      .eq('user_id', userId)
+      .eq('trading_account_id', account.id)
+
+    if (tradesError) {
+      console.error('Error fetching trades:', tradesError)
+    }
+
+    const tradeStats = trades || []
+    const totalTrades = tradeStats.length
+    const openTrades = tradeStats.filter(t => t.status === 'open').length
+    const closedTrades = tradeStats.filter(t => t.status === 'closed').length
+    const winningTrades = tradeStats.filter(t => t.status === 'closed' && (t.pnl || 0) > 0).length
+    const losingTrades = tradeStats.filter(t => t.status === 'closed' && (t.pnl || 0) < 0).length
+    const totalPnL = tradeStats.reduce((sum, t) => sum + (t.pnl || 0), 0)
+    const winRate = closedTrades > 0 ? ((winningTrades / closedTrades) * 100).toFixed(1) : '0'
+    const netROI = ((account.current_balance - account.initial_balance) / account.initial_balance * 100).toFixed(2)
+
+    const summary = `📊 **${account.name}** Summary (${account.broker})
+💰 Balance: ${account.currency}${account.current_balance} | Equity: ${account.currency}${account.current_equity}
+📈 Net ROI: ${netROI}% | Total P&L: ${totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}
+📝 Trades: ${totalTrades} total (${openTrades} open, ${closedTrades} closed)
+🎯 Win Rate: ${winRate}% (${winningTrades}W / ${losingTrades}L)`
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        account_summary: {
+          account,
+          stats: {
+            total_trades: totalTrades,
+            open_trades: openTrades,
+            closed_trades: closedTrades,
+            winning_trades: winningTrades,
+            losing_trades: losingTrades,
+            win_rate: parseFloat(winRate),
+            total_pnl: totalPnL,
+            net_roi: parseFloat(netROI)
+          }
+        },
+        chatbot_message: summary
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error in handleGetAccountSummary:', error)
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        chatbot_message: 'I couldn\'t generate your account summary. Please try again.'
+      }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+}
+
+async function handleGetQuickTemplates(user_email?: string) {
+  try {
+    if (!user_email) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'user_email is required',
+          chatbot_message: 'I need your email to get your quick trade templates.'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const userId = await getUserByEmail(user_email)
+
+    // Get user's most traded symbols and strategies
+    const { data: popularSymbols, error: symbolsError } = await supabase
+      .from('trades')
+      .select('symbol')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    const { data: strategies, error: strategiesError } = await supabase
+      .from('strategies')
+      .select('name, risk_per_trade')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .limit(5)
+
+    if (symbolsError || strategiesError) {
+      console.error('Error fetching templates data:', symbolsError || strategiesError)
+    }
+
+    // Count symbol frequency
+    const symbolCounts: Record<string, number> = {}
+    popularSymbols?.forEach(trade => {
+      symbolCounts[trade.symbol] = (symbolCounts[trade.symbol] || 0) + 1
+    })
+
+    const topSymbols = Object.entries(symbolCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([symbol]) => symbol)
+
+    const templates = {
+      popular_symbols: topSymbols,
+      strategies: strategies || [],
+      quick_actions: [
+        { text: '🚀 Scalp Trade', symbol: 'EURUSD', quantity: 10000, notes: 'Quick scalp opportunity' },
+        { text: '📈 Swing Position', symbol: 'GBPUSD', quantity: 50000, notes: 'Medium-term swing trade' },
+        { text: '⚡ Breakout Trade', symbol: 'USDJPY', quantity: 25000, notes: 'Breakout above resistance' }
+      ]
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        templates,
+        chatbot_message: `Here are your quick trade templates based on your trading history:
+📊 Most traded: ${topSymbols.slice(0, 3).join(', ')}
+🎯 Active strategies: ${strategies?.map(s => s.name).join(', ') || 'None set up yet'}
+
+Use these templates to quickly create trades with your preferred settings!`
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error in handleGetQuickTemplates:', error)
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        chatbot_message: 'I couldn\'t fetch your quick templates. Please try again.'
+      }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
