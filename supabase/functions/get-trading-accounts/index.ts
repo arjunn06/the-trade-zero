@@ -100,9 +100,7 @@ serve(async (req) => {
   
   const accountsResponse = {
     account: account_numbered,       // e.g. { "account 1": "Name" }
-    account_list,                    // e.g. { account_1_name: "Name" }
-    account_array,                   // e.g. [ { name: "Name" } ]
-    ...account_list_flat             // e.g. { "account_list.account_1_name": "Name" }
+
   };
 
   return new Response(
