@@ -29,7 +29,7 @@ serve(async (req) => {
       console.error('No OpenAI API key provided');
       return new Response(
         JSON.stringify({ error: 'OpenAI API key not provided' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
@@ -118,7 +118,7 @@ CRITICAL: Only include fields that are clearly visible. Use exact numerical valu
       
       return new Response(
         JSON.stringify({ error: errorMessage }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
@@ -146,7 +146,7 @@ CRITICAL: Only include fields that are clearly visible. Use exact numerical valu
           error: 'Failed to extract structured trade data from image',
           rawResponse: content 
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
@@ -200,7 +200,7 @@ CRITICAL: Only include fields that are clearly visible. Use exact numerical valu
     console.error('Error in analyze-screenshot function:', error);
     return new Response(
       JSON.stringify({ error: 'Failed to analyze screenshot', details: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   }
 });
