@@ -6,6 +6,8 @@ import { MobileHeader } from '@/components/MobileHeader';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+import { userPreferences } from '@/utils/secureStorage';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -25,8 +27,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       }
 
       try {
-        // First check localStorage for immediate response
-        const localStorageCompleted = localStorage.getItem('welcome-completed') === 'true';
+        // First check secure storage for immediate response
+        const localStorageCompleted = await userPreferences.getOnboardingComplete();
         
         const { data: profile, error } = await supabase
           .from('profiles')
@@ -35,8 +37,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
           .single();
 
         if (error) {
-          console.error('Error fetching profile:', error);
-          // If no profile exists but localStorage says completed, trust it
+          logger.apiError('ProtectedRoute - fetching profile', error);
+          // If no profile exists but secure storage says completed, trust it
           setHasCompletedOnboarding(localStorageCompleted);
         } else {
           const dbCompleted = profile?.has_completed_onboarding || false;
@@ -52,9 +54,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
           }
         }
       } catch (error) {
-        console.error('Error checking onboarding status:', error);
-        // Fallback to localStorage
-        setHasCompletedOnboarding(localStorage.getItem('welcome-completed') === 'true');
+        logger.apiError('ProtectedRoute - checking onboarding status', error);
+        // Fallback to secure storage
+        const fallbackCompleted = await userPreferences.getOnboardingComplete();
+        setHasCompletedOnboarding(fallbackCompleted);
       } finally {
         setCheckingOnboarding(false);
       }

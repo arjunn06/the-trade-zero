@@ -12,6 +12,7 @@ import { Copy, Edit3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
 
 interface Trade {
   id: string;
@@ -181,7 +182,7 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
       if (error) throw error;
       setTradingAccounts(data || []);
     } catch (error) {
-      console.error('Error fetching trading accounts:', error);
+      logger.apiError('CopyTradeDialog - fetching trading accounts', error);
     }
   };
 
@@ -197,7 +198,7 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
       if (error) throw error;
       setStrategies(data || []);
     } catch (error) {
-      console.error('Error fetching strategies:', error);
+      logger.apiError('CopyTradeDialog - fetching strategies', error);
     }
   };
 
@@ -252,7 +253,7 @@ export function CopyTradeDialog({ open, onOpenChange, trade, onCopySuccess }: Co
       onCopySuccess();
       onOpenChange(false);
     } catch (error) {
-      console.error('Error copying trade:', error);
+      logger.apiError('CopyTradeDialog - copying trade', error);
       toast({
         title: "Error",
         description: "Failed to copy trade",

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { userPreferences } from '@/utils/secureStorage';
+import { logger } from '@/lib/logger';
 
 const Welcome = () => {
   const navigate = useNavigate();
@@ -13,8 +15,8 @@ const Welcome = () => {
     if (!user) return;
 
     try {
-      // Set localStorage immediately to prevent loops
-      localStorage.setItem('welcome-completed', 'true');
+      // Set secure storage immediately to prevent loops
+      await userPreferences.setOnboardingComplete();
       
       // Mark onboarding as completed in database
       const { error } = await supabase
@@ -23,7 +25,7 @@ const Welcome = () => {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error updating onboarding status:', error);
+        logger.apiError('Welcome - updating onboarding status', error);
         toast({
           title: "Error",
           description: "Failed to save onboarding progress. Please try again.",
@@ -34,7 +36,7 @@ const Welcome = () => {
 
       navigate('/dashboard');
     } catch (error) {
-      console.error('Error completing onboarding:', error);
+      logger.apiError('Welcome - completing onboarding', error);
       toast({
         title: "Error", 
         description: "Something went wrong. Please try again.",

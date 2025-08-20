@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 
 interface AccountTransactionDialogProps {
@@ -88,7 +89,7 @@ export const AccountTransactionDialog = ({
       onOpenChange(false);
       resetForm();
     } catch (error) {
-      console.error('Error recording transaction:', error);
+      logger.apiError('AccountTransactionDialog - recording transaction', error);
       toast({
         title: "Error",
         description: "Failed to record transaction",

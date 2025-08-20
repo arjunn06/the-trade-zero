@@ -6,6 +6,7 @@ import { Trash2, TrendingUp, TrendingDown, History } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
 import { format } from 'date-fns';
 
 interface Transaction {
@@ -60,7 +61,7 @@ export const AccountTransactionHistory = ({
       if (error) throw error;
       setTransactions((data || []) as Transaction[]);
     } catch (error) {
-      console.error('Error fetching transactions:', error);
+      logger.apiError('AccountTransactionHistory - fetching transactions', error);
       toast({
         title: "Error",
         description: "Failed to fetch transaction history",
@@ -105,7 +106,7 @@ export const AccountTransactionHistory = ({
       fetchTransactions();
       onTransactionDeleted();
     } catch (error) {
-      console.error('Error deleting transaction:', error);
+      logger.apiError('AccountTransactionHistory - deleting transaction', error);
       toast({
         title: "Error",
         description: "Failed to delete transaction",

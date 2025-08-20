@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
+import { userPreferences } from '@/utils/secureStorage';
 import { TrendingUp, TrendingDown, DollarSign, Target, Calendar, Plus, Activity, BarChart3, Star, PieChart, Clock, Shield, TrendingDown as LossIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -43,7 +45,7 @@ const AccountGoalsSection = ({ accounts, user, formatCurrency }: AccountGoalsSec
         });
         setAccountEquities(equities);
       } catch (error) {
-        console.error('Error fetching account equities:', error);
+        logger.apiError('Dashboard - fetching account equities', error);
       }
     };
 
@@ -216,7 +218,7 @@ const Dashboard = () => {
 
       // Set primary account on first login if not already set
       if (allAccounts.length > 0 && selectedAccountIds.includes('all') && !primaryAccountId) {
-        const savedPrimaryId = localStorage.getItem('primaryAccountId');
+        const savedPrimaryId = await userPreferences.getPrimaryAccount();
         if (savedPrimaryId && allAccounts.find(acc => acc.id === savedPrimaryId)) {
           setPrimaryAccountId(savedPrimaryId);
           setSelectedAccountIds([savedPrimaryId]);
@@ -441,24 +443,21 @@ const Dashboard = () => {
       
       setEquityData(equityCurve);
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      logger.apiError('Dashboard - fetching dashboard data', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStarAccount = (accountId: string, event?: React.MouseEvent) => {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
+  const togglePrimaryAccount = async (accountId: string) => {
     const newPrimaryId = primaryAccountId === accountId ? null : accountId;
     setPrimaryAccountId(newPrimaryId);
     if (newPrimaryId) {
-      localStorage.setItem('primaryAccountId', newPrimaryId);
+      await userPreferences.setPrimaryAccount(newPrimaryId);
       setSelectedAccountIds([newPrimaryId]);
     } else {
-      localStorage.removeItem('primaryAccountId');
+      // Clear primary account preference - this could be improved with a dedicated method
+      await userPreferences.setPrimaryAccount('');
     }
   };
 

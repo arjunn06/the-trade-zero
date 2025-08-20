@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { userPreferences } from '@/utils/secureStorage'
 
 type Theme = 'dark' | 'light' | 'system'
 
@@ -26,9 +27,20 @@ export function ThemeProvider({
   storageKey = 'trade-zero-theme',
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  )
+  const [theme, setTheme] = useState<Theme>(defaultTheme)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  // Load theme from secure storage on mount
+  useEffect(() => {
+    const loadTheme = async () => {
+      const savedTheme = await userPreferences.getTheme();
+      if (savedTheme) {
+        setTheme(savedTheme as Theme);
+      }
+      setIsLoaded(true);
+    };
+    loadTheme();
+  }, []);
 
   useEffect(() => {
     const root = window.document.documentElement
@@ -51,8 +63,8 @@ export function ThemeProvider({
   const value = {
     theme,
     setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme)
-      setTheme(theme)
+      userPreferences.setTheme(theme);
+      setTheme(theme);
     },
   }
 
