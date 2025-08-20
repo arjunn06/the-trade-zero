@@ -497,46 +497,82 @@ export type Database = {
       trading_accounts: {
         Row: {
           account_type: string
+          breach_date: string | null
+          breach_reason: string | null
           broker: string | null
           created_at: string
           currency: string
           current_balance: number
+          current_drawdown: number | null
           current_equity: number
+          daily_loss_limit: number | null
           equity_goal: number | null
           id: string
           initial_balance: number
           is_active: boolean
+          is_prop_firm: boolean | null
+          max_drawdown_reached: boolean | null
+          max_loss_limit: number | null
+          minimum_trading_days: number | null
           name: string
+          profit_target: number | null
+          start_date: string | null
+          target_completion_date: string | null
+          trading_days_completed: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
           account_type: string
+          breach_date?: string | null
+          breach_reason?: string | null
           broker?: string | null
           created_at?: string
           currency?: string
           current_balance?: number
+          current_drawdown?: number | null
           current_equity?: number
+          daily_loss_limit?: number | null
           equity_goal?: number | null
           id?: string
           initial_balance?: number
           is_active?: boolean
+          is_prop_firm?: boolean | null
+          max_drawdown_reached?: boolean | null
+          max_loss_limit?: number | null
+          minimum_trading_days?: number | null
           name: string
+          profit_target?: number | null
+          start_date?: string | null
+          target_completion_date?: string | null
+          trading_days_completed?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
           account_type?: string
+          breach_date?: string | null
+          breach_reason?: string | null
           broker?: string | null
           created_at?: string
           currency?: string
           current_balance?: number
+          current_drawdown?: number | null
           current_equity?: number
+          daily_loss_limit?: number | null
           equity_goal?: number | null
           id?: string
           initial_balance?: number
           is_active?: boolean
+          is_prop_firm?: boolean | null
+          max_drawdown_reached?: boolean | null
+          max_loss_limit?: number | null
+          minimum_trading_days?: number | null
           name?: string
+          profit_target?: number | null
+          start_date?: string | null
+          target_completion_date?: string | null
+          trading_days_completed?: number | null
           updated_at?: string
           user_id?: string
         }

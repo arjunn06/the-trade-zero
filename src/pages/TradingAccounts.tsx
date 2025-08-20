@@ -17,6 +17,8 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useUndoToast } from '@/components/UndoToast';
 import { AccountTransactionDialog } from '@/components/AccountTransactionDialog';
 import { AccountTransactionHistory } from '@/components/AccountTransactionHistory';
+import { PropFirmProgress } from '@/components/PropFirmProgress';
+import { DrawdownMonitor } from '@/components/DrawdownMonitor';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +32,12 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { format, addDays } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface TradingAccount {
   id: string;
@@ -43,6 +51,18 @@ interface TradingAccount {
   is_active: boolean;
   created_at: string;
   equity_goal?: number;
+  is_prop_firm: boolean;
+  profit_target?: number;
+  max_loss_limit?: number;
+  daily_loss_limit?: number;
+  minimum_trading_days?: number;
+  current_drawdown: number;
+  max_drawdown_reached: boolean;
+  breach_reason?: string;
+  breach_date?: string;
+  trading_days_completed: number;
+  start_date?: string;
+  target_completion_date?: string;
 }
 
 const TradingAccounts = () => {
@@ -68,6 +88,12 @@ const TradingAccounts = () => {
     initial_balance: '',
     currency: 'USD',
     equity_goal: '',
+    is_prop_firm: false,
+    profit_target: '',
+    max_loss_limit: '',
+    daily_loss_limit: '',
+    minimum_trading_days: '',
+    start_date: new Date()
   });
 
   // Premium limits for basic users
@@ -163,6 +189,15 @@ const TradingAccounts = () => {
         current_equity: parseFloat(formData.initial_balance),
         currency: formData.currency,
         equity_goal: formData.equity_goal ? parseFloat(formData.equity_goal) : null,
+        is_prop_firm: formData.is_prop_firm,
+        profit_target: formData.profit_target ? parseFloat(formData.profit_target) : null,
+        max_loss_limit: formData.max_loss_limit ? parseFloat(formData.max_loss_limit) : null,
+        daily_loss_limit: formData.daily_loss_limit ? parseFloat(formData.daily_loss_limit) : null,
+        minimum_trading_days: formData.minimum_trading_days ? parseInt(formData.minimum_trading_days) : null,
+        start_date: formData.is_prop_firm ? formData.start_date.toISOString() : null,
+        target_completion_date: formData.is_prop_firm && formData.minimum_trading_days 
+          ? addDays(formData.start_date, parseInt(formData.minimum_trading_days)).toISOString() 
+          : null,
         user_id: user.id
       };
 
@@ -213,7 +248,13 @@ const TradingAccounts = () => {
       broker: account.broker || '',
       initial_balance: account.initial_balance.toString(),
       currency: account.currency,
-      equity_goal: (account as any).equity_goal?.toString() || ''
+      equity_goal: account.equity_goal?.toString() || '',
+      is_prop_firm: account.is_prop_firm || false,
+      profit_target: account.profit_target?.toString() || '',
+      max_loss_limit: account.max_loss_limit?.toString() || '',
+      daily_loss_limit: account.daily_loss_limit?.toString() || '',
+      minimum_trading_days: account.minimum_trading_days?.toString() || '',
+      start_date: account.start_date ? new Date(account.start_date) : new Date()
     });
     setDialogOpen(true);
   };
@@ -294,7 +335,13 @@ const TradingAccounts = () => {
       broker: '',
       initial_balance: '',
       currency: 'USD',
-      equity_goal: ''
+      equity_goal: '',
+      is_prop_firm: false,
+      profit_target: '',
+      max_loss_limit: '',
+      daily_loss_limit: '',
+      minimum_trading_days: '',
+      start_date: new Date()
     });
   };
 
@@ -433,20 +480,118 @@ const TradingAccounts = () => {
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="equity_goal">Profit Goal (Optional)</Label>
-                  <Input
-                    id="equity_goal"
-                    type="number"
-                    step="0.01"
-                    placeholder="Target profit goal"
-                    value={formData.equity_goal}
-                    onChange={(e) => setFormData({ ...formData, equity_goal: e.target.value })}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Set a target profit goal to track your progress
-                  </p>
-                 </div>
+                 <div>
+                   <Label htmlFor="equity_goal">Profit Goal (Optional)</Label>
+                   <Input
+                     id="equity_goal"
+                     type="number"
+                     step="0.01"
+                     placeholder="Target profit goal"
+                     value={formData.equity_goal}
+                     onChange={(e) => setFormData({ ...formData, equity_goal: e.target.value })}
+                   />
+                   <p className="text-xs text-muted-foreground mt-1">
+                     Set a target profit goal to track your progress
+                   </p>
+                  </div>
+
+                  {/* Prop Firm Configuration */}
+                  <div className="space-y-4 border border-border rounded-lg p-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="is_prop_firm"
+                        checked={formData.is_prop_firm}
+                        onCheckedChange={(checked) => setFormData({ ...formData, is_prop_firm: !!checked })}
+                      />
+                      <Label htmlFor="is_prop_firm" className="font-medium">
+                        This is a Prop Firm Account
+                      </Label>
+                    </div>
+                    
+                    {formData.is_prop_firm && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="profit_target">Profit Target</Label>
+                            <Input
+                              id="profit_target"
+                              type="number"
+                              step="0.01"
+                              placeholder="Required profit"
+                              value={formData.profit_target}
+                              onChange={(e) => setFormData({ ...formData, profit_target: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="max_loss_limit">Max Loss Limit</Label>
+                            <Input
+                              id="max_loss_limit"
+                              type="number"
+                              step="0.01"
+                              placeholder="Maximum allowed loss"
+                              value={formData.max_loss_limit}
+                              onChange={(e) => setFormData({ ...formData, max_loss_limit: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="daily_loss_limit">Daily Loss Limit</Label>
+                            <Input
+                              id="daily_loss_limit"
+                              type="number"
+                              step="0.01"
+                              placeholder="Maximum daily loss"
+                              value={formData.daily_loss_limit}
+                              onChange={(e) => setFormData({ ...formData, daily_loss_limit: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="minimum_trading_days">Minimum Trading Days</Label>
+                            <Input
+                              id="minimum_trading_days"
+                              type="number"
+                              placeholder="Required trading days"
+                              value={formData.minimum_trading_days}
+                              onChange={(e) => setFormData({ ...formData, minimum_trading_days: e.target.value })}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label>Challenge Start Date</Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !formData.start_date && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {formData.start_date ? (
+                                  format(formData.start_date, "PPP")
+                                ) : (
+                                  <span>Pick start date</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={formData.start_date}
+                                onSelect={(date) => date && setFormData({ ...formData, start_date: date })}
+                                initialFocus
+                                className={cn("p-3 pointer-events-auto")}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
                  {editingAccount && (
                    <div className="flex items-center justify-between p-4 border rounded-lg">
@@ -529,91 +674,119 @@ const TradingAccounts = () => {
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {accounts.map((account) => (
-             <Card key={account.id} className={!account.is_active ? 'opacity-60' : ''}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-lg font-medium">{account.name}</CardTitle>
-                  <div className="flex items-center space-x-2">
-                    {account.is_active && <Badge variant="default">Active</Badge>}
-                    {!isPremium && accounts.length >= BASIC_ACCOUNT_LIMIT && (
-                      <Badge variant="outline" className="text-xs">
-                        Limit Reached
-                      </Badge>
-                    )}
-                  </div>
-                </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Badge variant={account.account_type === 'live' ? 'default' : 'secondary'}>
-                    {account.account_type.toUpperCase()}
-                  </Badge>
-                  {account.broker && (
-                    <Badge variant="outline">
-                      {account.broker}
-                    </Badge>
-                  )}
-                </div>
-                 <div className="space-y-2">
-                   <div className="flex justify-between">
-                     <span className="text-sm text-muted-foreground">Initial Balance</span>
-                     <span className="font-medium">{formatCurrency(account.initial_balance, account.currency)}</span>
-                   </div>
-                   <div className="flex justify-between">
-                     <span className="text-sm text-muted-foreground">Current Equity</span>
-                     <span className="font-medium">{formatCurrency(accountEquities[account.id] || account.initial_balance, account.currency)}</span>
-                   </div>
-                   <div className="flex justify-between">
-                     <span className="text-sm text-muted-foreground">P&L</span>
-                     <span className={`font-medium ${(accountEquities[account.id] || account.initial_balance) - account.initial_balance >= 0 ? 'text-profit' : 'text-loss'}`}>
-                       {formatCurrency((accountEquities[account.id] || account.initial_balance) - account.initial_balance, account.currency)}
-                     </span>
-                   </div>
-                 </div>
-                  <div className="flex flex-col gap-2 pt-2 border-t">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => navigate(`/account-performance/${account.id}`)}
-                      size="sm"
-                      className="w-full"
-                    >
-                      Account Performance
-                    </Button>
-                    <div className="flex space-x-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => {
-                          setSelectedAccount(account);
-                          setTransactionDialogOpen(true);
-                        }}
-                        className="flex-1"
-                        title="Add Transaction"
-                      >
-                        <DollarSign className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => {
-                          setSelectedAccount(account);
-                          setHistoryDialogOpen(true);
-                        }}
-                        className="flex-1"
-                        title="Transaction History"
-                      >
-                        <History className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(account)} className="flex-1">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account)} className="flex-1">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+          {accounts.map((account) => {
+            const currentEquity = accountEquities[account.id] || account.initial_balance;
+            
+            return (
+              <div key={account.id} className="space-y-4">
+                <Card className={!account.is_active ? 'opacity-60' : ''}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-lg font-medium">{account.name}</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      {account.is_active && !account.max_drawdown_reached && <Badge variant="default">Active</Badge>}
+                      {account.max_drawdown_reached && <Badge variant="destructive">Breached</Badge>}
+                      {!isPremium && accounts.length >= BASIC_ACCOUNT_LIMIT && (
+                        <Badge variant="outline" className="text-xs">
+                          Limit Reached
+                        </Badge>
+                      )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-          ))}
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Badge variant={account.account_type === 'live' ? 'default' : 'secondary'}>
+                        {account.account_type.toUpperCase()}
+                      </Badge>
+                      {account.broker && (
+                        <Badge variant="outline">
+                          {account.broker}
+                        </Badge>
+                      )}
+                      {account.is_prop_firm && (
+                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                          Prop Firm
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Initial Balance</span>
+                        <span className="font-medium">{formatCurrency(account.initial_balance, account.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Current Equity</span>
+                        <span className="font-medium">{formatCurrency(currentEquity, account.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">P&L</span>
+                        <span className={`font-medium ${currentEquity - account.initial_balance >= 0 ? 'text-profit' : 'text-loss'}`}>
+                          {formatCurrency(currentEquity - account.initial_balance, account.currency)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2 pt-2 border-t">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => navigate(`/account-performance/${account.id}`)}
+                        size="sm"
+                        className="w-full"
+                      >
+                        Account Performance
+                      </Button>
+                      <div className="flex space-x-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            setSelectedAccount(account);
+                            setTransactionDialogOpen(true);
+                          }}
+                          className="flex-1"
+                          title="Add Transaction"
+                        >
+                          <DollarSign className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            setSelectedAccount(account);
+                            setHistoryDialogOpen(true);
+                          }}
+                          className="flex-1"
+                          title="Transaction History"
+                        >
+                          <History className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(account)} className="flex-1">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account)} className="flex-1">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Prop Firm Progress Component */}
+                {account.is_prop_firm && (
+                  <PropFirmProgress
+                    account={account}
+                    currentEquity={currentEquity}
+                  />
+                )}
+                
+                {/* Drawdown Monitor Hook */}
+                {account.is_prop_firm && (
+                  <DrawdownMonitor 
+                    account={account}
+                    currentEquity={currentEquity}
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
