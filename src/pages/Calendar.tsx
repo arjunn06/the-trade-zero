@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { LoadingCard } from '@/components/ui/loading-spinner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subWeeks, subMonths, isWithinInterval } from 'date-fns';
@@ -268,6 +269,36 @@ export default function CalendarPage() {
       currency: 'USD'
     }).format(amount);
   };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          {/* Header Skeleton */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-2">
+              <div className="h-8 bg-muted rounded w-40 animate-pulse"></div>
+              <div className="h-4 bg-muted rounded w-64 animate-pulse"></div>
+            </div>
+            <div className="h-10 bg-muted rounded w-48 animate-pulse"></div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Calendar Skeleton */}
+            <div className="lg:col-span-2">
+              <LoadingCard className="h-96" />
+            </div>
+            
+            {/* Day Details Skeleton */}
+            <LoadingCard className="h-96" />
+          </div>
+          
+          {/* Period Metrics Skeleton */}
+          <LoadingCard className="h-64" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

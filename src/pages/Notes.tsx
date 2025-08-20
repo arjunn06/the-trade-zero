@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { LoadingCard } from '@/components/ui/loading-spinner';
 import {
   Dialog,
   DialogContent,
@@ -301,7 +302,27 @@ const Notes = () => {
   };
 
   if (loading) {
-    return <div>Loading notes...</div>;
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          {/* Header Skeleton */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="h-8 bg-muted rounded w-32 animate-pulse"></div>
+              <div className="h-4 bg-muted rounded w-48 animate-pulse"></div>
+            </div>
+            <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+          </div>
+          
+          {/* Notes Grid Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <LoadingCard key={i} className="h-48" />
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   return (

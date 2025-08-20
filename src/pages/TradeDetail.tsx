@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { LoadingCard } from '@/components/ui/loading-spinner';
 import {
   Dialog,
   DialogContent,
@@ -176,8 +177,33 @@ const TradeDetail = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-96">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <div className="space-y-6">
+          {/* Header Skeleton */}
+          <div className="flex items-center gap-4">
+            <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+            <div className="flex-1 space-y-2">
+              <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
+              <div className="flex gap-2">
+                <div className="h-6 bg-muted rounded w-16 animate-pulse"></div>
+                <div className="h-6 bg-muted rounded w-16 animate-pulse"></div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <div className="h-10 bg-muted rounded w-20 animate-pulse"></div>
+              <div className="h-10 bg-muted rounded w-24 animate-pulse"></div>
+            </div>
+          </div>
+          
+          {/* Trade Details Grid Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <LoadingCard key={i} className="h-48" />
+            ))}
+          </div>
+          
+          {/* Notes and Confluence Skeleton */}
+          <LoadingCard className="h-32" />
+          <LoadingCard className="h-64" />
         </div>
       </DashboardLayout>
     );

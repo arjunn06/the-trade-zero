@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { LoadingCard, LoadingTable } from '@/components/ui/loading-spinner';
 
 
 interface TradingAccount {
@@ -178,8 +179,31 @@ const AccountPerformance = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-96">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <div className="space-y-6">
+          {/* Header Skeleton */}
+          <div className="flex items-center gap-4">
+            <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+            <div className="flex-1 space-y-2">
+              <div className="h-8 bg-muted rounded w-64 animate-pulse"></div>
+              <div className="h-4 bg-muted rounded w-48 animate-pulse"></div>
+            </div>
+          </div>
+          
+          {/* Key Metrics Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <LoadingCard key={i} className="h-32" />
+            ))}
+          </div>
+          
+          {/* Performance Cards Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <LoadingCard className="h-64" />
+            <LoadingCard className="h-64" />
+          </div>
+          
+          {/* Recent Trades Skeleton */}
+          <LoadingCard className="h-96" />
         </div>
       </DashboardLayout>
     );

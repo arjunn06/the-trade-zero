@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Settings, CheckCircle, XCircle, Target, TrendingUp, AlertTriangle, ArrowRight, RotateCcw } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { LoadingCard, LoadingTable } from '@/components/ui/loading-spinner';
 
 interface ConfluenceItem {
   id: string;
@@ -295,6 +296,42 @@ export default function Confluence() {
   const confluenceProgress = totalWeight > 0 ? (checkedWeight / totalWeight) * 100 : 0;
   const checkedCount = currentSession.checkedItems.size;
   const totalCount = confluenceItems.length;
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          {/* Header Skeleton */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="h-8 bg-muted rounded w-56 animate-pulse"></div>
+              <div className="h-4 bg-muted rounded w-80 animate-pulse"></div>
+            </div>
+            <div className="flex gap-2">
+              <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+              <div className="h-10 bg-muted rounded w-24 animate-pulse"></div>
+            </div>
+          </div>
+          
+          {/* Trade Setup Skeleton */}
+          <LoadingCard className="h-48" />
+          
+          {/* Confluence Score Skeleton */}
+          <LoadingCard className="h-40" />
+          
+          {/* Checklist Items Skeleton */}
+          <div className="grid gap-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <LoadingCard key={i} className="h-64" />
+            ))}
+          </div>
+          
+          {/* Action Buttons Skeleton */}
+          <LoadingCard className="h-20" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

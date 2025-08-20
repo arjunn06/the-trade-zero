@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { LoadingTable, LoadingCard } from '@/components/ui/loading-spinner';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumFeature } from '@/components/PremiumFeature';
 import { CsvImportSection } from '@/components/CsvImportSection';
@@ -369,7 +370,30 @@ const TradingAccounts = () => {
   };
 
   if (loading) {
-    return <div>Loading accounts...</div>;
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          {/* Header Skeleton */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
+              <div className="h-4 bg-muted rounded w-72 animate-pulse"></div>
+            </div>
+            <div className="h-10 bg-muted rounded w-40 animate-pulse"></div>
+          </div>
+          
+          {/* Accounts Table Skeleton */}
+          <Card>
+            <CardHeader>
+              <div className="h-6 bg-muted rounded w-40 animate-pulse"></div>
+            </CardHeader>
+            <CardContent>
+              <LoadingTable rows={5} cols={6} />
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   // Check if basic user has exceeded account limit
