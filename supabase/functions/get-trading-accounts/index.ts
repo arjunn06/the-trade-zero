@@ -17,31 +17,58 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  // Get the authorization header
+  // Try JWT auth; else fallback to email lookup for Zoho GC
+  let userId: string | null = null;
+
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return new Response(
-      JSON.stringify({ error: "Auth header is not 'Bearer {token}'" }), 
-      { status: 401, headers: corsHeaders }
-    );
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (!authError && user) {
+      userId = user.id;
+    }
   }
 
-  // Verify the JWT token
-  const token = authHeader.replace('Bearer ', '');
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-  
-  if (authError || !user) {
-    return new Response(
-      JSON.stringify({ error: "Invalid token" }), 
-      { status: 401, headers: corsHeaders }
-    );
+  if (!userId) {
+    // Fallback: accept user_email from query string or JSON body
+    const url = new URL(req.url);
+    const emailFromQuery = url.searchParams.get('user_email');
+    let email = emailFromQuery;
+    if (!email && req.headers.get('content-type')?.includes('application/json')) {
+      try {
+        const body = await req.json();
+        email = body?.user_email || body?.email;
+      } catch (_) {
+        // ignore
+      }
+    }
+    if (!email) {
+      return new Response(
+        JSON.stringify({ error: "Missing authentication: pass Authorization: Bearer <token> or include user_email in the request." }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    // Look up user_id by email in profiles
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('email', email)
+      .maybeSingle();
+    if (profileError || !profile?.user_id) {
+      return new Response(
+        JSON.stringify({ error: 'User not found for provided email' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    userId = profile.user_id;
   }
 
-  // Use the authenticated user's ID instead of query parameter
+  // Use the authenticated or resolved user's ID
   const { data, error } = await supabase
     .from("trading_accounts")
     .select("id, name")
-    .eq("user_id", user.id);
+    .eq("user_id", userId);
+
 
   if (error) {
     return new Response(
