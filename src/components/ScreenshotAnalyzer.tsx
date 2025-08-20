@@ -182,7 +182,7 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
                     Drop your trading screenshot here or click to browse
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Supports: MT4, MT5, cTrader, TradingView, and other platforms
+                    Supports: MT4, MT5, TradingView, and other platforms
                   </p>
                 </div>
               </div>

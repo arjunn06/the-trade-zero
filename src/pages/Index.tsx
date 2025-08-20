@@ -120,7 +120,7 @@ const Index = () => {
               <span className="ml-2 text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">Premium</span>
             </h3>
             <p className="text-muted-foreground">
-              Automatically extract trade details from screenshots using AI. Supports MT4, MT5, cTrader, and more.
+              Automatically extract trade details from screenshots using AI. Supports MT4, MT5, and more.
             </p>
           </div>
 

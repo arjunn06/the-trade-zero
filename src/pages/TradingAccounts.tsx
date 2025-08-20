@@ -12,7 +12,7 @@ import { LoadingTable, LoadingCard } from '@/components/ui/loading-spinner';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumFeature } from '@/components/PremiumFeature';
 import { CsvImportSection } from '@/components/CsvImportSection';
-import { CTraderIntegration } from '@/components/CTraderIntegration';
+
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useUndoToast } from '@/components/UndoToast';
 import { AccountTransactionDialog } from '@/components/AccountTransactionDialog';
@@ -68,7 +68,6 @@ const TradingAccounts = () => {
     initial_balance: '',
     currency: 'USD',
     equity_goal: '',
-    use_ctrader: false
   });
 
   // Premium limits for basic users
@@ -158,10 +157,10 @@ const TradingAccounts = () => {
       const accountData = {
         name: formData.name,
         account_type: formData.account_type,
-        broker: formData.use_ctrader ? 'cTrader' : formData.broker,
-        initial_balance: formData.use_ctrader ? 0 : parseFloat(formData.initial_balance),
-        current_balance: formData.use_ctrader ? 0 : parseFloat(formData.initial_balance),
-        current_equity: formData.use_ctrader ? 0 : parseFloat(formData.initial_balance),
+        broker: formData.broker,
+        initial_balance: parseFloat(formData.initial_balance),
+        current_balance: parseFloat(formData.initial_balance),
+        current_equity: parseFloat(formData.initial_balance),
         currency: formData.currency,
         equity_goal: formData.equity_goal ? parseFloat(formData.equity_goal) : null,
         user_id: user.id
@@ -189,74 +188,13 @@ const TradingAccounts = () => {
 
         if (error) throw error;
 
-        // If cTrader integration is enabled, initiate OAuth flow immediately
-        if (formData.use_ctrader && newAccount) {
-          try {
-            // Get current session for authentication
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session?.access_token) {
-              throw new Error('No valid authentication session found');
-            }
-
-            const { data: authData, error: authError } = await supabase.functions.invoke('ctrader-auth', {
-              body: {
-                tradingAccountId: newAccount.id,
-              },
-              headers: {
-                Authorization: `Bearer ${session.access_token}`,
-              },
-            });
-
-            if (authError) throw authError;
-
-            if (authData?.authUrl) {
-              // Store the new account ID for after OAuth completes
-              sessionStorage.setItem('ctrader_pending_account', newAccount.id);
-              
-              // Open OAuth URL in new window
-              const authWindow = window.open(authData.authUrl, 'ctrader-auth', 'width=600,height=700');
-              
-              toast({
-                title: "Account Created - Connecting to cTrader",
-                description: "Please complete the authentication to import your trading data",
-              });
-
-              // Listen for window close to refresh data
-              const checkClosed = setInterval(() => {
-                if (authWindow?.closed) {
-                  clearInterval(checkClosed);
-                  setTimeout(async () => {
-                    // Refresh the accounts list - initial sync should already be triggered by callback
-                    fetchAccounts();
-                    
-                    // Show sync completion message
-                    toast({
-                      title: "Connection Successful",
-                      description: "Your cTrader account is connected and data is being imported. This may take a few moments.",
-                    });
-                  }, 2000);
-                }
-              }, 1000);
-            }
-          } catch (ctraderError) {
-            console.error('cTrader integration failed:', ctraderError);
-            toast({
-              title: "Account Created",
-              description: "Account created but cTrader integration failed. You can connect later.",
-              variant: "default"
-            });
-          }
-        } else {
-          toast({ title: "Success", description: "Account created successfully" });
-        }
+        toast({ title: "Success", description: "Account created successfully" });
       }
 
       setDialogOpen(false);
       setEditingAccount(null);
       resetForm();
-      if (!formData.use_ctrader) {
-        fetchAccounts();
-      }
+      fetchAccounts();
     } catch (error) {
       console.error('Error saving account:', error);
       toast({
@@ -275,8 +213,7 @@ const TradingAccounts = () => {
       broker: account.broker || '',
       initial_balance: account.initial_balance.toString(),
       currency: account.currency,
-      equity_goal: (account as any).equity_goal?.toString() || '',
-      use_ctrader: false
+      equity_goal: (account as any).equity_goal?.toString() || ''
     });
     setDialogOpen(true);
   };
@@ -357,8 +294,7 @@ const TradingAccounts = () => {
       broker: '',
       initial_balance: '',
       currency: 'USD',
-      equity_goal: '',
-      use_ctrader: false
+      equity_goal: ''
     });
   };
 
@@ -460,83 +396,42 @@ const TradingAccounts = () => {
                   </Select>
                 </div>
                 
-                {!editingAccount && (
-                  <div className="border rounded-lg p-4 bg-muted/50">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="use_ctrader"
-                        checked={formData.use_ctrader}
-                        onCheckedChange={(checked) => setFormData({ ...formData, use_ctrader: !!checked })}
-                      />
-                      <Label htmlFor="use_ctrader" className="flex items-center gap-2">
-                        <img 
-                          src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/CTrader_logo.svg/120px-CTrader_logo.svg.png" 
-                          alt="cTrader" 
-                          className="w-5 h-5"
-                        />
-                        Connect cTrader Account Instead
-                      </Label>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Connect directly to your cTrader account to automatically import trades, balances, and positions.
-                    </p>
-                  </div>
-                )}
+                <div>
+                  <Label htmlFor="broker">Broker</Label>
+                  <Input
+                    id="broker"
+                    value={formData.broker}
+                    onChange={(e) => setFormData({ ...formData, broker: e.target.value })}
+                  />
+                </div>
                 
-                {!formData.use_ctrader && (
-                  <>
-                    <div>
-                      <Label htmlFor="broker">Broker</Label>
-                      <Input
-                        id="broker"
-                        value={formData.broker}
-                        onChange={(e) => setFormData({ ...formData, broker: e.target.value })}
-                      />
-                    </div>
-                  </>
-                )}
-                
-                {!formData.use_ctrader && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="initial_balance">Initial Balance</Label>
-                      <Input
-                        id="initial_balance"
-                        type="number"
-                        step="0.01"
-                        value={formData.initial_balance}
-                        onChange={(e) => setFormData({ ...formData, initial_balance: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="currency">Currency</Label>
-                      <Select value={formData.currency} onValueChange={(value) => setFormData({ ...formData, currency: value })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="USD">USD</SelectItem>
-                          <SelectItem value="EUR">EUR</SelectItem>
-                          <SelectItem value="GBP">GBP</SelectItem>
-                          <SelectItem value="JPY">JPY</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="initial_balance">Initial Balance</Label>
+                    <Input
+                      id="initial_balance"
+                      type="number"
+                      step="0.01"
+                      value={formData.initial_balance}
+                      onChange={(e) => setFormData({ ...formData, initial_balance: e.target.value })}
+                      required
+                    />
                   </div>
-                )}
-
-                {formData.use_ctrader && (
-                  <div className="border rounded-lg p-4 bg-primary/5">
-                    <h4 className="font-medium mb-2">cTrader Integration</h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• Account details will be automatically imported</li>
-                      <li>• Trading history will be synced in real-time</li>
-                      <li>• Balance and equity will be updated automatically</li>
-                      <li>• All positions and trades will be tracked</li>
-                    </ul>
+                  <div>
+                    <Label htmlFor="currency">Currency</Label>
+                    <Select value={formData.currency} onValueChange={(value) => setFormData({ ...formData, currency: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                        <SelectItem value="GBP">GBP</SelectItem>
+                        <SelectItem value="JPY">JPY</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
+                </div>
 
                 <div>
                   <Label htmlFor="equity_goal">Profit Goal (Optional)</Label>
@@ -590,15 +485,6 @@ const TradingAccounts = () => {
                           }}
                         />
                       </div>
-                      
-                      {/* cTrader Integration for existing account */}
-                      <div className="border-t pt-4">
-                        <h3 className="text-sm font-medium mb-3">cTrader Integration</h3>
-                        <CTraderIntegration
-                          accountId={editingAccount.id}
-                          accountName={editingAccount.name}
-                        />
-                      </div>
                     </div>
                   )}
                   
@@ -636,12 +522,6 @@ const TradingAccounts = () => {
                     <Plus className="h-4 w-4 mr-2" />
                     Create Manual Account
                   </Button>
-                  <div className="text-muted-foreground text-sm">or</div>
-                  <CTraderIntegration
-                    accountId=""
-                    accountName="First Account"
-                    isFirstAccount={true}
-                  />
                 </div>
               )}
             </div>

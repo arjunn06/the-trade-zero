@@ -76,7 +76,7 @@ const NewTrade = () => {
     emotions: '',
     risk_amount: '',
     risk_reward_ratio: '',
-    // Advanced cTrader fields
+    // Advanced fields
     order_type: '',
     execution_price: '',
     slippage_points: '',
@@ -1217,8 +1217,8 @@ const NewTrade = () => {
 
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    <strong>Note:</strong> These advanced fields are automatically populated when importing from cTrader. 
-                    Manual entry is optional but provides more detailed trade analysis.
+                    <strong>Note:</strong> These advanced fields provide more detailed trade analysis. 
+                    Manual entry is optional.
                   </p>
                 </div>
               </div>
