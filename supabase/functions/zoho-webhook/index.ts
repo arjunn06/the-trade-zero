@@ -130,18 +130,22 @@ function normalizeTradeDataFromRoot(payload: any): ZohoWebhookRequest['trade_dat
   const notes = payload.notes ?? payload.Notes;
   const emotions = payload.emotions;
   
-  // Handle exit details if position is closed
-  const position_status = payload.position_status || payload.Position_status;
-  const is_closed = position_status && (String(position_status).toLowerCase() === 'yes' || String(position_status).toLowerCase() === 'closed');
-  const exit_price = is_closed ? toNumber(payload.exit_price ?? payload.Exit_price) : undefined;
-  const exit_date = is_closed ? (payload.exit_date ?? payload.Exit_date ?? payload.exit_time ?? payload.Exit_time) : undefined;
-  const pnl = is_closed ? toNumber(payload.pnl ?? payload.PnL) : undefined;
+  // Determine closed status from multiple possible fields
+  const statusField = payload.status ?? payload.Status ?? payload.is_closed ?? payload['Is position closed?'] ?? payload.position_status ?? payload.Position_status;
+  const statusStr = statusField ? String(statusField).toLowerCase() : undefined;
+  const is_closed = statusStr === 'yes' || statusStr === 'closed' || statusStr === 'true';
+
+  // Exit details (capture regardless, we'll decide status based on presence too)
+  const exit_price = toNumber(payload.exit_price ?? payload.Exit_price);
+  const exit_date = payload.exit_date ?? payload.Exit_date ?? payload.exit_time ?? payload.Exit_time;
+  const pnl = toNumber(payload.pnl ?? payload.PnL);
   const risk_amount = toNumber(payload.risk_amount ?? payload.Amount_at_risk);
   
   // Handle screenshot upload
   const screenshot_url = payload.screenshot_url || payload.Screenshot || payload.upload_screenshot;
   
   if (!symbol || !trade_type || entry_price == null || quantity == null) return undefined;
+  const computedStatus = (is_closed || exit_price != null || !!exit_date) ? 'closed' : 'open';
   return {
     symbol,
     trade_type,
@@ -157,7 +161,7 @@ function normalizeTradeDataFromRoot(payload: any): ZohoWebhookRequest['trade_dat
     exit_date,
     pnl,
     risk_amount,
-    status: is_closed ? 'closed' : 'open',
+    status: computedStatus,
     screenshot_url,
   } as any;
 }
@@ -347,7 +351,9 @@ async function handleCreateTrade(user_email?: string, trade_data?: ZohoWebhookRe
     const exitPriceNum = toNumber((trade_data as any).exit_price);
     const pnlNum = toNumber((trade_data as any).pnl);
     const riskAmountNum = toNumber((trade_data as any).risk_amount);
-    const tradeStatus = (trade_data as any).status || 'open';
+    const explicitStatusVal = (trade_data as any).status;
+    const explicitStatus = explicitStatusVal ? String(explicitStatusVal).toLowerCase() : undefined;
+    const tradeStatus = (explicitStatus === 'closed' || explicitStatus === 'yes' || explicitStatus === 'true' || exitPriceNum != null || !!(trade_data as any).exit_date) ? 'closed' : 'open';
     
     const entryDateIso = trade_data.entry_date
       ? (parseGCDate(trade_data.entry_date) || new Date(trade_data.entry_date).toISOString())
