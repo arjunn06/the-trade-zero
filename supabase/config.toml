@@ -93,3 +93,6 @@ verify_jwt = true
 
 [functions.zoho-webhook]
 verify_jwt = false
+
+[functions.get-trading-accounts]
+verify_jwt = false
