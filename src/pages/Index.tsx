@@ -14,7 +14,7 @@ const Index = () => {
   useEffect(() => {
     const script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = 'https://gc.zohopublic.in/org/60021522321/flows/581000000885913/embed/script';
+    script.src = 'https://gc.zohopublic.in/org/60021522321/flows/581000000900001/embed/script';
     script.defer = true;
     script.setAttribute('nonce', '{place_your_nonce_value_here}');
     document.head.appendChild(script);
