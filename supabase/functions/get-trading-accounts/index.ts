@@ -77,12 +77,21 @@ serve(async (req) => {
     );
   }
 
-  // Return flattened structure for direct Zoho variable access
+  // Return both flattened top-level keys and nested account_list for Zoho mapping compatibility
+  const flat = (data || []).reduce((acc, account, index) => {
+    acc[`account_${index + 1}_name`] = account.name;
+    return acc;
+  }, {} as Record<string, string>);
+
+  const nested = (data || []).reduce((acc, account, index) => {
+    acc[`account ${index + 1}`] = { name: account.name };
+    return acc;
+  }, {} as Record<string, { name: string }>);
+
   const accountsResponse = {
-    account_list: (data || []).reduce((acc, account, index) => {
-      acc[`account_${index + 1}_name`] = account.name;
-      return acc;
-    }, {} as Record<string, string>)
+    ...flat,
+    account_list: flat,
+    account: nested
   };
 
   return new Response(
