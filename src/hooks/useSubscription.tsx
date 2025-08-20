@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 interface SubscriptionContextType {
   isLoading: boolean;
@@ -39,7 +40,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         .maybeSingle();
 
       if (error) {
-        console.error('Error checking subscription:', error);
+        logger.apiError('useSubscription - checking subscription', error);
         setIsPremium(false);
         setSubscriptionTier('basic');
         setSubscriptionEnd(null);
@@ -50,7 +51,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         const isActive = data.subscribed && 
           (!data.subscription_end || new Date(data.subscription_end) > new Date());
         
-        console.log('Subscription check:', {
+        // Only log subscription info in development
+        logger.debug('Subscription check completed', {
           email: user.email,
           subscribed: data.subscribed,
           subscription_end: data.subscription_end,
@@ -77,7 +79,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         setSubscriptionEnd(null);
       }
     } catch (error) {
-      console.error('Error in checkSubscription:', error);
+      logger.apiError('useSubscription - checkSubscription', error);
       setIsPremium(false);
       setSubscriptionTier('basic');
       setSubscriptionEnd(null);

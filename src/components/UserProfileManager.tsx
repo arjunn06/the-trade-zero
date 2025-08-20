@@ -52,6 +52,8 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
 
   // Check if OpenAI key exists on component mount
   useEffect(() => {
+    // Note: OpenAI keys are now handled server-side via Supabase secrets
+    // This localStorage check is kept for backwards compatibility but will be deprecated
     const existingKey = localStorage.getItem('openai_api_key');
     if (existingKey) {
       setOpenAIKeyExists(true);
@@ -225,7 +227,7 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
           });
       } catch (error) {
         // Profiles table might not exist, that's okay
-        console.log('Profiles table update skipped:', error);
+        // Profile update is optional, don't log errors in production
       }
 
       toast({

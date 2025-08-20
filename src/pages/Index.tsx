@@ -44,7 +44,10 @@ const Index = () => {
       description: `${plan} plan ($${amount}/month) will be integrated with Zoho payments.`,
     });
     
-    console.log('Zoho Payment Integration:', { plan, amount, user: user.id });
+    // Log payment integration info only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Zoho Payment Integration:', { plan, amount, user: user.id });
+    }
   };
 
   // Redirect authenticated users to dashboard

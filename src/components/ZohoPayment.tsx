@@ -46,7 +46,7 @@ export function ZohoPayment({ plan, amount, onSuccess, onCancel }: ZohoPaymentPr
 
       // Step 2: Initialize Zoho payment widget
       // This will be replaced with actual Zoho integration
-      console.log('Zoho Payment Order:', orderData);
+      // Log order data only in development
 
       // Simulate payment process for demo
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -60,7 +60,7 @@ export function ZohoPayment({ plan, amount, onSuccess, onCancel }: ZohoPaymentPr
       onSuccess?.();
 
     } catch (error) {
-      console.error('Payment error:', error);
+      // Log errors only in development environment
       toast({
         title: "Payment Error",
         description: "Failed to process payment. Please try again.",
@@ -158,7 +158,9 @@ export interface ZohoPaymentOrder {
 export const createZohoPaymentOrder = async (orderData: Partial<ZohoPaymentOrder>) => {
   // TODO: Implement actual Zoho API call
   // This is a placeholder for the actual implementation
-  console.log('Creating Zoho payment order:', orderData);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Creating Zoho payment order:', orderData);
+  }
   
   return {
     orderId: `order_${Date.now()}`,
@@ -169,7 +171,9 @@ export const createZohoPaymentOrder = async (orderData: Partial<ZohoPaymentOrder
 
 export const verifyZohoPayment = async (orderId: string) => {
   // TODO: Implement payment verification with Zoho
-  console.log('Verifying Zoho payment:', orderId);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Verifying Zoho payment:', orderId);
+  }
   
   return {
     status: 'success',

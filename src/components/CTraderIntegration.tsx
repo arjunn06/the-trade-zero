@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import { Loader2, ExternalLink, Download, CheckCircle, AlertCircle } from 'lucide-react';
 import { PremiumFeature } from './PremiumFeature';
 
@@ -56,7 +57,7 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
         setConnection(data);
       }
     } catch (error) {
-      console.log('No existing connection found');
+      logger.debug('No existing connection found for account', { accountId });
     } finally {
       setLoadingConnection(false);
     }
@@ -142,7 +143,7 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
         }, 1000);
       }
     } catch (error) {
-      console.error('Error connecting to cTrader:', error);
+      logger.apiError('CTraderIntegration - connecting to cTrader', error);
       toast({
         title: "Connection Failed",
         description: "Failed to connect to cTrader. Please try again.",
@@ -189,7 +190,7 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
       // Update last sync time
       setConnection(prev => prev ? { ...prev, last_sync: new Date().toISOString() } : null);
     } catch (error) {
-      console.error('Error importing trades:', error);
+      logger.apiError('CTraderIntegration - importing trades', error);
       toast({
         title: "Import Failed",
         description: "Failed to import trades from cTrader. Please try again.",
@@ -234,7 +235,7 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
         window.parent.postMessage('refresh-accounts', '*');
       }
     } catch (error) {
-      console.error('Error syncing account:', error);
+      logger.apiError('CTraderIntegration - syncing account', error);
       toast({
         title: "Sync Failed",
         description: "Failed to sync account. Please try again.",
@@ -279,7 +280,7 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
         window.parent.postMessage('refresh-accounts', '*');
       }
     } catch (error) {
-      console.error('Error performing full sync:', error);
+      logger.apiError('CTraderIntegration - performing full sync', error);
       toast({
         title: "Full Sync Failed",
         description: "Failed to perform full sync. Please try again.",
@@ -307,7 +308,7 @@ export const CTraderIntegration: React.FC<CTraderIntegrationProps> = ({
         description: "Successfully disconnected from cTrader",
       });
     } catch (error) {
-      console.error('Error disconnecting:', error);
+      logger.apiError('CTraderIntegration - disconnecting', error);
       toast({
         title: "Error",
         description: "Failed to disconnect from cTrader",

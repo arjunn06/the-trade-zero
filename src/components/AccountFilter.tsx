@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff, ChevronDown, ChevronRight, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 
@@ -63,7 +64,7 @@ export function AccountFilter({
       if (error) throw error;
       setAccounts(data || []);
     } catch (error) {
-      console.error('Error fetching trading accounts:', error);
+      logger.apiError('AccountFilter - fetching trading accounts', error);
     } finally {
       setLoading(false);
     }
