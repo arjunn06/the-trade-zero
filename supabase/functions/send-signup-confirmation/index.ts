@@ -12,11 +12,20 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface SignupConfirmationRequest {
-  userEmail: string;
-  userDisplayName?: string;
-  confirmationUrl: string;
-  token: string;
+interface WebhookPayload {
+  user: {
+    email: string;
+    user_metadata?: {
+      display_name?: string;
+    };
+  };
+  email_data: {
+    token: string;
+    token_hash: string;
+    redirect_to: string;
+    email_action_type: string;
+    site_url: string;
+  };
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -26,11 +35,19 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { userEmail, userDisplayName, confirmationUrl, token }: SignupConfirmationRequest = await req.json();
+    console.log("Webhook received for signup confirmation");
+    
+    const payload: WebhookPayload = await req.json();
+    console.log("Webhook payload:", payload);
 
-    if (!userEmail || !confirmationUrl || !token) {
+    const { user, email_data } = payload;
+    const { email } = user;
+    const { token_hash, redirect_to, email_action_type, site_url } = email_data;
+    
+    if (!email) {
+      console.error("No email found in webhook payload");
       return new Response(
-        JSON.stringify({ error: "Email, confirmation URL, and token are required" }),
+        JSON.stringify({ error: "Email is required" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -38,26 +55,32 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Construct the confirmation URL
+    const confirmationUrl = `${site_url}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}`;
+    
+    console.log("Sending confirmation email to:", email);
+    console.log("Confirmation URL:", confirmationUrl);
+
     // Render the React email template
     const emailHtml = await renderAsync(
       React.createElement(SignupConfirmationEmail, {
-        userEmail,
-        userDisplayName,
+        userEmail: email,
+        userDisplayName: user.user_metadata?.display_name || email.split('@')[0],
         confirmationUrl,
-        token
+        token: token_hash
       })
     );
 
     const emailResponse = await resend.emails.send({
-      from: "TradeZero <noreply@thetradezero.com>",
-      to: [userEmail],
-      subject: "Welcome to TradeZero - Confirm your email",
+      from: "TheTradeZero <noreply@thetradezero.com>",
+      to: [email],
+      subject: "Welcome to TheTradeZero - Confirm your email",
       html: emailHtml,
     });
 
     console.log("Signup confirmation email sent successfully:", emailResponse);
 
-    return new Response(JSON.stringify(emailResponse), {
+    return new Response(JSON.stringify({ success: true, emailResponse }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -65,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error("Error in send-signup-confirmation function:", error);
+    console.error("Error in send-signup-confirmation webhook:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
