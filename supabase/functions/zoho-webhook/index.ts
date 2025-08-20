@@ -77,6 +77,46 @@ function parseGCDate(value?: string): string | undefined {
   return undefined;
 }
 
+async function downloadAndUploadFile(fileUrl: string, fileName: string, userId: string): Promise<string | null> {
+  try {
+    console.log(`Downloading file from: ${fileUrl}`);
+    const response = await fetch(fileUrl);
+    if (!response.ok) {
+      console.error(`Failed to download file: ${response.status} ${response.statusText}`);
+      return null;
+    }
+
+    const fileBuffer = await response.arrayBuffer();
+    const fileExtension = fileName.split('.').pop()?.toLowerCase() || 'png';
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const uniqueFileName = `${userId}/${timestamp}-${fileName}`;
+
+    // Upload to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('trade-screenshots')
+      .upload(uniqueFileName, fileBuffer, {
+        contentType: response.headers.get('content-type') || `image/${fileExtension}`,
+        upsert: false
+      });
+
+    if (error) {
+      console.error('Storage upload error:', error);
+      return null;
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('trade-screenshots')
+      .getPublicUrl(uniqueFileName);
+
+    console.log(`File uploaded successfully: ${publicUrl}`);
+    return publicUrl;
+  } catch (error) {
+    console.error('Error downloading/uploading file:', error);
+    return null;
+  }
+}
+
 function normalizeTradeDataFromRoot(payload: any): ZohoWebhookRequest['trade_data'] | undefined {
   if (!payload) return undefined;
   const symbol = payload.symbol || payload.Symbol;
@@ -98,6 +138,9 @@ function normalizeTradeDataFromRoot(payload: any): ZohoWebhookRequest['trade_dat
   const pnl = is_closed ? toNumber(payload.pnl ?? payload.PnL) : undefined;
   const risk_amount = toNumber(payload.risk_amount ?? payload.Amount_at_risk);
   
+  // Handle screenshot upload
+  const screenshot_url = payload.screenshot_url || payload.Screenshot || payload.upload_screenshot;
+  
   if (!symbol || !trade_type || entry_price == null || quantity == null) return undefined;
   return {
     symbol,
@@ -115,6 +158,7 @@ function normalizeTradeDataFromRoot(payload: any): ZohoWebhookRequest['trade_dat
     pnl,
     risk_amount,
     status: is_closed ? 'closed' : 'open',
+    screenshot_url,
   } as any;
 }
 
@@ -313,6 +357,18 @@ async function handleCreateTrade(user_email?: string, trade_data?: ZohoWebhookRe
       ? (parseGCDate((trade_data as any).exit_date) || new Date((trade_data as any).exit_date).toISOString())
       : null;
 
+    // Handle screenshot upload if provided
+    let screenshotUrls: string[] = [];
+    if ((trade_data as any).screenshot_url) {
+      console.log('Processing screenshot upload...');
+      const fileName = `screenshot-${Date.now()}.png`;
+      const uploadedUrl = await downloadAndUploadFile((trade_data as any).screenshot_url, fileName, userId);
+      if (uploadedUrl) {
+        screenshotUrls.push(uploadedUrl);
+        console.log('Screenshot uploaded successfully:', uploadedUrl);
+      }
+    }
+
     const { data: trade, error: tradeError } = await supabase
       .from('trades')
       .insert({
@@ -333,6 +389,7 @@ async function handleCreateTrade(user_email?: string, trade_data?: ZohoWebhookRe
         notes: trade_data.notes || null,
         emotions: trade_data.emotions || null,
         status: tradeStatus,
+        screenshots: screenshotUrls.length > 0 ? screenshotUrls : null,
         source: 'zoho_chatbot'
       })
       .select()
