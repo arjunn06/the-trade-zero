@@ -77,13 +77,23 @@ serve(async (req) => {
     );
   }
 
-  // Simplified response: numbered headings as strings + list for Zoho list mapping
+  // Provide all compatible shapes for Zoho mapping
+  const account_numbered = (data || []).reduce((acc, account, index) => {
+    acc[`account ${index + 1}`] = account.name;
+    return acc;
+  }, {} as Record<string, string>);
+
+  const account_list = (data || []).reduce((acc, account, index) => {
+    acc[`account_${index + 1}_name`] = account.name;
+    return acc;
+  }, {} as Record<string, string>);
+
+  const account_array = (data || []).map((account) => ({ name: account.name }));
+
   const accountsResponse = {
-    account: (data || []).reduce((acc, account, index) => {
-      acc[`account ${index + 1}`] = account.name;
-      return acc;
-    }, {} as Record<string, string>),
-    account_list: (data || []).map((account) => ({ name: account.name }))
+    account: account_numbered,       // e.g. { "account 1": "Name" }
+    account_list,                    // e.g. { account_1_name: "Name" }
+    account_array                    // e.g. [ { name: "Name" } ]
   };
 
   return new Response(
