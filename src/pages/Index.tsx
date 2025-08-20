@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { RazorpayPayment } from '@/components/RazorpayPayment';
-import { TrendingUp, BarChart3, Shield, Calendar, Check, Star } from 'lucide-react';
+import { TrendingUp, BarChart3, Shield, Calendar, Check, Star, Brain } from 'lucide-react';
 import { useEffect } from 'react';
 
 const Index = () => {
@@ -110,11 +110,14 @@ const Index = () => {
 
           <div className="text-center">
             <div className="bg-brand-blue/10 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Shield className="h-8 w-8 text-brand-blue" />
+              <Brain className="h-8 w-8 text-brand-blue" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">Strategy Management</h3>
+            <h3 className="text-xl font-semibold mb-2">
+              AI Screenshot Analysis
+              <span className="ml-2 text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">Premium</span>
+            </h3>
             <p className="text-muted-foreground">
-              Create and manage trading strategies with confluence checklists and rules.
+              Automatically extract trade details from screenshots using AI. Supports MT4, MT5, cTrader, and more.
             </p>
           </div>
 
@@ -216,6 +219,10 @@ const Index = () => {
                 <li className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-green-500" />
                   <span>Advanced confluence system</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>AI Screenshot Analyzer (BYOK)</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-green-500" />
