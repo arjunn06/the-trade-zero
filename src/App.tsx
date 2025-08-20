@@ -29,6 +29,10 @@ import Welcome from "./pages/Welcome";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
+import { AdminLogin } from "./pages/admin/AdminLogin";
+import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { InvitePage } from "./pages/InvitePage";
+import { AdminRoute } from "./components/AdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +75,9 @@ const App = () => (
             <Route path="/payment-cancel" element={<PaymentCancel />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/refund" element={<Refund />} />
+            <Route path="/invite/:token" element={<InvitePage />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

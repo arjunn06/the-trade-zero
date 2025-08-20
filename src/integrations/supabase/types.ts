@@ -122,6 +122,42 @@ export type Database = {
         }
         Relationships: []
       }
+      invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          status: string
+          token: string
+          updated_at: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          status?: string
+          token?: string
+          updated_at?: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          status?: string
+          token?: string
+          updated_at?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           category: string | null
@@ -168,6 +204,7 @@ export type Database = {
           email: string | null
           has_completed_onboarding: boolean
           id: string
+          role: Database["public"]["Enums"]["user_role"] | null
           timezone: string | null
           updated_at: string
           user_id: string
@@ -178,6 +215,7 @@ export type Database = {
           email?: string | null
           has_completed_onboarding?: boolean
           id?: string
+          role?: Database["public"]["Enums"]["user_role"] | null
           timezone?: string | null
           updated_at?: string
           user_id: string
@@ -188,6 +226,7 @@ export type Database = {
           email?: string | null
           has_completed_onboarding?: boolean
           id?: string
+          role?: Database["public"]["Enums"]["user_role"] | null
           timezone?: string | null
           updated_at?: string
           user_id?: string
@@ -607,6 +646,10 @@ export type Database = {
         Args: { secret_id: string }
         Returns: string
       }
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
       migrate_tokens_to_vault: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -634,7 +677,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -761,6 +804,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["admin", "user"],
+    },
   },
 } as const
