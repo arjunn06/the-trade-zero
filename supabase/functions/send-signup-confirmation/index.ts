@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 import { Resend } from "npm:resend@2.0.0";
 import { renderAsync } from "npm:@react-email/components@0.0.22";
 import React from "npm:react@18.3.1";
@@ -35,9 +36,27 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log("Webhook received for signup confirmation");
-    
-    const payload: WebhookPayload = await req.json();
+    // Verify webhook signature
+    const payloadText = await req.text();
+    const headers = Object.fromEntries(req.headers);
+    const hookSecret = Deno.env.get("SEND_EMAIL_HOOK_SECRET") || "";
+
+    if (!hookSecret) {
+      console.warn("SEND_EMAIL_HOOK_SECRET not set; proceeding without verification (development mode)");
+    } else {
+      try {
+        const wh = new Webhook(hookSecret);
+        wh.verify(payloadText, headers);
+      } catch (e) {
+        console.error("Webhook verification failed:", e);
+        return new Response(JSON.stringify({ error: "Invalid signature" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+    }
+
+    const payload: WebhookPayload = JSON.parse(payloadText);
     console.log("Webhook payload:", payload);
 
     const { user, email_data } = payload;

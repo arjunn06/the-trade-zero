@@ -51,8 +51,8 @@ enable_confirmations = true
 
 [auth.email.webhook]
 enabled = true
-url = "https://dynibyqrcbxneiwjyahn.supabase.co/functions/v1/send-signup-confirmation"
-secret = "your-webhook-secret-here"
+url = "https://dynibyqrcbxneiwjyahn.functions.supabase.co/send-signup-confirmation"
+secret = "SEND_EMAIL_HOOK_SECRET"
 
 [edge_runtime]
 enabled = true
