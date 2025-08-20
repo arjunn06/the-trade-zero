@@ -61,7 +61,7 @@ export function AdminDashboard() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
             <p className="text-muted-foreground">
-              Manage users and invitations for TradeZero Beta
+              Manage users and invitations for TheTradeZero Beta
             </p>
           </div>
           <Badge variant="secondary">Beta Admin Panel</Badge>

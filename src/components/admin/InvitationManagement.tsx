@@ -84,7 +84,7 @@ export function InvitationManagement() {
         body: {
           email: newEmail.trim().toLowerCase(),
           token: data.token,
-          inviterName: user?.user_metadata?.display_name || 'TradeZero Team'
+          inviterName: user?.user_metadata?.display_name || 'TheTradeZero Team'
         }
       });
 
@@ -126,7 +126,7 @@ export function InvitationManagement() {
         body: {
           email: invitation.email,
           token: invitation.token,
-          inviterName: user?.user_metadata?.display_name || 'TradeZero Team'
+          inviterName: user?.user_metadata?.display_name || 'TheTradeZero Team'
         }
       });
 

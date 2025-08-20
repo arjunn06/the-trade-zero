@@ -124,7 +124,7 @@ export function InvitePage() {
         .eq('token', token);
 
       toast({
-        title: 'Welcome to TradeZero!',
+        title: 'Welcome to TheTradeZero!',
         description: 'Your account has been created successfully',
       });
 
@@ -183,7 +183,7 @@ export function InvitePage() {
           <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
             <CheckCircle className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle>Welcome to TradeZero Beta!</CardTitle>
+          <CardTitle>Welcome to TheTradeZero Beta!</CardTitle>
           <p className="text-sm text-muted-foreground">
             You've been invited to join our exclusive beta
           </p>
@@ -234,7 +234,7 @@ export function InvitePage() {
             </div>
 
             <Button type="submit" className="w-full" disabled={isSigningUp}>
-              {isSigningUp ? 'Creating Account...' : 'Join TradeZero Beta'}
+              {isSigningUp ? 'Creating Account...' : 'Join TheTradeZero Beta'}
             </Button>
           </form>
         </CardContent>

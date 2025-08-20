@@ -120,7 +120,7 @@ export function AdminLogin() {
           </div>
           <CardTitle>Admin Login</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Access the TradeZero admin panel
+            Access the TheTradeZero admin panel
           </p>
         </CardHeader>
         <CardContent>
