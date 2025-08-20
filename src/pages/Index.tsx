@@ -63,7 +63,7 @@ const Index = () => {
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-6 w-6 text-brand-blue" />
-            <span className="font-bold text-xl">TradeZero</span>
+            <span className="font-bold text-xl">TheTradeZero</span>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
@@ -392,7 +392,7 @@ const Index = () => {
         <div className="container mx-auto px-6 py-12">
           <div className="flex items-center justify-center gap-2 mb-4">
             <TrendingUp className="h-5 w-5 text-brand-blue" />
-            <span className="font-semibold text-lg">TradeZero</span>
+            <span className="font-semibold text-lg">TheTradeZero</span>
           </div>
           <p className="text-center text-muted-foreground mb-6">
             Professional trading journal platform for serious traders.
