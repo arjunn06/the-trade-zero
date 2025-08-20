@@ -33,6 +33,7 @@ import { AdminLogin } from "./pages/admin/AdminLogin";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { InvitePage } from "./pages/InvitePage";
 import { AdminRoute } from "./components/AdminRoute";
+import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
           <SubscriptionProvider>
         <Toaster />
         <Sonner />
+        <AnalyticsTracker />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />

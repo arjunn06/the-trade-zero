@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { Mail, Plus, Copy, RefreshCw } from 'lucide-react';
@@ -19,6 +21,8 @@ interface Invitation {
   expires_at: string;
   used_at: string | null;
   created_at: string;
+  premium_access: boolean;
+  notes: string | null;
 }
 
 export function InvitationManagement() {
@@ -27,6 +31,8 @@ export function InvitationManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [premiumAccess, setPremiumAccess] = useState(false);
+  const [inviteNotes, setInviteNotes] = useState('');
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -64,7 +70,9 @@ export function InvitationManagement() {
         .from('invitations')
         .insert({
           email: newEmail.trim().toLowerCase(),
-          invited_by: user?.id
+          invited_by: user?.id,
+          premium_access: premiumAccess,
+          notes: inviteNotes.trim() || null
         })
         .select()
         .single();
@@ -82,6 +90,8 @@ export function InvitationManagement() {
 
       setInvitations([data, ...invitations]);
       setNewEmail('');
+      setPremiumAccess(false);
+      setInviteNotes('');
       setIsDialogOpen(false);
 
       toast({
@@ -178,6 +188,26 @@ export function InvitationManagement() {
                     onKeyDown={(e) => e.key === 'Enter' && createInvitation()}
                   />
                 </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="premium"
+                    checked={premiumAccess}
+                    onCheckedChange={(checked) => setPremiumAccess(checked as boolean)}
+                  />
+                  <Label htmlFor="premium">Grant Premium Access</Label>
+                </div>
+
+                <div>
+                  <Label htmlFor="notes">Notes (Optional)</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Add notes about this invitation..."
+                    value={inviteNotes}
+                    onChange={(e) => setInviteNotes(e.target.value)}
+                    rows={3}
+                  />
+                </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancel
@@ -198,6 +228,7 @@ export function InvitationManagement() {
               <TableRow>
                 <TableHead>Email</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Premium</TableHead>
                 <TableHead>Sent</TableHead>
                 <TableHead>Expires</TableHead>
                 <TableHead>Actions</TableHead>
@@ -206,13 +237,13 @@ export function InvitationManagement() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={6} className="text-center py-8">
                     Loading invitations...
                   </TableCell>
                 </TableRow>
               ) : invitations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={6} className="text-center py-8">
                     No invitations sent yet
                   </TableCell>
                 </TableRow>
@@ -224,6 +255,13 @@ export function InvitationManagement() {
                     </TableCell>
                     <TableCell>
                       {getStatusBadge(invitation)}
+                    </TableCell>
+                    <TableCell>
+                      {invitation.premium_access ? (
+                        <Badge variant="default">Premium</Badge>
+                      ) : (
+                        <Badge variant="outline">Standard</Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       {new Date(invitation.created_at).toLocaleDateString()}

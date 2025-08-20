@@ -50,6 +50,39 @@ export type Database = {
         }
         Relationships: []
       }
+      app_analytics: {
+        Row: {
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           created_at: string | null
@@ -129,6 +162,8 @@ export type Database = {
           expires_at: string
           id: string
           invited_by: string
+          notes: string | null
+          premium_access: boolean | null
           status: string
           token: string
           updated_at: string
@@ -140,6 +175,8 @@ export type Database = {
           expires_at?: string
           id?: string
           invited_by: string
+          notes?: string | null
+          premium_access?: boolean | null
           status?: string
           token?: string
           updated_at?: string
@@ -151,6 +188,8 @@ export type Database = {
           expires_at?: string
           id?: string
           invited_by?: string
+          notes?: string | null
+          premium_access?: boolean | null
           status?: string
           token?: string
           updated_at?: string
@@ -204,6 +243,8 @@ export type Database = {
           email: string | null
           has_completed_onboarding: boolean
           id: string
+          notes: string | null
+          premium_access_override: boolean | null
           role: Database["public"]["Enums"]["user_role"] | null
           timezone: string | null
           updated_at: string
@@ -215,6 +256,8 @@ export type Database = {
           email?: string | null
           has_completed_onboarding?: boolean
           id?: string
+          notes?: string | null
+          premium_access_override?: boolean | null
           role?: Database["public"]["Enums"]["user_role"] | null
           timezone?: string | null
           updated_at?: string
@@ -226,6 +269,8 @@ export type Database = {
           email?: string | null
           has_completed_onboarding?: boolean
           id?: string
+          notes?: string | null
+          premium_access_override?: boolean | null
           role?: Database["public"]["Enums"]["user_role"] | null
           timezone?: string | null
           updated_at?: string
