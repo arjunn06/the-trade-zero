@@ -77,12 +77,12 @@ serve(async (req) => {
     );
   }
 
-  // Return accounts with main heading and sub-headings (values as objects for Zoho mapping)
+  // Return flattened structure for direct Zoho variable access
   const accountsResponse = {
-    account: (data || []).reduce((acc, account, index) => {
-      acc[`account ${index + 1}`] = { name: account.name };
+    account_list: (data || []).reduce((acc, account, index) => {
+      acc[`account_${index + 1}_name`] = account.name;
       return acc;
-    }, {} as Record<string, { name: string }>)
+    }, {} as Record<string, string>)
   };
 
   return new Response(
