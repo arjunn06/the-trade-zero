@@ -99,7 +99,7 @@ serve(async (req) => {
   }, {} as Record<string, string>);
   
   const accountsResponse = {
-    account: account_numbered,       // e.g. { "account 1": "Name" }
+    account: account_numbered,       // e.g. { "account_1": "Name" }
 
   };
 
