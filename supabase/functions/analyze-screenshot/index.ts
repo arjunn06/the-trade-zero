@@ -12,9 +12,13 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Analyze screenshot function called');
     const { image, openai_api_key } = await req.json();
     
+    console.log('Request data received - has image:', !!image, 'has key:', !!openai_api_key);
+    
     if (!image) {
+      console.error('No image provided');
       return new Response(
         JSON.stringify({ error: 'No image provided' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -22,11 +26,14 @@ serve(async (req) => {
     }
 
     if (!openai_api_key) {
+      console.error('No OpenAI API key provided');
       return new Response(
         JSON.stringify({ error: 'OpenAI API key not provided' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
+
+    console.log('Making request to OpenAI API...');
 
     // Analyze the image with GPT-4 Vision
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -95,16 +102,28 @@ CRITICAL: Only include fields that are clearly visible. Use exact numerical valu
       }),
     });
 
+    console.log('OpenAI API response status:', response.status);
+    
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('OpenAI API error:', errorData);
+      const errorText = await response.text();
+      console.error('OpenAI API error:', response.status, errorText);
+      let errorMessage = 'OpenAI API error';
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error?.message || errorData.message || 'API request failed';
+      } catch {
+        errorMessage = `API returned ${response.status}: ${errorText}`;
+      }
+      
       return new Response(
-        JSON.stringify({ error: 'OpenAI API error', details: errorData }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: response.status }
+        JSON.stringify({ error: errorMessage }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
     const data = await response.json();
+    console.log('OpenAI response received, processing...');
     const content = data.choices[0].message.content;
     
     console.log('OpenAI response:', content);
@@ -168,6 +187,7 @@ CRITICAL: Only include fields that are clearly visible. Use exact numerical valu
       cleanedData.notes = tradeData.notes.substring(0, 500); // Limit length
     }
 
+    console.log('Analysis completed successfully, returning data');
     return new Response(
       JSON.stringify({ 
         tradeData: cleanedData,

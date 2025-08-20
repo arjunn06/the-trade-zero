@@ -35,6 +35,14 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const [apiKey, setApiKey] = useState('');
 
+  // Load saved API key on mount
+  useState(() => {
+    const savedKey = localStorage.getItem('openai_api_key');
+    if (savedKey) {
+      setApiKey(savedKey);
+    }
+  });
+
   const handleFileSelect = (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast({
@@ -59,11 +67,19 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
       });
       return;
     }
-    setShowApiKeyDialog(true);
+    
+    // If we have a saved API key, use it directly
+    const savedKey = localStorage.getItem('openai_api_key');
+    if (savedKey && savedKey.startsWith('sk-')) {
+      setApiKey(savedKey);
+      analyzeScreenshot(savedKey);
+    } else {
+      setShowApiKeyDialog(true);
+    }
   };
 
-  const analyzeScreenshot = async () => {
-    const key = apiKey.trim();
+  const analyzeScreenshot = async (providedKey?: string) => {
+    const key = providedKey || apiKey.trim();
     if (!key) {
       toast({
         title: "API Key Required",
@@ -81,6 +97,9 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
       return;
     }
 
+    // Save the API key for future use
+    localStorage.setItem('openai_api_key', key);
+
     setAnalyzing(true);
     setShowApiKeyDialog(false);
 
@@ -96,11 +115,12 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
       const { data, error } = await supabase.functions.invoke('analyze-screenshot', {
         body: { 
           image: base64,
-          openai_api_key: apiKey
+          openai_api_key: key
         },
       });
 
       if (error) {
+        console.error('Edge function error:', error);
         throw new Error(error.message || 'Failed to analyze screenshot');
       }
 
@@ -112,8 +132,9 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
           title: "Analysis complete",
           description: "Trade details extracted successfully!",
         });
-        // Clear API key for security
-        setApiKey('');
+        // Don't clear the API key since we're storing it
+      } else if (result?.error) {
+        throw new Error(result.error);
       } else {
         toast({
           title: "No trade data found",
@@ -124,9 +145,10 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
 
     } catch (error) {
       console.error('Error analyzing screenshot:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to analyze the screenshot. Please try again.";
       toast({
         title: "Analysis failed",
-        description: error instanceof Error ? error.message : "Failed to analyze the screenshot. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -279,7 +301,7 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
                     className="mt-1"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Your API key is not stored and only used for this analysis
+                    Your API key is stored locally and only used for analysis
                   </p>
                 </div>
 
@@ -292,11 +314,26 @@ export function ScreenshotAnalyzer({ onDataExtracted, className }: ScreenshotAna
                     Cancel
                   </Button>
                   <Button
-                    onClick={analyzeScreenshot}
+                    onClick={() => analyzeScreenshot()}
                     disabled={!apiKey.trim()}
                     className="flex-1"
                   >
                     Analyze Screenshot
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      localStorage.removeItem('openai_api_key');
+                      setApiKey('');
+                      toast({
+                        title: "API Key cleared",
+                        description: "Your stored API key has been removed"
+                      });
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs px-2"
+                  >
+                    Clear Key
                   </Button>
                 </div>
               </div>
