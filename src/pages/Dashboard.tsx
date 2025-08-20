@@ -561,6 +561,17 @@ const Dashboard = () => {
           {/* Primary KPI Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
+              title="Current Balance"
+              value={formatCurrency(stats.currentBalance)}
+              change={{
+                value: stats.currentBalance - stats.initialBalance,
+                percentage: stats.initialBalance > 0 ? `${(((stats.currentBalance - stats.initialBalance) / stats.initialBalance) * 100).toFixed(1)}%` : "0.0%",
+                isPositive: stats.currentBalance >= stats.initialBalance
+              }}
+              icon={<DollarSign className="h-5 w-5" />}
+              className="stagger-fade"
+            />
+            <MetricCard
               title="Total P&L"
               value={formatCurrency(stats.totalPnl)}
               change={{
@@ -568,7 +579,7 @@ const Dashboard = () => {
                 percentage: stats.initialBalance > 0 ? `${((stats.totalPnl / stats.initialBalance) * 100).toFixed(1)}%` : "0.0%",
                 isPositive: stats.totalPnl >= 0
               }}
-              icon={<DollarSign className="h-5 w-5" />}
+              icon={<TrendingUp className="h-5 w-5" />}
               className="stagger-fade"
             />
             <MetricCard
@@ -591,17 +602,6 @@ const Dashboard = () => {
                 isPositive: true
               }}
               icon={<Activity className="h-5 w-5" />}
-              className="stagger-fade"
-            />
-            <MetricCard
-              title="Current Balance"
-              value={formatCurrency(stats.currentBalance)}
-              change={{
-                value: stats.currentBalance - stats.initialBalance,
-                percentage: stats.initialBalance > 0 ? `${(((stats.currentBalance - stats.initialBalance) / stats.initialBalance) * 100).toFixed(1)}%` : "0.0%",
-                isPositive: stats.currentBalance >= stats.initialBalance
-              }}
-              icon={<TrendingUp className="h-5 w-5" />}
               className="stagger-fade"
             />
           </div>
