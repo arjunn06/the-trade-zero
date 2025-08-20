@@ -3,8 +3,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { RazorpayPayment } from '@/components/RazorpayPayment';
-import { TrendingUp, BarChart3, Shield, Calendar, Check, Star, Brain } from 'lucide-react';
+import { TrendingUp, BarChart3, Shield, Calendar, Check, Star, Brain, ArrowRight, Zap } from 'lucide-react';
 import { useEffect } from 'react';
+import { GeometricElements } from '@/components/GeometricElements.tsx';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -56,184 +57,221 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground dark">
       {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <header className="relative z-50 border-b border-border/50">
+        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-6 w-6 text-brand-blue" />
-            <span className="font-bold text-xl">The Trade Zero</span>
+            <span className="font-bold text-xl">TradeZero</span>
           </div>
-          <Button asChild>
-            <a href="/auth">Get Started</a>
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
+              <a href="/auth">Sign In</a>
+            </Button>
+            <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <a href="/auth">Get Started</a>
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <main className="container mx-auto px-4 py-16">
-        <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            The Trade Zero
-          </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Track your trades, analyze performance, and improve your trading strategy with our comprehensive journal platform.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" asChild>
-              <a href="/auth">Start Trading Journal</a>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <a href="/auth">Sign In</a>
-            </Button>
-          </div>
-        </div>
-
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-24">
-          <div className="text-center">
-            <div className="bg-brand-blue/10 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="h-8 w-8 text-brand-blue" />
+      <main className="relative">
+        <GeometricElements />
+        
+        <section className="container mx-auto px-6 py-24 lg:py-32">
+          <div className="max-w-4xl">
+            <h1 className="text-5xl lg:text-7xl font-bold mb-8 leading-tight">
+              Trading journal
+              <br />
+              <span className="text-muted-foreground">for professionals</span>
+            </h1>
+            <p className="text-xl lg:text-2xl text-muted-foreground mb-12 max-w-2xl leading-relaxed">
+              The best way to track your trades instead of spreadsheets.
+              <br />
+              Analyze performance and improve your strategy at scale.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8 text-base font-medium" asChild>
+                <a href="/auth">
+                  Get Started
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </a>
+              </Button>
+              <Button size="lg" variant="outline" className="h-12 px-8 text-base font-medium border-border hover:bg-muted" asChild>
+                <a href="/auth">View Demo</a>
+              </Button>
             </div>
-            <h3 className="text-xl font-semibold mb-2">Trade Tracking</h3>
-            <p className="text-muted-foreground">
-              Log all your trades with detailed entry and exit information, including P&L tracking.
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="container mx-auto px-6 py-24">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Everything you need to scale</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Professional tools for serious traders who want to understand and improve their performance.
             </p>
           </div>
 
-          <div className="text-center">
-            <div className="bg-brand-blue/10 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <BarChart3 className="h-8 w-8 text-brand-blue" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="group p-6 rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 hover:border-brand-blue/50">
+              <div className="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-4 group-hover:bg-brand-blue/30 transition-colors">
+                <TrendingUp className="h-6 w-6 text-brand-blue" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Advanced Tracking</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Log every detail with precision. Entry, exit, P&L, risk, and more with our comprehensive trade journal.
+              </p>
             </div>
-            <h3 className="text-xl font-semibold mb-2">Performance Analytics</h3>
-            <p className="text-muted-foreground">
-              Comprehensive dashboard with win rates, profit/loss analysis, and performance metrics.
-            </p>
-          </div>
 
-          <div className="text-center">
-            <div className="bg-brand-blue/10 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Brain className="h-8 w-8 text-brand-blue" />
+            <div className="group p-6 rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 hover:border-brand-blue/50">
+              <div className="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-4 group-hover:bg-brand-blue/30 transition-colors">
+                <BarChart3 className="h-6 w-6 text-brand-blue" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Performance Analytics</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Deep insights into your trading patterns with advanced metrics, win rates, and drawdown analysis.
+              </p>
             </div>
-            <h3 className="text-xl font-semibold mb-2">
-              AI Screenshot Analysis
-              <span className="ml-2 text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">Premium</span>
-            </h3>
-            <p className="text-muted-foreground">
-              Automatically extract trade details from screenshots using AI. Supports MT4, MT5, and more.
-            </p>
-          </div>
 
-          <div className="text-center">
-            <div className="bg-brand-blue/10 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Calendar className="h-8 w-8 text-brand-blue" />
+            <div className="group p-6 rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 hover:border-brand-blue/50">
+              <div className="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-4 group-hover:bg-brand-blue/30 transition-colors">
+                <Brain className="h-6 w-6 text-brand-blue" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
+                AI Screenshot Analysis
+                <span className="text-xs px-2 py-1 bg-brand-blue/20 text-brand-blue rounded-full">Pro</span>
+              </h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Automatically extract trade details from MT4, MT5, and broker screenshots using advanced AI.
+              </p>
             </div>
-            <h3 className="text-xl font-semibold mb-2">P&L Calendar</h3>
-            <p className="text-muted-foreground">
-              Visual calendar view of your daily, weekly, and monthly trading performance.
-            </p>
+
+            <div className="group p-6 rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 hover:border-brand-blue/50">
+              <div className="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-4 group-hover:bg-brand-blue/30 transition-colors">
+                <Calendar className="h-6 w-6 text-brand-blue" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Visual P&L Calendar</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Track daily, weekly, and monthly performance with our intuitive calendar interface.
+              </p>
+            </div>
+
+            <div className="group p-6 rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 hover:border-brand-blue/50">
+              <div className="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-4 group-hover:bg-brand-blue/30 transition-colors">
+                <Shield className="h-6 w-6 text-brand-blue" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Risk Management</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Built-in risk monitoring with drawdown alerts and position sizing recommendations.
+              </p>
+            </div>
+
+            <div className="group p-6 rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 hover:border-brand-blue/50">
+              <div className="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-4 group-hover:bg-brand-blue/30 transition-colors">
+                <Zap className="h-6 w-6 text-brand-blue" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Multi-Account Support</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Manage multiple trading accounts and strategies from a single unified dashboard.
+              </p>
+            </div>
           </div>
-        </div>
+        </section>
 
         {/* Pricing Section */}
-        <div className="mt-32">
+        <section className="container mx-auto px-6 py-24">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Choose Your Plan</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Simple, transparent pricing</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Start free and upgrade as your trading grows. All plans include our core features.
+              Start free and scale as you grow. No hidden fees, cancel anytime.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Free Plan */}
-            <div className="bg-card border rounded-lg p-8 relative">
-              <div className="text-center">
-                <h3 className="text-2xl font-bold mb-4">Starter</h3>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">$0</span>
-                  <span className="text-muted-foreground">/month</span>
-                </div>
-                <p className="text-muted-foreground mb-8">Perfect for getting started with trading journaling</p>
+            <div className="p-8 rounded-2xl border border-border bg-card">
+              <h3 className="text-2xl font-bold mb-2">Starter</h3>
+              <p className="text-muted-foreground mb-6">Perfect for getting started with trading journaling</p>
+              <div className="mb-8">
+                <span className="text-4xl font-bold">$0</span>
+                <span className="text-muted-foreground">/month</span>
               </div>
               
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
+                  <Check className="h-5 w-5 text-success flex-shrink-0" />
                   <span>Up to 50 trades per month</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
+                  <Check className="h-5 w-5 text-success flex-shrink-0" />
                   <span>Basic performance analytics</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
+                  <Check className="h-5 w-5 text-success flex-shrink-0" />
                   <span>P&L calendar view</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
+                  <Check className="h-5 w-5 text-success flex-shrink-0" />
                   <span>1 trading account</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>Basic confluence checklist</span>
+                  <Check className="h-5 w-5 text-success flex-shrink-0" />
+                  <span>Basic risk management</span>
                 </li>
               </ul>
               
-              <Button className="w-full" asChild>
+              <Button className="w-full h-12 text-base font-medium" asChild>
                 <a href="/auth">Get Started Free</a>
               </Button>
             </div>
 
             {/* Pro Plan */}
-            <div className="bg-card border rounded-lg p-8 relative border-primary">
+            <div className="p-8 rounded-2xl border-2 border-brand-blue bg-card relative">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+                <div className="bg-brand-blue text-white px-4 py-1 rounded-full text-sm font-medium flex items-center gap-1">
                   <Star className="h-4 w-4" />
                   Most Popular
                 </div>
               </div>
               
-              <div className="text-center">
-                <h3 className="text-2xl font-bold mb-4">Professional</h3>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">$10</span>
-                  <span className="text-muted-foreground">/month</span>
-                </div>
-                <p className="text-muted-foreground mb-8">Advanced features for serious traders</p>
+              <h3 className="text-2xl font-bold mb-2">Professional</h3>
+              <p className="text-muted-foreground mb-6">Advanced features for serious traders</p>
+              <div className="mb-8">
+                <span className="text-4xl font-bold">$10</span>
+                <span className="text-muted-foreground">/month</span>
               </div>
               
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
+                  <Check className="h-5 w-5 text-success flex-shrink-0" />
                   <span>Unlimited trades</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
+                  <Check className="h-5 w-5 text-success flex-shrink-0" />
                   <span>Advanced analytics & reports</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
+                  <Check className="h-5 w-5 text-success flex-shrink-0" />
                   <span>Multiple trading accounts</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>Custom strategies & rules</span>
+                  <Check className="h-5 w-5 text-success flex-shrink-0" />
+                  <span>AI Screenshot Analysis</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>Advanced confluence system</span>
+                  <Check className="h-5 w-5 text-success flex-shrink-0" />
+                  <span>Advanced risk management</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>AI Screenshot Analyzer (BYOK)</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>Trade screenshots & notes</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500" />
+                  <Check className="h-5 w-5 text-success flex-shrink-0" />
                   <span>Export & backup</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-success flex-shrink-0" />
+                  <span>Priority support</span>
                 </li>
               </ul>
               
@@ -245,7 +283,6 @@ const Index = () => {
                     title: "Payment Successful!",
                     description: "Welcome to Professional plan! Redirecting to dashboard...",
                   });
-                  // Small delay to show the success message
                   setTimeout(() => {
                     window.location.href = '/dashboard';
                   }, 2000);
@@ -254,39 +291,44 @@ const Index = () => {
                   console.error('Payment error:', error);
                 }}
               >
-                Start Professional Plan
+                <div className="w-full h-12 flex items-center justify-center text-base font-medium">
+                  Start Professional Plan
+                </div>
               </RazorpayPayment>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Call to Action */}
-        <div className="text-center mt-24">
-          <div className="bg-card border rounded-lg p-8 max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold mb-4">Ready to improve your trading?</h2>
-            <p className="text-muted-foreground mb-6">
-              Join thousands of traders who use our platform to track, analyze, and improve their trading performance.
+        <section className="container mx-auto px-6 py-24">
+          <div className="text-center max-w-2xl mx-auto">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-6">Ready to scale your trading?</h2>
+            <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+              Join professional traders who trust TradeZero to track, analyze, and improve their performance.
             </p>
-            <Button size="lg" asChild>
-              <a href="/auth">Create Free Account</a>
+            <Button size="lg" className="h-12 px-8 text-base font-medium" asChild>
+              <a href="/auth">
+                Create Free Account
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </a>
             </Button>
           </div>
-        </div>
+        </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t mt-24">
-        <div className="container mx-auto px-4 py-8">
+      <footer className="border-t border-border/50">
+        <div className="container mx-auto px-6 py-12">
           <div className="flex items-center justify-center gap-2 mb-4">
             <TrendingUp className="h-5 w-5 text-brand-blue" />
-            <span className="font-semibold">The Trade Zero</span>
+            <span className="font-semibold text-lg">TradeZero</span>
           </div>
-          <p className="text-center text-muted-foreground mb-4">
+          <p className="text-center text-muted-foreground mb-6">
             Professional trading journal platform for serious traders.
           </p>
-          <div className="flex justify-center gap-6 text-sm text-muted-foreground">
-            <a href="/terms" className="hover:text-foreground transition-colors">Terms & Conditions</a>
-            <a href="/refund" className="hover:text-foreground transition-colors">Refund Policy</a>
+          <div className="flex justify-center gap-8 text-sm">
+            <a href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms & Conditions</a>
+            <a href="/refund" className="text-muted-foreground hover:text-foreground transition-colors">Refund Policy</a>
           </div>
         </div>
       </footer>
