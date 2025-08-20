@@ -9,53 +9,44 @@ import {
   Text,
   Section,
   Button,
-} from 'npm:@react-email/components@0.0.22';
-import * as React from 'npm:react@18.3.1';
+} from '@react-email/components';
+import * as React from 'react';
 
 interface SignupConfirmationEmailProps {
-  supabase_url: string;
-  email_action_type: string;
-  redirect_to: string;
-  token_hash: string;
+  userEmail: string;
+  userDisplayName?: string;
+  confirmationUrl: string;
   token: string;
-  user_name: string;
 }
 
 export const SignupConfirmationEmail = ({
-  token,
-  supabase_url,
-  email_action_type,
-  redirect_to,
-  token_hash,
-  user_name,
-}: SignupConfirmationEmailProps) => {
-  const confirmationUrl = `${supabase_url}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}`;
-
-  return (
-    <Html>
-      <Head />
-      <Preview>Welcome to The Trade Zero - Confirm your email address</Preview>
-      <Body style={main}>
-        <Container style={container}>
-          <Section style={logoSection}>
-            <Heading style={h1}>The Trade Zero</Heading>
-          </Section>
-          
-          <Heading style={h2}>Welcome, {user_name}!</Heading>
-          
-          <Text style={text}>
-            Thank you for signing up for The Trade Zero. We're excited to help you track and analyze your trading performance.
+  userEmail,
+  userDisplayName,
+  confirmationUrl,
+  token
+}: SignupConfirmationEmailProps) => (
+  <Html>
+    <Head />
+    <Preview>Welcome to TradeZero - Confirm your email address</Preview>
+    <Body style={main}>
+      <Container style={container}>
+        <Section style={header}>
+          <Heading style={h1}>Welcome to TradeZero!</Heading>
+          <Text style={subtitle}>Professional Trading Journal & Analytics Platform</Text>
+        </Section>
+        
+        <Section style={content}>
+          <Text style={greeting}>
+            Hello {userDisplayName || 'Trader'}!
           </Text>
           
           <Text style={text}>
-            To get started, please confirm your email address by clicking the button below:
+            Thank you for signing up for TradeZero. To get started with tracking and analyzing your trades, 
+            please confirm your email address by clicking the button below.
           </Text>
           
-          <Section style={buttonSection}>
-            <Button
-              href={confirmationUrl}
-              style={button}
-            >
+          <Section style={buttonContainer}>
+            <Button href={confirmationUrl} style={button}>
               Confirm Email Address
             </Button>
           </Section>
@@ -63,99 +54,206 @@ export const SignupConfirmationEmail = ({
           <Text style={text}>
             Or copy and paste this link into your browser:
           </Text>
-          
-          <Link href={confirmationUrl} style={link}>
+          <Text style={linkText}>
             {confirmationUrl}
-          </Link>
-          
-          <Text style={smallText}>
-            If you didn't create an account with The Trade Zero, you can safely ignore this email.
           </Text>
           
-          <Text style={footer}>
+          <Section style={codeSection}>
+            <Text style={codeLabel}>Verification Code:</Text>
+            <Text style={code}>{token}</Text>
+          </Section>
+          
+          <Text style={text}>
+            Once confirmed, you'll have access to:
+          </Text>
+          <ul style={featureList}>
+            <li style={featureItem}>📊 Advanced trade journaling</li>
+            <li style={featureItem}>📈 Performance analytics & insights</li>
+            <li style={featureItem}>🎯 Risk management tools</li>
+            <li style={featureItem}>📱 Mobile-friendly interface</li>
+            <li style={featureItem}>🔄 Trade import from multiple platforms</li>
+          </ul>
+          
+          <Text style={helpText}>
+            If you didn't create an account with us, you can safely ignore this email.
+          </Text>
+        </Section>
+        
+        <Section style={footer}>
+          <Text style={footerText}>
             Best regards,<br />
-            The Trade Zero Team
+            The TradeZero Team
           </Text>
-        </Container>
-      </Body>
-    </Html>
-  );
-};
+          <Text style={footerLink}>
+            Visit us at <Link href="https://thetradezero.com" style={link}>thetradezero.com</Link>
+          </Text>
+          <Text style={footerSmall}>
+            This email was sent to {userEmail}
+          </Text>
+        </Section>
+      </Container>
+    </Body>
+  </Html>
+);
 
 export default SignupConfirmationEmail;
 
+// Styles
 const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
+  backgroundColor: '#f8fafc',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
 };
 
 const container = {
   margin: '0 auto',
   padding: '20px 0 48px',
-  maxWidth: '580px',
+  maxWidth: '600px',
 };
 
-const logoSection = {
+const header = {
+  backgroundColor: '#ffffff',
+  borderRadius: '12px 12px 0 0',
+  padding: '40px 30px 30px',
   textAlign: 'center' as const,
-  padding: '20px 0',
+  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
 };
 
 const h1 = {
-  color: '#1f2937',
+  color: '#ffffff',
   fontSize: '28px',
-  fontWeight: 'bold',
-  margin: '0',
-  textAlign: 'center' as const,
+  fontWeight: '700',
+  margin: '0 0 10px',
 };
 
-const h2 = {
-  color: '#1f2937',
-  fontSize: '24px',
-  fontWeight: 'bold',
-  margin: '30px 0 15px',
+const subtitle = {
+  color: 'rgba(255,255,255,0.9)',
+  fontSize: '16px',
+  margin: '0',
+};
+
+const content = {
+  backgroundColor: '#ffffff',
+  padding: '40px 30px',
+  borderRadius: '0 0 12px 12px',
+};
+
+const greeting = {
+  fontSize: '18px',
+  fontWeight: '600',
+  color: '#1e293b',
+  margin: '0 0 20px',
 };
 
 const text = {
-  color: '#374151',
+  color: '#475569',
   fontSize: '16px',
-  lineHeight: '26px',
+  lineHeight: '24px',
   margin: '16px 0',
 };
 
-const buttonSection = {
+const buttonContainer = {
   textAlign: 'center' as const,
   margin: '32px 0',
 };
 
 const button = {
   backgroundColor: '#3b82f6',
-  borderRadius: '6px',
+  borderRadius: '8px',
   color: '#ffffff',
   fontSize: '16px',
-  fontWeight: 'bold',
+  fontWeight: '600',
   textDecoration: 'none',
   textAlign: 'center' as const,
   display: 'inline-block',
-  padding: '12px 24px',
+  padding: '16px 32px',
+  border: 'none',
+};
+
+const linkText = {
+  color: '#3b82f6',
+  fontSize: '14px',
+  fontFamily: 'monospace',
+  wordBreak: 'break-all' as const,
+  backgroundColor: '#f1f5f9',
+  padding: '12px',
+  borderRadius: '6px',
+  margin: '16px 0',
+};
+
+const codeSection = {
+  backgroundColor: '#f8fafc',
+  border: '1px solid #e2e8f0',
+  borderRadius: '8px',
+  padding: '20px',
+  margin: '24px 0',
+  textAlign: 'center' as const,
+};
+
+const codeLabel = {
+  color: '#64748b',
+  fontSize: '14px',
+  margin: '0 0 8px',
+};
+
+const code = {
+  fontSize: '24px',
+  fontWeight: '700',
+  color: '#1e293b',
+  fontFamily: 'monospace',
+  letterSpacing: '2px',
+  margin: '0',
+};
+
+const featureList = {
+  color: '#475569',
+  fontSize: '16px',
+  lineHeight: '24px',
+  paddingLeft: '20px',
+  margin: '16px 0',
+};
+
+const featureItem = {
+  margin: '8px 0',
+};
+
+const helpText = {
+  color: '#64748b',
+  fontSize: '14px',
+  lineHeight: '20px',
+  margin: '32px 0 0',
+  padding: '16px',
+  backgroundColor: '#fef3c7',
+  borderRadius: '6px',
+  border: '1px solid #fbbf24',
+};
+
+const footer = {
+  backgroundColor: '#f8fafc',
+  padding: '30px',
+  textAlign: 'center' as const,
+  marginTop: '20px',
+  borderRadius: '12px',
+};
+
+const footerText = {
+  color: '#475569',
+  fontSize: '16px',
+  margin: '0 0 16px',
+};
+
+const footerLink = {
+  color: '#64748b',
+  fontSize: '14px',
+  margin: '0 0 16px',
 };
 
 const link = {
   color: '#3b82f6',
-  fontSize: '14px',
   textDecoration: 'underline',
-  wordBreak: 'break-all' as const,
 };
 
-const smallText = {
-  color: '#6b7280',
-  fontSize: '14px',
-  lineHeight: '20px',
-  margin: '32px 0 16px',
-};
-
-const footer = {
-  color: '#6b7280',
-  fontSize: '14px',
-  lineHeight: '20px',
-  margin: '32px 0 0',
+const footerSmall = {
+  color: '#94a3b8',
+  fontSize: '12px',
+  margin: '0',
 };

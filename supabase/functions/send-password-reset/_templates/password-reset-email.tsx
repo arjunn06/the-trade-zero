@@ -1,182 +1,158 @@
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
   Html,
   Link,
   Preview,
-  Section,
   Text,
-  Hr,
-} from 'npm:@react-email/components@0.0.22';
-import * as React from 'npm:react@18.3.1';
+  Button,
+  Section
+} from '@react-email/components';
+import * as React from 'react';
 
 interface PasswordResetEmailProps {
-  supabase_url: string;
-  email_action_type: string;
-  redirect_to: string;
-  token_hash: string;
+  userEmail: string;
+  userDisplayName?: string;
+  resetUrl: string;
   token: string;
-  user_email: string;
-  user_name?: string;
 }
 
 export const PasswordResetEmail = ({
-  token,
-  supabase_url,
-  email_action_type,
-  redirect_to,
-  token_hash,
-  user_email,
-  user_name,
-}: PasswordResetEmailProps) => {
-  const resetUrl = `${supabase_url}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}`;
-  const displayName = user_name || user_email?.split('@')[0] || 'Trader';
-
-  return (
-    <Html>
-      <Head />
-      <Preview>Reset your Trade Zero password</Preview>
-      <Body style={main}>
-        <Container style={container}>
-          {/* Header */}
-          <Section style={header}>
-            <div style={logoContainer}>
-              <div style={logoIcon}>🔒</div>
-              <Text style={logoText}>The Trade Zero</Text>
-            </div>
+  userEmail,
+  userDisplayName,
+  resetUrl,
+  token
+}: PasswordResetEmailProps) => (
+  <Html>
+    <Head />
+    <Preview>Reset your TradeZero password</Preview>
+    <Body style={main}>
+      <Container style={container}>
+        <Section style={header}>
+          <Heading style={h1}>Password Reset</Heading>
+          <Text style={subtitle}>TradeZero Account Security</Text>
+        </Section>
+        
+        <Section style={content}>
+          <Text style={greeting}>
+            Hello {userDisplayName || 'Trader'}!
+          </Text>
+          
+          <Text style={text}>
+            We received a request to reset the password for your TradeZero account associated with {userEmail}.
+          </Text>
+          
+          <Text style={text}>
+            If you made this request, click the button below to reset your password. This link will expire in 1 hour for security reasons.
+          </Text>
+          
+          <Section style={buttonContainer}>
+            <Button href={resetUrl} style={button}>
+              Reset Password
+            </Button>
           </Section>
-
-          {/* Content */}
-          <Section style={content}>
-            <Heading style={h1}>Password Reset Request</Heading>
-            
-            <Text style={paragraph}>
-              Hi {displayName},
-            </Text>
-
-            <Text style={paragraph}>
-              We received a request to reset your password for your Trade Zero account. If you didn't make this request, you can safely ignore this email.
-            </Text>
-
-            <Text style={paragraph}>
-              To reset your password, click the button below:
-            </Text>
-
-            {/* CTA Button */}
-            <Section style={buttonContainer}>
-              <Button style={button} href={resetUrl}>
-                Reset Your Password
-              </Button>
-            </Section>
-
-            <Text style={paragraph}>
-              Or copy and paste this link in your browser:
-            </Text>
-            <Link href={resetUrl} style={link}>
-              {resetUrl}
-            </Link>
-
-            <Hr style={hr} />
-
-            {/* Security Notice */}
-            <Section style={securityNotice}>
-              <Text style={securityTitle}>🛡️ Security Notice</Text>
-              <Text style={paragraph}>
-                This password reset link will expire in 1 hour for your security. If you didn't request this reset, please check your account for any suspicious activity.
-              </Text>
-            </Section>
-
-            <Hr style={hr} />
-
-            <Text style={paragraph}>
-              If you're having trouble accessing your account or need assistance, feel free to contact our support team at{' '}
-              <Link href="mailto:support@thetradezero.com" style={link}>
-                support@thetradezero.com
-              </Link>
-            </Text>
-
-            <Text style={paragraph}>
-              Best regards,<br />
-              <strong>The Trade Zero Security Team</strong>
+          
+          <Text style={text}>
+            Or copy and paste this link into your browser:
+          </Text>
+          <Text style={linkText}>
+            {resetUrl}
+          </Text>
+          
+          <Section style={codeSection}>
+            <Text style={codeLabel}>Reset Code:</Text>
+            <Text style={code}>{token}</Text>
+          </Section>
+          
+          <Section style={securityNotice}>
+            <Text style={securityTitle}>🔒 Security Notice</Text>
+            <Text style={securityText}>
+              • This password reset link will expire in 1 hour<br/>
+              • If you didn't request this reset, please ignore this email<br/>
+              • Your password will remain unchanged unless you click the link above<br/>
+              • For security, never share this email or link with anyone
             </Text>
           </Section>
-
-          {/* Footer */}
-          <Section style={footer}>
-            <Text style={footerText}>
-              This email was sent to {user_email}. If you didn't request a password reset, please ignore this email.
-            </Text>
-            <Text style={footerText}>
-              © 2024 The Trade Zero. All rights reserved.
-            </Text>
-          </Section>
-        </Container>
-      </Body>
-    </Html>
-  );
-};
+          
+          <Text style={helpText}>
+            <strong>Didn't request this?</strong><br/>
+            If you didn't request a password reset, you can safely ignore this email. 
+            Your account remains secure and no changes will be made.
+          </Text>
+        </Section>
+        
+        <Section style={footer}>
+          <Text style={footerText}>
+            Best regards,<br />
+            The TradeZero Security Team
+          </Text>
+          <Text style={footerLink}>
+            Visit us at <Link href="https://thetradezero.com" style={link}>thetradezero.com</Link>
+          </Text>
+          <Text style={footerSmall}>
+            This email was sent to {userEmail}
+          </Text>
+        </Section>
+      </Container>
+    </Body>
+  </Html>
+);
 
 export default PasswordResetEmail;
 
 // Styles
 const main = {
-  backgroundColor: '#f6f9fc',
-  fontFamily: '-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif',
+  backgroundColor: '#f8fafc',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segue UI", Roboto, sans-serif',
 };
 
 const container = {
   margin: '0 auto',
   padding: '20px 0 48px',
-  maxWidth: '560px',
+  maxWidth: '600px',
 };
 
 const header = {
   backgroundColor: '#ffffff',
-  borderRadius: '8px 8px 0 0',
-  padding: '24px',
-  borderBottom: '1px solid #e6e8eb',
+  borderRadius: '12px 12px 0 0',
+  padding: '40px 30px 30px',
+  textAlign: 'center' as const,
+  background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
 };
 
-const logoContainer = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '12px',
+const h1 = {
+  color: '#ffffff',
+  fontSize: '28px',
+  fontWeight: '700',
+  margin: '0 0 10px',
 };
 
-const logoIcon = {
-  fontSize: '24px',
-};
-
-const logoText = {
-  fontSize: '24px',
-  fontWeight: 'bold',
-  color: '#1f2937',
+const subtitle = {
+  color: 'rgba(255,255,255,0.9)',
+  fontSize: '16px',
   margin: '0',
 };
 
 const content = {
   backgroundColor: '#ffffff',
-  padding: '32px',
-  borderRadius: '0 0 8px 8px',
+  padding: '40px 30px',
+  borderRadius: '0 0 12px 12px',
 };
 
-const h1 = {
-  color: '#dc2626',
-  fontSize: '28px',
-  fontWeight: 'bold',
-  margin: '0 0 24px',
-  textAlign: 'center' as const,
+const greeting = {
+  fontSize: '18px',
+  fontWeight: '600',
+  color: '#1e293b',
+  margin: '0 0 20px',
 };
 
-const paragraph = {
-  color: '#4b5563',
+const text = {
+  color: '#475569',
   fontSize: '16px',
-  lineHeight: '26px',
-  margin: '0 0 16px',
+  lineHeight: '24px',
+  margin: '16px 0',
 };
 
 const buttonContainer = {
@@ -193,28 +169,51 @@ const button = {
   textDecoration: 'none',
   textAlign: 'center' as const,
   display: 'inline-block',
-  padding: '14px 32px',
+  padding: '16px 32px',
   border: 'none',
-  cursor: 'pointer',
 };
 
-const link = {
-  color: '#dc2626',
-  textDecoration: 'underline',
+const linkText = {
+  color: '#3b82f6',
   fontSize: '14px',
+  fontFamily: 'monospace',
   wordBreak: 'break-all' as const,
+  backgroundColor: '#f1f5f9',
+  padding: '12px',
+  borderRadius: '6px',
+  margin: '16px 0',
 };
 
-const hr = {
-  borderColor: '#e6e8eb',
+const codeSection = {
+  backgroundColor: '#f8fafc',
+  border: '1px solid #e2e8f0',
+  borderRadius: '8px',
+  padding: '20px',
   margin: '24px 0',
+  textAlign: 'center' as const,
+};
+
+const codeLabel = {
+  color: '#64748b',
+  fontSize: '14px',
+  margin: '0 0 8px',
+};
+
+const code = {
+  fontSize: '24px',
+  fontWeight: '700',
+  color: '#1e293b',
+  fontFamily: 'monospace',
+  letterSpacing: '2px',
+  margin: '0',
 };
 
 const securityNotice = {
   backgroundColor: '#fef2f2',
-  padding: '20px',
-  borderRadius: '8px',
   border: '1px solid #fecaca',
+  borderRadius: '8px',
+  padding: '20px',
+  margin: '24px 0',
 };
 
 const securityTitle = {
@@ -224,17 +223,51 @@ const securityTitle = {
   margin: '0 0 12px',
 };
 
+const securityText = {
+  color: '#7f1d1d',
+  fontSize: '14px',
+  lineHeight: '20px',
+  margin: '0',
+};
+
+const helpText = {
+  color: '#64748b',
+  fontSize: '14px',
+  lineHeight: '20px',
+  margin: '32px 0 0',
+  padding: '16px',
+  backgroundColor: '#fef3c7',
+  borderRadius: '6px',
+  border: '1px solid #fbbf24',
+};
+
 const footer = {
   backgroundColor: '#f8fafc',
-  padding: '24px',
-  borderRadius: '8px',
-  marginTop: '24px',
+  padding: '30px',
+  textAlign: 'center' as const,
+  marginTop: '20px',
+  borderRadius: '12px',
 };
 
 const footerText = {
-  color: '#6b7280',
+  color: '#475569',
+  fontSize: '16px',
+  margin: '0 0 16px',
+};
+
+const footerLink = {
+  color: '#64748b',
   fontSize: '14px',
-  lineHeight: '20px',
-  margin: '0 0 8px',
-  textAlign: 'center' as const,
+  margin: '0 0 16px',
+};
+
+const link = {
+  color: '#3b82f6',
+  textDecoration: 'underline',
+};
+
+const footerSmall = {
+  color: '#94a3b8',
+  fontSize: '12px',
+  margin: '0',
 };

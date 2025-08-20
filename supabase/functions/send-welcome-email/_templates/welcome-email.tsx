@@ -1,127 +1,111 @@
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
   Html,
-  Img,
   Link,
   Preview,
-  Section,
   Text,
-  Hr,
-} from 'npm:@react-email/components@0.0.22'
-import * as React from 'npm:react@18.3.1'
+  Button,
+  Section
+} from '@react-email/components';
+import * as React from 'react';
 
 interface WelcomeEmailProps {
-  supabase_url: string
-  email_action_type: string
-  redirect_to: string
-  token_hash: string
-  token: string
-  user_email: string
-  user_name?: string
+  userEmail: string;
+  userDisplayName?: string;
 }
 
 export const WelcomeEmail = ({
-  token,
-  supabase_url,
-  email_action_type,
-  redirect_to,
-  token_hash,
-  user_email,
-  user_name,
-}: WelcomeEmailProps) => {
-  const confirmUrl = `${supabase_url}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}`
-  const displayName = user_name || user_email?.split('@')[0] || 'Trader'
-
-  return (
-    <Html>
-      <Head />
-      <Preview>Welcome to The Trade Zero - Verify your account to get started!</Preview>
-      <Body style={main}>
-        <Container style={container}>
-          {/* Header with logo */}
-          <Section style={header}>
-            <div style={logoContainer}>
-              <div style={logoIcon}>📈</div>
-              <Text style={logoText}>The Trade Zero</Text>
-            </div>
-          </Section>
-
-          {/* Welcome Message */}
-          <Section style={content}>
-            <Heading style={h1}>Welcome to The Trade Zero, {displayName}! 🎉</Heading>
-            
-            <Text style={paragraph}>
-              We're thrilled to have you join our community of serious traders! You're just one step away from accessing your professional trading journal.
-            </Text>
-
-            <Text style={paragraph}>
-              To get started and secure your account, please verify your email address by clicking the button below:
-            </Text>
-
-            {/* CTA Button */}
-            <Section style={buttonContainer}>
-              <Button style={button} href={confirmUrl}>
-                Verify Your Account
-              </Button>
-            </Section>
-
-            <Text style={paragraph}>
-              Or copy and paste this link in your browser:
-            </Text>
-            <Link href={confirmUrl} style={link}>
-              {confirmUrl}
-            </Link>
-
-            <Hr style={hr} />
-
-            {/* What's Next Section */}
-            <Text style={sectionTitle}>What's next?</Text>
-            <Text style={paragraph}>
-              Once you verify your account, you'll be able to:
-            </Text>
-            
-            <ul style={list}>
-              <li style={listItem}>📊 Track unlimited trades with detailed analytics</li>
-              <li style={listItem}>💡 Create custom trading strategies and rules</li>
-              <li style={listItem}>📈 View your performance with our beautiful P&L calendar</li>
-              <li style={listItem}>🔍 Use advanced confluence checklists</li>
-              <li style={listItem}>📱 Access your journal from anywhere</li>
+  userEmail,
+  userDisplayName
+}: WelcomeEmailProps) => (
+  <Html>
+    <Head />
+    <Preview>Welcome to TradeZero - Your Trading Journey Begins!</Preview>
+    <Body style={main}>
+      <Container style={container}>
+        <Section style={header}>
+          <Heading style={h1}>Welcome to TradeZero!</Heading>
+          <Text style={subtitle}>Your Professional Trading Journey Starts Here</Text>
+        </Section>
+        
+        <Section style={content}>
+          <Text style={greeting}>
+            Hello {userDisplayName || 'Trader'}!
+          </Text>
+          
+          <Text style={text}>
+            🎉 Congratulations! Your TradeZero account has been successfully activated. 
+            You're now part of an exclusive community of professional traders who are serious 
+            about tracking, analyzing, and optimizing their trading performance.
+          </Text>
+          
+          <Section style={featureHighlight}>
+            <Text style={featureTitle}>🚀 Here's what you can do now:</Text>
+            <ul style={featureList}>
+              <li style={featureItem}>📊 <strong>Track Every Trade:</strong> Log your trades with detailed analytics</li>
+              <li style={featureItem}>📈 <strong>Performance Analytics:</strong> Get insights into your trading patterns</li>
+              <li style={featureItem}>🎯 <strong>Risk Management:</strong> Monitor your risk and drawdown in real-time</li>
+              <li style={featureItem}>📱 <strong>Mobile Access:</strong> Trade tracking on-the-go</li>
+              <li style={featureItem}>🔄 <strong>Import Trades:</strong> Connect with your broker for automatic imports</li>
+              <li style={featureItem}>📝 <strong>Trading Journal:</strong> Document your trading thoughts and strategies</li>
             </ul>
-
-            <Hr style={hr} />
-
-            {/* Support Section */}
-            <Text style={paragraph}>
-              Need help getting started? We're here for you! Feel free to reach out to our support team at{' '}
-              <Link href="mailto:support@thetradezero.com" style={link}>
-                support@thetradezero.com
-              </Link>
-            </Text>
-
-            <Text style={paragraph}>
-              Happy trading,<br />
-              <strong>The Trade Zero Team</strong>
-            </Text>
           </Section>
-
-          {/* Footer */}
-          <Section style={footer}>
-            <Text style={footerText}>
-              This email was sent to {user_email}. If you didn't create an account with The Trade Zero, you can safely ignore this email.
-            </Text>
-            <Text style={footerText}>
-              © 2024 The Trade Zero. All rights reserved.
-            </Text>
+          
+          <Section style={buttonContainer}>
+            <Button href="https://thetradezero.com/dashboard" style={button}>
+              Start Trading Journey
+            </Button>
           </Section>
-        </Container>
-      </Body>
-    </Html>
-  )
-}
+          
+          <Section style={tipsSection}>
+            <Text style={tipsTitle}>💡 Quick Start Tips:</Text>
+            <ol style={tipsList}>
+              <li style={tipItem}>Set up your first trading account in the Accounts section</li>
+              <li style={tipItem}>Add your first trade to see how our analytics work</li>
+              <li style={tipItem}>Explore the Dashboard to understand your key metrics</li>
+              <li style={tipItem}>Set up your trading goals and risk parameters</li>
+            </ol>
+          </Section>
+          
+          <Text style={supportText}>
+            <strong>Need help getting started?</strong><br/>
+            Check out our <Link href="https://thetradezero.com/docs" style={link}>documentation</Link> or 
+            reach out to our support team at <Link href="mailto:support@thetradezero.com" style={link}>support@thetradezero.com</Link>
+          </Text>
+          
+          <Section style={statsSection}>
+            <Text style={statsTitle}>📊 Join the Community</Text>
+            <Text style={statsText}>
+              You're now part of a growing community of professional traders who have already:
+            </Text>
+            <ul style={statsList}>
+              <li style={statsItem}>• Tracked over 50,000+ trades</li>
+              <li style={statsItem}>• Improved their win rate by an average of 23%</li>
+              <li style={statsItem}>• Reduced their maximum drawdown by 31%</li>
+            </ul>
+          </Section>
+        </Section>
+        
+        <Section style={footer}>
+          <Text style={footerText}>
+            Happy Trading!<br />
+            The TradeZero Team
+          </Text>
+          <Text style={footerLink}>
+            Visit us at <Link href="https://thetradezero.com" style={link}>thetradezero.com</Link>
+          </Text>
+          <Text style={footerSmall}>
+            This email was sent to {userEmail}<br/>
+            You're receiving this because you just created a TradeZero account.
+          </Text>
+        </Section>
+      </Container>
+    </Body>
+  </Html>
+);
 
 export default WelcomeEmail
 

@@ -1,122 +1,75 @@
-import React from 'npm:react@18.3.1'
-import { Webhook } from 'https://esm.sh/standardwebhooks@1.0.0'
-import { Resend } from 'npm:resend@4.0.0'
-import { renderAsync } from 'npm:@react-email/components@0.0.22'
-import { WelcomeEmail } from './_templates/welcome-email.tsx'
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Resend } from "npm:resend@2.0.0";
+import { renderAsync } from "@react-email/components";
+import React from "react";
+import { WelcomeEmail } from "./_templates/welcome-email.tsx";
 
-const resend = new Resend(Deno.env.get('RESEND_API_KEY') as string)
-const hookSecret = Deno.env.get('SEND_EMAIL_HOOK_SECRET') as string
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+interface WelcomeEmailRequest {
+  userEmail: string;
+  userDisplayName?: string;
 }
 
-Deno.serve(async (req) => {
+const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { 
-      status: 405,
-      headers: corsHeaders 
-    })
-  }
-
   try {
-    const payload = await req.text()
-    const headers = Object.fromEntries(req.headers)
-    
-    console.log('Received webhook payload for welcome email')
-    
-    // Verify webhook signature if hook secret is provided
-    if (hookSecret) {
-      const wh = new Webhook(hookSecret)
-      try {
-        wh.verify(payload, headers)
-      } catch (error) {
-        console.error('Webhook verification failed:', error)
-        return new Response('Unauthorized', { 
-          status: 401,
-          headers: corsHeaders 
-        })
-      }
+    const { userEmail, userDisplayName }: WelcomeEmailRequest = await req.json();
+
+    if (!userEmail) {
+      return new Response(
+        JSON.stringify({ error: "Email is required" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
-
-    const webhookData = JSON.parse(payload)
-    const {
-      user,
-      email_data: { token, token_hash, redirect_to, email_action_type },
-    } = webhookData
-
-    console.log('Processing welcome email for user:', user.email)
-
-    // Extract user name from metadata if available
-    const userName = user.user_metadata?.display_name || user.user_metadata?.full_name || null
 
     // Render the React email template
-    const html = await renderAsync(
+    const emailHtml = await renderAsync(
       React.createElement(WelcomeEmail, {
-        supabase_url: Deno.env.get('SUPABASE_URL') ?? '',
-        token,
-        token_hash,
-        redirect_to: redirect_to || Deno.env.get('SITE_URL') || '',
-        email_action_type,
-        user_email: user.email,
-        user_name: userName,
+        userEmail,
+        userDisplayName
       })
-    )
+    );
 
-    console.log('Sending welcome email via Resend...')
+    const emailResponse = await resend.emails.send({
+      from: "TradeZero <welcome@thetradezero.com>",
+      to: [userEmail],
+      subject: "🎉 Welcome to TradeZero - Your Trading Journey Begins!",
+      html: emailHtml,
+    });
 
-    // Send the email using Resend
-    const { data, error } = await resend.emails.send({
-      from: 'The Trade Zero <no-reply@thetradezero.com>',
-      to: [user.email],
-      subject: 'Welcome to The Trade Zero - Verify your account! 🎉',
-      html,
-    })
+    console.log("Welcome email sent successfully:", emailResponse);
 
-    if (error) {
-      console.error('Failed to send email:', error)
-      throw error
-    }
-
-    console.log('Welcome email sent successfully:', data)
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Welcome email sent successfully',
-        email_id: data?.id 
-      }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
-      }
-    )
-
+    return new Response(JSON.stringify(emailResponse), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders,
+      },
+    });
   } catch (error: any) {
-    console.error('Error in send-welcome-email function:', error)
-    
+    console.error("Error in send-welcome-email function:", error);
     return new Response(
-      JSON.stringify({
-        error: {
-          message: error.message || 'Failed to send welcome email',
-          code: error.code || 'UNKNOWN_ERROR',
-        },
-      }),
+      JSON.stringify({ error: error.message }),
       {
         status: 500,
-        headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
-    )
+    );
   }
-})
+};
+
+serve(handler);
