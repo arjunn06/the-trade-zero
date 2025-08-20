@@ -9,8 +9,8 @@ import {
   Text,
   Button,
   Section
-} from '@react-email/components';
-import * as React from 'react';
+} from 'npm:@react-email/components@0.0.22';
+import * as React from 'npm:react@18.3.1';
 
 interface WelcomeEmailProps {
   userEmail: string;
@@ -230,4 +230,138 @@ const footerText = {
   lineHeight: '20px',
   margin: '0 0 8px',
   textAlign: 'center' as const,
+}
+
+const footerLink = {
+  color: '#64748b',
+  fontSize: '14px',
+  margin: '0 0 16px',
+  textAlign: 'center' as const,
+}
+
+const footerSmall = {
+  color: '#94a3b8',
+  fontSize: '12px',
+  margin: '0',
+  textAlign: 'center' as const,
+}
+
+const subtitle = {
+  color: 'rgba(255,255,255,0.9)',
+  fontSize: '16px',
+  margin: '0',
+  textAlign: 'center' as const,
+}
+
+const greeting = {
+  fontSize: '18px',
+  fontWeight: '600',
+  color: '#1e293b',
+  margin: '0 0 20px',
+}
+
+const text = {
+  color: '#475569',
+  fontSize: '16px',
+  lineHeight: '24px',
+  margin: '16px 0',
+}
+
+const featureHighlight = {
+  backgroundColor: '#f8fafc',
+  border: '1px solid #e2e8f0',
+  borderRadius: '8px',
+  padding: '20px',
+  margin: '24px 0',
+}
+
+const featureTitle = {
+  color: '#1e293b',
+  fontSize: '18px',
+  fontWeight: '600',
+  margin: '0 0 16px',
+}
+
+const featureList = {
+  color: '#475569',
+  fontSize: '16px',
+  lineHeight: '24px',
+  paddingLeft: '20px',
+  margin: '16px 0',
+}
+
+const featureItem = {
+  margin: '8px 0',
+}
+
+const tipsSection = {
+  backgroundColor: '#fef3c7',
+  border: '1px solid #fbbf24',
+  borderRadius: '8px',
+  padding: '20px',
+  margin: '24px 0',
+}
+
+const tipsTitle = {
+  color: '#92400e',
+  fontSize: '16px',
+  fontWeight: '600',
+  margin: '0 0 12px',
+}
+
+const tipsList = {
+  color: '#451a03',
+  fontSize: '14px',
+  lineHeight: '20px',
+  paddingLeft: '20px',
+  margin: '12px 0',
+}
+
+const tipItem = {
+  margin: '8px 0',
+}
+
+const supportText = {
+  color: '#64748b',
+  fontSize: '14px',
+  lineHeight: '20px',
+  margin: '32px 0',
+  padding: '16px',
+  backgroundColor: '#f1f5f9',
+  borderRadius: '6px',
+  border: '1px solid #cbd5e1',
+}
+
+const statsSection = {
+  backgroundColor: '#ecfdf5',
+  border: '1px solid #bbf7d0',
+  borderRadius: '8px',
+  padding: '20px',
+  margin: '24px 0',
+}
+
+const statsTitle = {
+  color: '#065f46',
+  fontSize: '16px',
+  fontWeight: '600',
+  margin: '0 0 12px',
+}
+
+const statsText = {
+  color: '#047857',
+  fontSize: '14px',
+  lineHeight: '20px',
+  margin: '0 0 12px',
+}
+
+const statsList = {
+  color: '#047857',
+  fontSize: '14px',
+  lineHeight: '20px',
+  paddingLeft: '20px',
+  margin: '12px 0 0',
+}
+
+const statsItem = {
+  margin: '4px 0',
 }
