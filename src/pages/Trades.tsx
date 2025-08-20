@@ -41,6 +41,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { LoadingTable, LoadingCard } from '@/components/ui/loading-spinner';
 
 interface Trade {
   id: string;
@@ -505,7 +506,41 @@ const Trades = () => {
   }, [trades]);
 
   if (loading) {
-    return <div>Loading trades...</div>;
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          {/* Header Skeleton */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
+              <div className="h-4 bg-muted rounded w-64 animate-pulse"></div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+              <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+            </div>
+          </div>
+          
+          {/* Filters Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="h-10 bg-muted rounded animate-pulse"></div>
+            <div className="h-10 bg-muted rounded animate-pulse"></div>
+            <div className="h-10 bg-muted rounded animate-pulse"></div>
+            <div className="h-10 bg-muted rounded animate-pulse"></div>
+          </div>
+          
+          {/* Table Skeleton */}
+          <Card>
+            <CardHeader>
+              <div className="h-6 bg-muted rounded w-32 animate-pulse"></div>
+            </CardHeader>
+            <CardContent>
+              <LoadingTable rows={8} cols={7} />
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   // Check if basic user has exceeded trade limit
