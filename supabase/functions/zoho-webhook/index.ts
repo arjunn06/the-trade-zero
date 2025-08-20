@@ -89,6 +89,15 @@ function normalizeTradeDataFromRoot(payload: any): ZohoWebhookRequest['trade_dat
   const trading_account_name = payload.trading_account_name ?? payload.Account;
   const notes = payload.notes ?? payload.Notes;
   const emotions = payload.emotions;
+  
+  // Handle exit details if position is closed
+  const position_status = payload.position_status || payload.Position_status;
+  const is_closed = position_status && (String(position_status).toLowerCase() === 'yes' || String(position_status).toLowerCase() === 'closed');
+  const exit_price = is_closed ? toNumber(payload.exit_price ?? payload.Exit_price) : undefined;
+  const exit_date = is_closed ? (payload.exit_date ?? payload.Exit_date ?? payload.exit_time ?? payload.Exit_time) : undefined;
+  const pnl = is_closed ? toNumber(payload.pnl ?? payload.PnL) : undefined;
+  const risk_amount = toNumber(payload.risk_amount ?? payload.Amount_at_risk);
+  
   if (!symbol || !trade_type || entry_price == null || quantity == null) return undefined;
   return {
     symbol,
@@ -101,6 +110,11 @@ function normalizeTradeDataFromRoot(payload: any): ZohoWebhookRequest['trade_dat
     trading_account_name,
     notes,
     emotions,
+    exit_price,
+    exit_date,
+    pnl,
+    risk_amount,
+    status: is_closed ? 'closed' : 'open',
   } as any;
 }
 
@@ -280,15 +294,24 @@ async function handleCreateTrade(user_email?: string, trade_data?: ZohoWebhookRe
       strategy_id = strategy?.id
     }
 
-    // Create the trade
+    // Create the trade with exit details if provided
     const normalizedType = normalizeTradeType((trade_data as any).trade_type);
     const entryPriceNum = toNumber((trade_data as any).entry_price)!;
     const quantityNum = toNumber((trade_data as any).quantity)!;
     const stopLossNum = toNumber((trade_data as any).stop_loss);
     const takeProfitNum = toNumber((trade_data as any).take_profit);
+    const exitPriceNum = toNumber((trade_data as any).exit_price);
+    const pnlNum = toNumber((trade_data as any).pnl);
+    const riskAmountNum = toNumber((trade_data as any).risk_amount);
+    const tradeStatus = (trade_data as any).status || 'open';
+    
     const entryDateIso = trade_data.entry_date
       ? (parseGCDate(trade_data.entry_date) || new Date(trade_data.entry_date).toISOString())
       : new Date().toISOString();
+    
+    const exitDateIso = (trade_data as any).exit_date
+      ? (parseGCDate((trade_data as any).exit_date) || new Date((trade_data as any).exit_date).toISOString())
+      : null;
 
     const { data: trade, error: tradeError } = await supabase
       .from('trades')
@@ -303,9 +326,13 @@ async function handleCreateTrade(user_email?: string, trade_data?: ZohoWebhookRe
         stop_loss: stopLossNum ?? null,
         take_profit: takeProfitNum ?? null,
         entry_date: entryDateIso,
+        exit_price: exitPriceNum ?? null,
+        exit_date: exitDateIso,
+        pnl: pnlNum ?? null,
+        risk_amount: riskAmountNum ?? null,
         notes: trade_data.notes || null,
         emotions: trade_data.emotions || null,
-        status: 'open',
+        status: tradeStatus,
         source: 'zoho_chatbot'
       })
       .select()
