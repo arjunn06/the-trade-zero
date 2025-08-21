@@ -4,6 +4,7 @@ import { logger } from '@/lib/logger';
 import { Shield } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PropFirmProgress } from '@/components/PropFirmProgress';
+import { PropFirmChart } from '@/components/PropFirmChart';
 
 interface PropFirmDashboardProps {
   accounts: any[];
@@ -69,13 +70,26 @@ const PropFirmDashboard = ({ accounts, user, formatCurrency }: PropFirmDashboard
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {propFirmAccounts.map((account) => (
-          <PropFirmProgress
-            key={account.id}
-            account={account}
-            currentEquity={accountEquities[account.id] || account.initial_balance}
-          />
-        ))}
+        <div className="grid gap-4 md:grid-cols-2">
+          {propFirmAccounts.map((account) => (
+            <PropFirmProgress
+              key={account.id}
+              account={account}
+              currentEquity={accountEquities[account.id] || account.initial_balance}
+            />
+          ))}
+        </div>
+        
+        {/* Chart for each prop firm account */}
+        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 mt-4">
+          {propFirmAccounts.map((account) => (
+            <PropFirmChart
+              key={`chart-${account.id}`}
+              account={account}
+              currentEquity={accountEquities[account.id] || account.initial_balance}
+            />
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

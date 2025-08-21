@@ -82,7 +82,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
               <span>Profit Target</span>
               <span>{formatCurrency(currentPnl)} / {formatCurrency(account.profit_target)}</span>
             </div>
-            <Progress value={profitProgress} className="h-2" />
+            <Progress value={profitProgress} className="h-3" />
             <p className="text-xs text-muted-foreground">
               {profitProgress.toFixed(1)}% complete
             </p>
@@ -100,11 +100,11 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
             </div>
             <Progress 
               value={drawdownProgress} 
-              className="h-2"
+              className="h-3"
               style={{
                 '--progress-foreground': drawdownProgress > 80 ? 'hsl(var(--destructive))' : 
                                        drawdownProgress > 60 ? 'hsl(var(--warning))' : 
-                                       'hsl(var(--primary))'
+                                       'hsl(var(--success))'
               } as React.CSSProperties}
             />
             <p className="text-xs text-muted-foreground">
@@ -123,7 +123,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
               </span>
               <span>{account.trading_days_completed} / {account.minimum_trading_days}</span>
             </div>
-            <Progress value={daysProgress} className="h-2" />
+            <Progress value={daysProgress} className="h-3" />
             <p className="text-xs text-muted-foreground">
               {daysRemaining > 0 ? `${daysRemaining} days remaining` : 'Challenge complete'}
             </p>
@@ -133,7 +133,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
         {/* Status Badge */}
         <div className="pt-2 border-t">
           {profitProgress >= 100 && daysProgress >= 100 ? (
-            <Badge variant="default" className="w-full justify-center bg-green-600">
+            <Badge variant="default" className="w-full justify-center bg-success text-success-foreground">
               Challenge Passed!
             </Badge>
           ) : drawdownProgress > 90 ? (
@@ -141,7 +141,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
               High Risk
             </Badge>
           ) : drawdownProgress > 70 ? (
-            <Badge variant="secondary" className="w-full justify-center text-orange-600">
+            <Badge variant="secondary" className="w-full justify-center text-warning">
               Caution
             </Badge>
           ) : (
