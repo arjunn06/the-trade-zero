@@ -19,6 +19,7 @@ import { SmartSuggestions } from '@/components/SmartSuggestions';
 import { QuickTradeWidget } from '@/components/QuickTradeWidget';
 import { AccountFilter } from '@/components/AccountFilter';
 import { PropFirmDashboard } from '@/components/PropFirmDashboard';
+import PerformanceScore from '@/components/PerformanceScore';
 
 interface AccountGoalsSectionProps {
   accounts: any[];
@@ -665,6 +666,14 @@ const Dashboard = () => {
           
           {/* Account Goals Progress */}
           <AccountGoalsSection accounts={accounts} user={user} formatCurrency={formatCurrency} />
+          
+          {/* Performance Score Triangle */}
+          <PerformanceScore
+            winRate={stats.winRate}
+            profitFactor={stats.profitFactor}
+            riskRewardRatio={stats.avgLoss !== 0 ? Math.abs(stats.avgWin / stats.avgLoss) : 0}
+            className="lg:col-span-1"
+          />
           
           {/* Charts and Recent Activity */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

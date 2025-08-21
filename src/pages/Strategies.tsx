@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import CriteriaManager from '@/components/CriteriaManager';
 
 interface Strategy {
   id: string;
@@ -54,11 +55,11 @@ const Strategies = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    rules: '',
-    entry_criteria: '',
-    exit_criteria: '',
-    partial_criteria: '',
-    be_criteria: '',
+    rules: [] as string[],
+    entry_criteria: [] as string[],
+    exit_criteria: [] as string[],
+    partial_criteria: [] as string[],
+    be_criteria: [] as string[],
     risk_per_trade: '',
     max_daily_risk: '',
     min_risk_reward: '',
@@ -108,11 +109,11 @@ const Strategies = () => {
       const strategyData = {
         name: formData.name,
         description: formData.description,
-        rules: formData.rules,
-        entry_criteria: formData.entry_criteria,
-        exit_criteria: formData.exit_criteria,
-        partial_criteria: formData.partial_criteria,
-        be_criteria: formData.be_criteria,
+        rules: formData.rules.join('\n'),
+        entry_criteria: formData.entry_criteria.join('\n'),
+        exit_criteria: formData.exit_criteria.join('\n'),
+        partial_criteria: formData.partial_criteria.join('\n'),
+        be_criteria: formData.be_criteria.join('\n'),
         risk_per_trade: formData.risk_per_trade ? parseFloat(formData.risk_per_trade) : null,
         max_daily_risk: formData.max_daily_risk ? parseFloat(formData.max_daily_risk) : null,
         min_risk_reward: formData.min_risk_reward ? parseFloat(formData.min_risk_reward) : null,
@@ -158,11 +159,11 @@ const Strategies = () => {
     setFormData({
       name: strategy.name,
       description: strategy.description || '',
-      rules: strategy.rules || '',
-      entry_criteria: strategy.entry_criteria || '',
-      exit_criteria: strategy.exit_criteria || '',
-      partial_criteria: strategy.partial_criteria || '',
-      be_criteria: strategy.be_criteria || '',
+      rules: strategy.rules ? strategy.rules.split('\n').filter(Boolean) : [],
+      entry_criteria: strategy.entry_criteria ? strategy.entry_criteria.split('\n').filter(Boolean) : [],
+      exit_criteria: strategy.exit_criteria ? strategy.exit_criteria.split('\n').filter(Boolean) : [],
+      partial_criteria: strategy.partial_criteria ? strategy.partial_criteria.split('\n').filter(Boolean) : [],
+      be_criteria: strategy.be_criteria ? strategy.be_criteria.split('\n').filter(Boolean) : [],
       risk_per_trade: strategy.risk_per_trade ? strategy.risk_per_trade.toString() : '',
       max_daily_risk: strategy.max_daily_risk ? strategy.max_daily_risk.toString() : '',
       min_risk_reward: strategy.min_risk_reward ? strategy.min_risk_reward.toString() : '',
@@ -220,11 +221,11 @@ const Strategies = () => {
     setFormData({
       name: '',
       description: '',
-      rules: '',
-      entry_criteria: '',
-      exit_criteria: '',
-      partial_criteria: '',
-      be_criteria: '',
+      rules: [],
+      entry_criteria: [],
+      exit_criteria: [],
+      partial_criteria: [],
+      be_criteria: [],
       risk_per_trade: '',
       max_daily_risk: '',
       min_risk_reward: '',
@@ -337,61 +338,41 @@ const Strategies = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="entry_criteria">Entry Criteria</Label>
-                  <Textarea
-                    id="entry_criteria"
-                    placeholder="What signals trigger an entry..."
-                    value={formData.entry_criteria}
-                    onChange={(e) => setFormData({ ...formData, entry_criteria: e.target.value })}
-                    rows={4}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="exit_criteria">Exit Criteria</Label>
-                  <Textarea
-                    id="exit_criteria"
-                    placeholder="When to close the trade..."
-                    value={formData.exit_criteria}
-                    onChange={(e) => setFormData({ ...formData, exit_criteria: e.target.value })}
-                    rows={4}
-                  />
-                </div>
+                <CriteriaManager
+                  title="Entry Criteria"
+                  items={formData.entry_criteria}
+                  onItemsChange={(items) => setFormData({ ...formData, entry_criteria: items })}
+                  placeholder="Add entry signal..."
+                />
+                <CriteriaManager
+                  title="Exit Criteria"
+                  items={formData.exit_criteria}
+                  onItemsChange={(items) => setFormData({ ...formData, exit_criteria: items })}
+                  placeholder="Add exit condition..."
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="partial_criteria">Partial Exit Criteria</Label>
-                  <Textarea
-                    id="partial_criteria"
-                    placeholder="When to take partial profits..."
-                    value={formData.partial_criteria}
-                    onChange={(e) => setFormData({ ...formData, partial_criteria: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="be_criteria">Break-Even Criteria</Label>
-                  <Textarea
-                    id="be_criteria"
-                    placeholder="When to move stop to break-even..."
-                    value={formData.be_criteria}
-                    onChange={(e) => setFormData({ ...formData, be_criteria: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="rules">Additional Trading Rules</Label>
-                <Textarea
-                  id="rules"
-                  placeholder="Other important rules and guidelines..."
-                  value={formData.rules}
-                  onChange={(e) => setFormData({ ...formData, rules: e.target.value })}
-                  rows={3}
+                <CriteriaManager
+                  title="Partial Exit Criteria"
+                  items={formData.partial_criteria}
+                  onItemsChange={(items) => setFormData({ ...formData, partial_criteria: items })}
+                  placeholder="Add partial profit rule..."
+                />
+                <CriteriaManager
+                  title="Break-Even Criteria"
+                  items={formData.be_criteria}
+                  onItemsChange={(items) => setFormData({ ...formData, be_criteria: items })}
+                  placeholder="Add break-even condition..."
                 />
               </div>
+
+              <CriteriaManager
+                title="Additional Trading Rules"
+                items={formData.rules}
+                onItemsChange={(items) => setFormData({ ...formData, rules: items })}
+                placeholder="Add trading rule..."
+              />
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
