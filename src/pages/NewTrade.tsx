@@ -17,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Checkbox } from '@/components/ui/checkbox';
 import { CalendarIcon, Upload, X, ImageIcon, Clock, CheckSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
+import MistakesManager from '@/components/MistakesManager';
 
 interface TradingAccount {
   id: string;
@@ -92,6 +93,7 @@ const NewTrade = () => {
   const [showAdvancedFields, setShowAdvancedFields] = useState(false);
   const [showConfluenceSection, setShowConfluenceSection] = useState(true);
   const [isPartialExit, setIsPartialExit] = useState(false);
+  const [tradeMistakes, setTradeMistakes] = useState<any[]>([]);
 
   // Auto-calculate PnL when relevant fields change
   useEffect(() => {
@@ -1632,6 +1634,13 @@ const NewTrade = () => {
                 </PremiumFeature>
               </div>
             </div>
+
+            {/* Mistakes Section */}
+            <MistakesManager 
+              tradeId={isEditing ? id : undefined}
+              mistakes={tradeMistakes}
+              onMistakesChange={setTradeMistakes}
+            />
 
             <div className="flex space-x-4">
               <Button 

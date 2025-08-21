@@ -197,6 +197,33 @@ export type Database = {
         }
         Relationships: []
       }
+      mistake_tags: {
+        Row: {
+          category: string | null
+          color: string | null
+          created_at: string | null
+          id: string
+          tag_name: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          tag_name: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          tag_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           category: string | null
@@ -310,38 +337,62 @@ export type Database = {
       }
       strategies: {
         Row: {
+          be_criteria: string | null
           created_at: string
           description: string | null
+          entry_criteria: string | null
+          exit_criteria: string | null
           id: string
           is_active: boolean
+          market_conditions: string | null
           max_daily_risk: number | null
+          max_risk_reward: number | null
+          min_risk_reward: number | null
           name: string
+          partial_criteria: string | null
           risk_per_trade: number | null
           rules: string | null
+          timeframe: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          be_criteria?: string | null
           created_at?: string
           description?: string | null
+          entry_criteria?: string | null
+          exit_criteria?: string | null
           id?: string
           is_active?: boolean
+          market_conditions?: string | null
           max_daily_risk?: number | null
+          max_risk_reward?: number | null
+          min_risk_reward?: number | null
           name: string
+          partial_criteria?: string | null
           risk_per_trade?: number | null
           rules?: string | null
+          timeframe?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          be_criteria?: string | null
           created_at?: string
           description?: string | null
+          entry_criteria?: string | null
+          exit_criteria?: string | null
           id?: string
           is_active?: boolean
+          market_conditions?: string | null
           max_daily_risk?: number | null
+          max_risk_reward?: number | null
+          min_risk_reward?: number | null
           name?: string
+          partial_criteria?: string | null
           risk_per_trade?: number | null
           rules?: string | null
+          timeframe?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -415,6 +466,44 @@ export type Database = {
           },
           {
             foreignKeyName: "fk_trade_confluence_trade"
+            columns: ["trade_id"]
+            isOneToOne: false
+            referencedRelation: "trades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trade_mistakes: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          mistake_tag: string
+          severity: string | null
+          trade_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          mistake_tag: string
+          severity?: string | null
+          trade_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          mistake_tag?: string
+          severity?: string | null
+          trade_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_mistakes_trade_id_fkey"
             columns: ["trade_id"]
             isOneToOne: false
             referencedRelation: "trades"

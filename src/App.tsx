@@ -17,6 +17,7 @@ import TradeDetail from "./pages/TradeDetail";
 import TradingAccounts from "./pages/TradingAccounts";
 import AccountPerformance from "./pages/AccountPerformance";
 import Strategies from "./pages/Strategies";
+import StrategyAnalytics from "./pages/StrategyAnalytics";
 import Notes from "./pages/Notes";
 import Calendar from "./pages/Calendar";
 import Confluence from "./pages/Confluence";
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/accounts" element={<ProtectedRoute><TradingAccounts /></ProtectedRoute>} />
             <Route path="/account-performance/:id" element={<ProtectedRoute><AccountPerformance /></ProtectedRoute>} />
             <Route path="/strategies" element={<ProtectedRoute><Strategies /></ProtectedRoute>} />
+            <Route path="/strategies/:id/analytics" element={<ProtectedRoute><StrategyAnalytics /></ProtectedRoute>} />
             <Route path="/upgrade" element={<ProtectedRoute><Upgrade /></ProtectedRoute>} />
             <Route path="/confluence" element={<ProtectedRoute><Confluence /></ProtectedRoute>} />
             <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
