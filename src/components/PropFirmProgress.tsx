@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Target, TrendingDown, AlertTriangle } from 'lucide-react';
+import { Clock, Target, TrendingDown, AlertTriangle, Check } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -113,9 +113,17 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
               <span>{formatCurrency(currentPnl)} / {formatCurrency(account.profit_target - account.initial_balance)}</span>
             </div>
             <Progress value={profitProgress} className="h-3" />
-            <p className="text-xs text-muted-foreground">
-              {profitProgress.toFixed(1)}% complete
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                {profitProgress.toFixed(1)}% complete
+              </p>
+              {profitProgress >= 100 && (
+                <div className="flex items-center gap-1 text-success">
+                  <Check className="h-3 w-3" />
+                  <span className="text-xs font-medium">Completed</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -154,9 +162,17 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
               <span>{actualTradingDays} / {account.minimum_trading_days}</span>
             </div>
             <Progress value={daysProgress} className="h-3" />
-            <p className="text-xs text-muted-foreground">
-              {daysRemaining > 0 ? `${daysRemaining} days remaining` : 'Challenge complete'}
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                {daysRemaining > 0 ? `${daysRemaining} days remaining` : 'Challenge complete'}
+              </p>
+              {daysProgress >= 100 && (
+                <div className="flex items-center gap-1 text-success">
+                  <Check className="h-3 w-3" />
+                  <span className="text-xs font-medium">Completed</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
