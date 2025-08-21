@@ -56,8 +56,10 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
   }, [account.id, account.trading_days_completed]);
 
   const currentPnl = currentEquity - account.initial_balance;
-  const profitProgress = account.profit_target ? Math.min((currentPnl / account.profit_target) * 100, 100) : 0;
-  const drawdownProgress = account.max_loss_limit ? Math.min((Math.abs(account.current_drawdown) / account.max_loss_limit) * 100, 100) : 0;
+  const profitGoal = account.profit_target ? Math.max(account.profit_target - account.initial_balance, 0) : 0;
+  const profitProgress = profitGoal > 0 ? Math.min(Math.max((currentPnl / profitGoal) * 100, 0), 100) : 0;
+  const drawdownUsed = Math.max(0, account.initial_balance - currentEquity);
+  const drawdownProgress = account.max_loss_limit ? Math.min(Math.max((drawdownUsed / account.max_loss_limit) * 100, 0), 100) : 0;
   const daysProgress = account.minimum_trading_days ? Math.min((actualTradingDays / account.minimum_trading_days) * 100, 100) : 0;
   
   const daysRemaining = account.target_completion_date 
@@ -123,7 +125,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
             <div className="flex justify-between text-xs">
               <span>Max Drawdown</span>
               <span className="text-destructive">
-                {formatCurrency(Math.abs(account.current_drawdown))} / {formatCurrency(account.max_loss_limit)}
+                {formatCurrency(drawdownUsed)} / {formatCurrency(account.max_loss_limit)}
               </span>
             </div>
             <Progress 
