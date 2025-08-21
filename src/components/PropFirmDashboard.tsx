@@ -69,8 +69,8 @@ const PropFirmDashboard = ({ accounts, user, formatCurrency }: PropFirmDashboard
           Track your progress across all prop firm challenges
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2">
+      <CardContent className="space-y-6">
+        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
           {propFirmAccounts.map((account) => (
             <PropFirmProgress
               key={account.id}

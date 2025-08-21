@@ -1,6 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { TrendingUp } from 'lucide-react';
+import { format } from 'date-fns';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PropFirmChartProps {
   account: {
@@ -11,12 +14,83 @@ interface PropFirmChartProps {
     profit_target?: number;
     max_loss_limit?: number;
     current_drawdown: number;
+    start_date?: string;
   };
   currentEquity: number;
   className?: string;
 }
 
+interface TradeDataPoint {
+  date: string;
+  equity: number;
+  displayDate: string;
+}
+
 export const PropFirmChart = ({ account, currentEquity, className }: PropFirmChartProps) => {
+  const [chartData, setChartData] = useState<TradeDataPoint[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTradeData = async () => {
+      try {
+        const { data: trades } = await supabase
+          .from('trades')
+          .select('entry_date, pnl')
+          .eq('trading_account_id', account.id)
+          .order('entry_date', { ascending: true });
+
+        if (!trades || trades.length === 0) {
+          // No trades yet, show just starting point
+          const startDate = account.start_date ? new Date(account.start_date) : new Date();
+          setChartData([{
+            date: startDate.toISOString(),
+            equity: account.initial_balance,
+            displayDate: format(startDate, 'MMM dd')
+          }]);
+          setLoading(false);
+          return;
+        }
+
+        // Calculate equity progression based on trade dates
+        let runningEquity = account.initial_balance;
+        const dataPoints: TradeDataPoint[] = [];
+        
+        // Add starting point
+        const startDate = account.start_date ? new Date(account.start_date) : new Date(trades[0].entry_date);
+        dataPoints.push({
+          date: startDate.toISOString(),
+          equity: account.initial_balance,
+          displayDate: format(startDate, 'MMM dd')
+        });
+
+        // Add equity progression for each trade
+        trades.forEach((trade) => {
+          runningEquity += trade.pnl || 0;
+          dataPoints.push({
+            date: trade.entry_date,
+            equity: runningEquity,
+            displayDate: format(new Date(trade.entry_date), 'MMM dd')
+          });
+        });
+
+        setChartData(dataPoints);
+      } catch (error) {
+        console.error('Error fetching trade data:', error);
+        // Fallback to basic data
+        const startDate = account.start_date ? new Date(account.start_date) : new Date();
+        setChartData([{
+          date: startDate.toISOString(),
+          equity: account.initial_balance,
+          displayDate: format(startDate, 'MMM dd')
+        }]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTradeData();
+  }, [account.id, account.initial_balance, account.start_date]);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -26,44 +100,19 @@ export const PropFirmChart = ({ account, currentEquity, className }: PropFirmCha
     }).format(amount);
   };
 
-  // Calculate accurate values
+  // Calculate chart boundaries
   const currentPnl = currentEquity - account.initial_balance;
-  const actualDrawdown = Math.min(0, currentPnl); // Drawdown is negative PnL
   const maxLossLevel = account.max_loss_limit ? account.initial_balance - account.max_loss_limit : null;
   
-  // Generate chart data points with accurate progression
-  const chartData = [
-    {
-      point: 'Start',
-      equity: account.initial_balance,
-      profitTarget: account.profit_target,
-      maxLoss: maxLossLevel,
-    },
-    {
-      point: 'Current',
-      equity: currentEquity,
-      profitTarget: account.profit_target,
-      maxLoss: maxLossLevel,
-    },
-    ...(account.profit_target && currentEquity < account.profit_target ? [{
-      point: 'Target',
-      equity: account.profit_target,
-      profitTarget: account.profit_target,
-      maxLoss: maxLossLevel,
-    }] : []),
-  ];
-
-  const minY = Math.min(
-    maxLossLevel || currentEquity,
+  const allValues = [
+    account.initial_balance,
     currentEquity,
-    account.initial_balance
-  ) * 0.9;
+    account.profit_target,
+    maxLossLevel
+  ].filter(Boolean) as number[];
 
-  const maxY = Math.max(
-    account.profit_target || currentEquity,
-    currentEquity,
-    account.initial_balance
-  ) * 1.1;
+  const minY = Math.min(...allValues) * 0.95;
+  const maxY = Math.max(...allValues) * 1.05;
 
   return (
     <Card className={className}>
@@ -74,12 +123,17 @@ export const PropFirmChart = ({ account, currentEquity, className }: PropFirmCha
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {loading ? (
+          <div className="h-64 w-full flex items-center justify-center">
+            <div className="text-muted-foreground">Loading chart data...</div>
+          </div>
+        ) : (
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 10, right: 30, left: 30, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
               <XAxis 
-                dataKey="point" 
+                dataKey="displayDate" 
                 axisLine={false}
                 tickLine={false}
                 className="text-xs"
@@ -133,6 +187,7 @@ export const PropFirmChart = ({ account, currentEquity, className }: PropFirmCha
             </LineChart>
           </ResponsiveContainer>
         </div>
+        )}
         
         {/* Legend */}
         <div className="flex flex-wrap gap-4 mt-4 text-xs">

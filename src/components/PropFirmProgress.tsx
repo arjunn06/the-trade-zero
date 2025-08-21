@@ -3,6 +3,8 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Target, TrendingDown, AlertTriangle } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PropFirmProgressProps {
   account: {
@@ -27,10 +29,36 @@ interface PropFirmProgressProps {
 }
 
 export const PropFirmProgress = ({ account, currentEquity, className }: PropFirmProgressProps) => {
+  const [actualTradingDays, setActualTradingDays] = useState(0);
+
+  useEffect(() => {
+    const calculateTradingDays = async () => {
+      try {
+        const { data: trades } = await supabase
+          .from('trades')
+          .select('entry_date')
+          .eq('trading_account_id', account.id);
+
+        if (trades) {
+          // Count unique dates when trades were made
+          const uniqueDates = new Set(
+            trades.map(trade => format(new Date(trade.entry_date), 'yyyy-MM-dd'))
+          );
+          setActualTradingDays(uniqueDates.size);
+        }
+      } catch (error) {
+        console.error('Error calculating trading days:', error);
+        setActualTradingDays(account.trading_days_completed || 0);
+      }
+    };
+
+    calculateTradingDays();
+  }, [account.id, account.trading_days_completed]);
+
   const currentPnl = currentEquity - account.initial_balance;
   const profitProgress = account.profit_target ? Math.min((currentPnl / account.profit_target) * 100, 100) : 0;
   const drawdownProgress = account.max_loss_limit ? Math.min((Math.abs(account.current_drawdown) / account.max_loss_limit) * 100, 100) : 0;
-  const daysProgress = account.minimum_trading_days ? Math.min((account.trading_days_completed / account.minimum_trading_days) * 100, 100) : 0;
+  const daysProgress = account.minimum_trading_days ? Math.min((actualTradingDays / account.minimum_trading_days) * 100, 100) : 0;
   
   const daysRemaining = account.target_completion_date 
     ? Math.max(0, differenceInDays(new Date(account.target_completion_date), new Date()))
@@ -67,7 +95,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
   }
 
   return (
-    <Card className={className}>
+    <Card className={`w-full ${className}`}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <Target className="h-4 w-4" />
@@ -121,7 +149,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
                 <Clock className="h-3 w-3" />
                 Trading Days
               </span>
-              <span>{account.trading_days_completed} / {account.minimum_trading_days}</span>
+              <span>{actualTradingDays} / {account.minimum_trading_days}</span>
             </div>
             <Progress value={daysProgress} className="h-3" />
             <p className="text-xs text-muted-foreground">
