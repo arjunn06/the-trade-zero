@@ -81,7 +81,7 @@ const PropFirmDashboard = ({ accounts, user, formatCurrency }: PropFirmDashboard
         </div>
         
         {/* Chart for each prop firm account */}
-        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 mt-4">
+        <div className="grid gap-6 mt-6">
           {propFirmAccounts.map((account) => (
             <PropFirmChart
               key={`chart-${account.id}`}

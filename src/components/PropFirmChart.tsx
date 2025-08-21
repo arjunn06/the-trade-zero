@@ -26,39 +26,44 @@ export const PropFirmChart = ({ account, currentEquity, className }: PropFirmCha
     }).format(amount);
   };
 
-  // Generate chart data points
+  // Calculate accurate values
+  const currentPnl = currentEquity - account.initial_balance;
+  const actualDrawdown = Math.min(0, currentPnl); // Drawdown is negative PnL
+  const maxLossLevel = account.max_loss_limit ? account.initial_balance - account.max_loss_limit : null;
+  
+  // Generate chart data points with accurate progression
   const chartData = [
     {
       point: 'Start',
       equity: account.initial_balance,
       profitTarget: account.profit_target,
-      maxLoss: account.initial_balance - (account.max_loss_limit || 0),
+      maxLoss: maxLossLevel,
     },
     {
       point: 'Current',
       equity: currentEquity,
       profitTarget: account.profit_target,
-      maxLoss: account.initial_balance - (account.max_loss_limit || 0),
+      maxLoss: maxLossLevel,
     },
-    {
+    ...(account.profit_target && currentEquity < account.profit_target ? [{
       point: 'Target',
-      equity: account.profit_target || currentEquity,
+      equity: account.profit_target,
       profitTarget: account.profit_target,
-      maxLoss: account.initial_balance - (account.max_loss_limit || 0),
-    },
+      maxLoss: maxLossLevel,
+    }] : []),
   ];
 
   const minY = Math.min(
-    account.initial_balance - (account.max_loss_limit || 0),
+    maxLossLevel || currentEquity,
     currentEquity,
     account.initial_balance
-  ) * 0.95;
+  ) * 0.9;
 
   const maxY = Math.max(
     account.profit_target || currentEquity,
     currentEquity,
     account.initial_balance
-  ) * 1.05;
+  ) * 1.1;
 
   return (
     <Card className={className}>
@@ -69,9 +74,9 @@ export const PropFirmChart = ({ account, currentEquity, className }: PropFirmCha
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-48 w-full">
+        <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <LineChart data={chartData} margin={{ top: 10, right: 30, left: 30, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
               <XAxis 
                 dataKey="point" 
@@ -89,9 +94,9 @@ export const PropFirmChart = ({ account, currentEquity, className }: PropFirmCha
               />
               
               {/* Max Loss Line */}
-              {account.max_loss_limit && (
+              {maxLossLevel && (
                 <ReferenceLine 
-                  y={account.initial_balance - account.max_loss_limit} 
+                  y={maxLossLevel} 
                   stroke="hsl(var(--destructive))" 
                   strokeDasharray="5 5"
                   strokeWidth={2}
@@ -137,19 +142,23 @@ export const PropFirmChart = ({ account, currentEquity, className }: PropFirmCha
           </div>
           {account.profit_target && (
             <div className="flex items-center gap-2">
-              <div className="w-3 h-0.5 bg-success border-dashed border-t-2 border-success"></div>
-              <span>Profit Target</span>
+              <div className="w-4 h-0.5 bg-success"></div>
+              <span>Target: {formatCurrency(account.profit_target)}</span>
             </div>
           )}
-          {account.max_loss_limit && (
+          {maxLossLevel && (
             <div className="flex items-center gap-2">
-              <div className="w-3 h-0.5 bg-destructive border-dashed border-t-2 border-destructive"></div>
-              <span>Max Loss</span>
+              <div className="w-4 h-0.5 bg-destructive"></div>
+              <span>Max Loss: {formatCurrency(maxLossLevel)}</span>
             </div>
           )}
           <div className="flex items-center gap-2">
-            <div className="w-3 h-0.5 bg-muted-foreground border-dashed border-t border-muted-foreground"></div>
-            <span>Start Balance</span>
+            <div className="w-4 h-0.5 bg-muted-foreground"></div>
+            <span>Start: {formatCurrency(account.initial_balance)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-0.5 bg-primary"></div>
+            <span>Current: {formatCurrency(currentEquity)} ({currentPnl >= 0 ? '+' : ''}{formatCurrency(currentPnl)})</span>
           </div>
         </div>
       </CardContent>
