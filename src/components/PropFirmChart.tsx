@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, Tooltip } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
@@ -111,6 +111,25 @@ export const PropFirmChart = ({ account, currentEquity, className }: PropFirmCha
     maxLossLevel
   ].filter(Boolean) as number[];
 
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+          <p className="font-medium">{label}</p>
+          <p className="text-primary">
+            Equity: {formatCurrency(payload[0].value)}
+          </p>
+          {payload[0].value !== account.initial_balance && (
+            <p className={`text-xs ${payload[0].value >= account.initial_balance ? 'text-success' : 'text-destructive'}`}>
+              P&L: {payload[0].value >= account.initial_balance ? '+' : ''}{formatCurrency(payload[0].value - account.initial_balance)}
+            </p>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
   const minY = Math.min(...allValues) * 0.95;
   const maxY = Math.max(...allValues) * 1.05;
 
@@ -146,6 +165,8 @@ export const PropFirmChart = ({ account, currentEquity, className }: PropFirmCha
                 className="text-xs"
                 width={80}
               />
+              
+              <Tooltip content={<CustomTooltip />} />
               
               {/* Max Loss Line */}
               {maxLossLevel && (

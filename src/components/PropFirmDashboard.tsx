@@ -70,7 +70,7 @@ const PropFirmDashboard = ({ accounts, user, formatCurrency }: PropFirmDashboard
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+        <div className="grid gap-6">
           {propFirmAccounts.map((account) => (
             <PropFirmProgress
               key={account.id}

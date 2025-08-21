@@ -108,7 +108,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
           <div className="space-y-2">
             <div className="flex justify-between text-xs">
               <span>Profit Target</span>
-              <span>{formatCurrency(currentPnl)} / {formatCurrency(account.profit_target)}</span>
+              <span>{formatCurrency(currentPnl)} / {formatCurrency(account.profit_target - account.initial_balance)}</span>
             </div>
             <Progress value={profitProgress} className="h-3" />
             <p className="text-xs text-muted-foreground">
@@ -123,7 +123,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
             <div className="flex justify-between text-xs">
               <span>Max Drawdown</span>
               <span className="text-destructive">
-                {formatCurrency(account.current_drawdown)} / -{formatCurrency(account.max_loss_limit)}
+                {formatCurrency(Math.abs(account.current_drawdown))} / {formatCurrency(account.max_loss_limit)}
               </span>
             </div>
             <Progress 
