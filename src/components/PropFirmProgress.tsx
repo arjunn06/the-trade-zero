@@ -60,6 +60,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
   const profitProgress = profitGoal > 0 ? Math.min(Math.max((currentPnl / profitGoal) * 100, 0), 100) : 0;
   const remainingProfit = profitGoal > 0 ? Math.max(profitGoal - currentPnl, 0) : 0;
   const drawdownUsed = Math.max(0, account.initial_balance - currentEquity);
+  const remainingDrawdown = account.max_loss_limit ? Math.max(0, account.max_loss_limit - drawdownUsed) : 0;
   const drawdownProgress = account.max_loss_limit ? Math.min(Math.max((drawdownUsed / account.max_loss_limit) * 100, 0), 100) : 0;
   const daysProgress = account.minimum_trading_days ? Math.min((actualTradingDays / account.minimum_trading_days) * 100, 100) : 0;
   
@@ -149,10 +150,17 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
                                        drawdownProgress > 60 ? 'hsl(var(--warning))' : 
                                        'hsl(var(--success))'
               } as React.CSSProperties}
-            />
-            <p className="text-xs text-muted-foreground">
-              {drawdownProgress.toFixed(1)}% of max drawdown used
-            </p>
+             />
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                {drawdownProgress.toFixed(1)}% of max drawdown used
+              </p>
+              {drawdownProgress < 100 && remainingDrawdown > 0 && (
+                <p className="text-xs text-muted-foreground font-medium">
+                  {formatCurrency(remainingDrawdown)} left
+                </p>
+              )}
+            </div>
           </div>
         )}
 
