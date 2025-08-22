@@ -61,7 +61,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
   const remainingProfit = profitGoal > 0 ? Math.max(profitGoal - currentPnl, 0) : 0;
   
   // Use the account's current_drawdown if available, otherwise calculate from equity difference
-  const drawdownUsed = account.current_drawdown || Math.max(0, account.initial_balance - currentEquity);
+  const drawdownUsed = (account.current_drawdown ?? Math.max(0, account.initial_balance - currentEquity));
   const remainingDrawdown = account.max_loss_limit ? Math.max(0, account.max_loss_limit - drawdownUsed) : 0;
   const drawdownProgress = account.max_loss_limit ? Math.min(Math.max((drawdownUsed / account.max_loss_limit) * 100, 0), 100) : 0;
   
@@ -124,7 +124,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
           <div className="space-y-2">
             <div className="flex justify-between text-xs">
               <span>Profit Target</span>
-              <span>{formatCurrency(currentPnl)} / {formatCurrency(account.profit_target - account.initial_balance)}</span>
+              <span>{formatCurrency(currentPnl)} / {formatCurrency(profitGoal)}</span>
             </div>
             <Progress value={profitProgress} className="h-3" />
             <div className="flex items-center justify-between">
