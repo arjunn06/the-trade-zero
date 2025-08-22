@@ -693,7 +693,11 @@ const Trades = () => {
                                 : 'bg-loss/10 text-loss border-loss/20'
                             }`}
                           >
-                            {trade.trade_type === 'long' ? 'Long' : 'Short'}
+                            {trade.trade_type === 'long' ? (
+                              <TrendingUp className="h-3 w-3" />
+                            ) : (
+                              <TrendingDown className="h-3 w-3" />
+                            )}
                           </Badge>
                         </div>
                         
