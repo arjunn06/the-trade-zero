@@ -115,22 +115,19 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
             </div>
             <Progress value={profitProgress} className="h-3" />
             <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">
-                  {profitProgress.toFixed(1)}% complete
-                </p>
-                {profitProgress < 100 && remainingProfit > 0 && (
-                  <p className="text-xs text-primary font-medium">
-                    ({formatCurrency(remainingProfit)} more to complete)
-                  </p>
-                )}
-              </div>
-              {profitProgress >= 100 && (
+              <p className="text-xs text-muted-foreground">
+                {profitProgress.toFixed(1)}% complete
+              </p>
+              {profitProgress >= 100 ? (
                 <div className="flex items-center gap-1 text-success">
                   <Check className="h-3 w-3" />
                   <span className="text-xs font-medium">Completed</span>
                 </div>
-              )}
+              ) : remainingProfit > 0 ? (
+                <p className="text-xs text-primary font-medium">
+                  {formatCurrency(remainingProfit)} more
+                </p>
+              ) : null}
             </div>
           </div>
         )}
