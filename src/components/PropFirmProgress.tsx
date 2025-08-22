@@ -59,9 +59,21 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
   const profitGoal = account.profit_target ? Math.max(account.profit_target - account.initial_balance, 0) : 0;
   const profitProgress = profitGoal > 0 ? Math.min(Math.max((currentPnl / profitGoal) * 100, 0), 100) : 0;
   const remainingProfit = profitGoal > 0 ? Math.max(profitGoal - currentPnl, 0) : 0;
-  const drawdownUsed = Math.max(0, account.initial_balance - currentEquity);
+  
+  // Use the account's current_drawdown if available, otherwise calculate from equity difference
+  const drawdownUsed = account.current_drawdown || Math.max(0, account.initial_balance - currentEquity);
   const remainingDrawdown = account.max_loss_limit ? Math.max(0, account.max_loss_limit - drawdownUsed) : 0;
   const drawdownProgress = account.max_loss_limit ? Math.min(Math.max((drawdownUsed / account.max_loss_limit) * 100, 0), 100) : 0;
+  
+  // Debug logging
+  console.log('Drawdown Debug:', {
+    currentEquity,
+    initialBalance: account.initial_balance,
+    currentDrawdown: account.current_drawdown,
+    drawdownUsed,
+    maxLossLimit: account.max_loss_limit,
+    drawdownProgress
+  });
   const daysProgress = account.minimum_trading_days ? Math.min((actualTradingDays / account.minimum_trading_days) * 100, 100) : 0;
   
   const daysRemaining = account.target_completion_date 
@@ -144,12 +156,11 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
             </div>
             <Progress 
               value={drawdownProgress} 
-              className="h-3"
-              style={{
-                '--progress-foreground': drawdownProgress > 80 ? 'hsl(var(--destructive))' : 
-                                       drawdownProgress > 60 ? 'hsl(var(--warning))' : 
-                                       'hsl(var(--success))'
-              } as React.CSSProperties}
+              className={`h-3 ${
+                drawdownProgress > 80 ? '[&>div]:bg-destructive' : 
+                drawdownProgress > 60 ? '[&>div]:bg-yellow-500' : 
+                '[&>div]:bg-green-500'
+              }`}
              />
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
