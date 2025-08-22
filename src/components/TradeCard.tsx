@@ -183,21 +183,32 @@ export function TradeCard({ trade, onClose, onDelete, onDuplicate, onViewScreens
           </div>
         )}
 
-        <div className="flex gap-2 pt-3 border-t">
+        <div className="flex gap-2 pt-3 border-t opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
           <Button
             size="sm"
             variant="outline"
             onClick={(e) => handleActionClick(e, () => navigate(`/trades/${trade.id}`))}
-            className="flex-1"
+            className="flex-1 hover:scale-105 transition-transform duration-200"
           >
             <Eye className="h-4 w-4 mr-1" />
             View
           </Button>
+          {onDuplicate && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => handleActionClick(e, () => onDuplicate(trade.id))}
+              className="hover:scale-105 transition-transform duration-200"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          )}
           {trade.status === 'open' && onClose && (
             <Button
               size="sm"
               variant="outline"
               onClick={(e) => handleActionClick(e, () => onClose(trade))}
+              className="hover:scale-105 transition-transform duration-200"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -207,6 +218,7 @@ export function TradeCard({ trade, onClose, onDelete, onDuplicate, onViewScreens
               size="sm"
               variant="ghost"
               onClick={(e) => handleActionClick(e, () => onDelete(trade.id))}
+              className="hover:scale-105 transition-transform duration-200 hover:bg-destructive/10 hover:text-destructive"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
