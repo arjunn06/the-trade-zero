@@ -58,6 +58,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
   const currentPnl = currentEquity - account.initial_balance;
   const profitGoal = account.profit_target ? Math.max(account.profit_target - account.initial_balance, 0) : 0;
   const profitProgress = profitGoal > 0 ? Math.min(Math.max((currentPnl / profitGoal) * 100, 0), 100) : 0;
+  const remainingProfit = profitGoal > 0 ? Math.max(profitGoal - currentPnl, 0) : 0;
   const drawdownUsed = Math.max(0, account.initial_balance - currentEquity);
   const drawdownProgress = account.max_loss_limit ? Math.min(Math.max((drawdownUsed / account.max_loss_limit) * 100, 0), 100) : 0;
   const daysProgress = account.minimum_trading_days ? Math.min((actualTradingDays / account.minimum_trading_days) * 100, 100) : 0;
@@ -114,9 +115,16 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
             </div>
             <Progress value={profitProgress} className="h-3" />
             <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                {profitProgress.toFixed(1)}% complete
-              </p>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">
+                  {profitProgress.toFixed(1)}% complete
+                </p>
+                {profitProgress < 100 && remainingProfit > 0 && (
+                  <p className="text-xs text-primary font-medium">
+                    ({formatCurrency(remainingProfit)} more to complete)
+                  </p>
+                )}
+              </div>
               {profitProgress >= 100 && (
                 <div className="flex items-center gap-1 text-success">
                   <Check className="h-3 w-3" />
