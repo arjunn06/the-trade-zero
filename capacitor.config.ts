@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.3c42aa138f9e484787f64e4378ffe56d',
-  appName: 'the-trade-zero',
+  appId: 'com.tradezero.app',
+  appName: 'Trade Zero',
   webDir: 'dist',
   server: {
     url: 'https://3c42aa13-8f9e-4847-87f6-4e4378ffe56d.lovableproject.com?forceHideBadge=true',
