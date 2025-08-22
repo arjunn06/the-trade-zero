@@ -81,7 +81,7 @@ const Trades = () => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [tradingAccounts, setTradingAccounts] = useState<{ id: string; name: string; }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [screenshotDialog, setScreenshotDialog] = useState(false);
