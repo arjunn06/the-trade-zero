@@ -644,9 +644,37 @@ const Trades = () => {
                 {filteredAndSortedTrades.map((trade, index) => (
                   <Card 
                     key={trade.id} 
-                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    className="group relative cursor-pointer hover:shadow-xl transition-all duration-300 ring-1 ring-border hover:ring-accent"
                     onClick={() => navigate(`/trades/${trade.id}`)}
                   >
+                    {/* Hover actions */}
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-200">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopyTrade(trade.id);
+                        }}
+                        aria-label="Duplicate trade"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 hover:text-destructive hover:bg-destructive/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteConfirm(trade.id, trade.symbol);
+                        }}
+                        aria-label="Delete trade"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+
                     <CardContent className="p-4 space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="text-sm text-muted-foreground">
@@ -656,7 +684,7 @@ const Trades = () => {
                       
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-lg">{trade.symbol}</span>
+                          <span className="font-semibold text-lg group-hover:underline decoration-primary/40 decoration-2 underline-offset-4 transition-[text-decoration-color]">{trade.symbol}</span>
                           <Badge 
                             variant={trade.trade_type === 'long' ? 'default' : 'secondary'}
                             className={`text-xs ${
