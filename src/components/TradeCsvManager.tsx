@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { PremiumFeature } from '@/components/PremiumFeature';
+import { CustomizableCsvExport } from '@/components/CustomizableCsvExport';
 
 interface TradeCsvManagerProps {
   accountId: string;
@@ -339,7 +340,7 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
               <Label className="text-sm font-medium">
                 Export Trades
               </Label>
-              <div className="mt-2">
+              <div className="mt-2 space-y-2">
                 <Button
                   onClick={handleExportCsv}
                   disabled={isExporting}
@@ -347,10 +348,11 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
                   className="w-full"
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  {isExporting ? 'Exporting...' : 'Download CSV'}
+                  {isExporting ? 'Exporting...' : 'Quick Export (All Fields)'}
                 </Button>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Export all trades from this account
+                <CustomizableCsvExport accountId={accountId} accountName={accountName} />
+                <p className="text-xs text-muted-foreground">
+                  Quick export includes all fields, or use custom export to select specific fields
                 </p>
               </div>
             </div>
