@@ -544,6 +544,7 @@ export type Database = {
           risk_amount: number | null
           risk_reward_ratio: number | null
           screenshots: string[] | null
+          session: string | null
           slippage_points: number | null
           source: string | null
           spread: number | null
@@ -590,6 +591,7 @@ export type Database = {
           risk_amount?: number | null
           risk_reward_ratio?: number | null
           screenshots?: string[] | null
+          session?: string | null
           slippage_points?: number | null
           source?: string | null
           spread?: number | null
@@ -636,6 +638,7 @@ export type Database = {
           risk_amount?: number | null
           risk_reward_ratio?: number | null
           screenshots?: string[] | null
+          session?: string | null
           slippage_points?: number | null
           source?: string | null
           spread?: number | null
