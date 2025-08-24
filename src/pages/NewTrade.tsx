@@ -67,6 +67,7 @@ const NewTrade = () => {
   const [formData, setFormData] = useState({
     symbol: '',
     trade_type: '',
+    session: '',
     entry_price: '',
     quantity: '',
     stop_loss: '',
@@ -190,6 +191,7 @@ const NewTrade = () => {
       setFormData({
         symbol: data.symbol || '',
         trade_type: data.trade_type || '',
+        session: (data as any).session || '',
         entry_price: data.entry_price?.toString() || '',
         quantity: data.quantity?.toString() || '',
         stop_loss: data.stop_loss?.toString() || '',
@@ -278,6 +280,7 @@ const NewTrade = () => {
       setFormData({
         symbol: data.symbol || '',
         trade_type: data.trade_type || '',
+        session: (data as any).session || '',
         entry_price: data.entry_price?.toString() || '',
         quantity: data.quantity?.toString() || '',
         stop_loss: data.stop_loss?.toString() || '',
@@ -660,6 +663,7 @@ const NewTrade = () => {
       const tradeData = {
         symbol: formData.symbol.toUpperCase(),
         trade_type: formData.trade_type,
+        session: formData.session || null,
         entry_price: parseFloat(formData.entry_price),
         quantity: parseFloat(formData.quantity),
         stop_loss: formData.stop_loss ? parseFloat(formData.stop_loss) : null,
@@ -886,6 +890,25 @@ const NewTrade = () => {
                   {formErrors.trade_type && (
                     <p className="text-sm text-destructive mt-1">{formErrors.trade_type}</p>
                   )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="session" className="text-sm font-medium">Trading Session</Label>
+                  <Select 
+                    value={formData.session} 
+                    onValueChange={(value) => setFormData({ ...formData, session: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select trading session" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="asia">Asia</SelectItem>
+                      <SelectItem value="london">London</SelectItem>
+                      <SelectItem value="new-york-am">New York AM</SelectItem>
+                      <SelectItem value="new-york-lunch">New York Lunch</SelectItem>
+                      <SelectItem value="new-york-pm">New York PM</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
