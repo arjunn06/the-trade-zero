@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RazorpayPayment } from '@/components/RazorpayPayment';
+import { SubscriptionRefresh } from '@/components/SubscriptionRefresh';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -96,9 +97,12 @@ const Upgrade = () => {
             )}
           </div>
 
+          {/* Subscription Status & Refresh */}
+          <SubscriptionRefresh />
+
           {/* Current Plan Status */}
           {isPremium && (
-            <Card className="mb-8 border-primary/20 bg-primary/5">
+            <Card className="mt-8 mb-8 border-primary/20 bg-primary/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Zap className="h-5 w-5 text-primary" />
