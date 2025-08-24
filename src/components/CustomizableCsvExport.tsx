@@ -108,12 +108,18 @@ export function CustomizableCsvExport({ accountId, accountName }: CustomizableCs
     
     setIsExporting(true);
     try {
-      const { data: trades, error } = await supabase
+      // Build query based on account selection
+      let query = supabase
         .from('trades')
         .select('*')
-        .eq('trading_account_id', accountId)
-        .eq('user_id', user.id)
-        .order('entry_date', { ascending: false });
+        .eq('user_id', user.id);
+
+      // Only filter by account if a specific account is selected
+      if (accountId !== 'all') {
+        query = query.eq('trading_account_id', accountId);
+      }
+
+      const { data: trades, error } = await query.order('entry_date', { ascending: false });
 
       if (error) throw error;
 

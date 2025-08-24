@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, TrendingUp, TrendingDown, ImageIcon, Eye, X, Copy, MoreHorizontal, Grid3X3, List } from 'lucide-react';
+import { Plus, Edit, Trash2, TrendingUp, TrendingDown, ImageIcon, Eye, X, Copy, MoreHorizontal, Grid3X3, List, FileSpreadsheet } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +15,7 @@ import { TradeFilters, type TradeFilters as TradeFiltersType } from '@/component
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useUndoToast } from '@/components/UndoToast';
 import { CopyTradeDialog } from '@/components/CopyTradeDialog';
+import { CustomizableCsvExport } from '@/components/CustomizableCsvExport';
 import {
   Table,
   TableBody,
@@ -555,6 +556,29 @@ const Trades = () => {
             <p className="text-muted-foreground">View and manage your trading history</p>
           </div>
           <div className="flex items-center gap-3">
+            {/* Export Button - Show only when there are trades */}
+            {trades.length > 0 && (
+              <PremiumFeature
+                feature="CSV Export"
+                description="Export your trades to CSV with customizable fields"
+                showUpgrade={false}
+                fallback={
+                  <Button variant="outline" disabled>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    Export CSV
+                  </Button>
+                }
+              >
+                <CustomizableCsvExport 
+                  accountId={filters.accountId || 'all'} 
+                  accountName={filters.accountId ? 
+                    tradingAccounts.find(acc => acc.id === filters.accountId)?.name || 'Selected Account' : 
+                    'All Accounts'
+                  }
+                />
+              </PremiumFeature>
+            )}
+            
             {/* View Toggle */}
             <div className="flex items-center border rounded-lg p-1">
               <Button
