@@ -125,6 +125,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          invoice_url: string | null
           trading_account_id: string | null
           transaction_date: string
           transaction_type: string
@@ -136,6 +137,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          invoice_url?: string | null
           trading_account_id?: string | null
           transaction_date?: string
           transaction_type: string
@@ -147,6 +149,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          invoice_url?: string | null
           trading_account_id?: string | null
           transaction_date?: string
           transaction_type?: string

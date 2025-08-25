@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Plus, DollarSign, TrendingUp, TrendingDown, Building2, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, DollarSign, TrendingUp, TrendingDown, Building2, Search } from 'lucide-react';
 import { FinancialTransactionDialog } from '@/components/FinancialTransactionDialog';
+import { TransactionCard } from '@/components/TransactionCard';
+import { TransactionDetailDialog } from '@/components/TransactionDetailDialog';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { format } from 'date-fns';
 
 interface FinancialTransaction {
@@ -19,6 +21,7 @@ interface FinancialTransaction {
   transaction_date: string;
   created_at: string;
   trading_account_id: string | null;
+  invoice_url?: string;
   trading_accounts?: {
     name: string;
     currency: string;
@@ -45,9 +48,12 @@ const transactionTypes = [
 export default function Transactions() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
+  const [accounts, setAccounts] = useState<Array<{ id: string; name: string; currency: string }>>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<FinancialTransaction | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<TransactionMetrics>({
     totalDeposits: 0,
@@ -56,6 +62,24 @@ export default function Transactions() {
     totalPayouts: 0,
     netFlow: 0,
   });
+
+  const fetchAccounts = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('trading_accounts')
+        .select('id, name, currency')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setAccounts(data || []);
+    } catch (error) {
+      console.error('Error fetching accounts:', error);
+    }
+  };
 
   const fetchTransactions = async () => {
     if (!user) return;
@@ -121,6 +145,15 @@ export default function Transactions() {
     setMetrics(metrics);
   };
 
+  const handleEdit = (transaction: FinancialTransaction) => {
+    setSelectedTransaction(transaction);
+    setShowDetailDialog(true);
+  };
+
+  const handleViewInvoice = (invoiceUrl: string) => {
+    window.open(invoiceUrl, '_blank');
+  };
+
   const handleDelete = async (transactionId: string) => {
     try {
       const { error } = await supabase
@@ -144,6 +177,8 @@ export default function Transactions() {
         description: "Failed to delete transaction",
         variant: "destructive",
       });
+    } finally {
+      setTransactionToDelete(null);
     }
   };
 
@@ -154,28 +189,29 @@ export default function Transactions() {
     }).format(amount);
   };
 
-  const getTransactionTitle = (transaction: FinancialTransaction) => {
-    const typeInfo = getTransactionTypeInfo(transaction.transaction_type);
-    const accountName = transaction.trading_accounts?.name || 'No Account';
+  // Filter transactions based on search term
+  const filteredTransactions = transactions.filter((transaction) => {
+    const searchLower = searchTerm.toLowerCase();
+    const typeInfo = transactionTypes.find(t => t.value === transaction.transaction_type);
+    const accountName = transaction.trading_accounts?.name || '';
     
-    // Create transaction title with proper preposition
-    const preposition = ['deposit', 'payout'].includes(transaction.transaction_type) ? 'to' : 'from';
-    
-    return `${typeInfo.label} ${preposition} ${accountName}`;
-  };
-
-  const getTransactionTypeInfo = (type: string) => {
-    return transactionTypes.find(t => t.value === type) || transactionTypes[transactionTypes.length - 1];
-  };
+    return (
+      typeInfo?.label.toLowerCase().includes(searchLower) ||
+      accountName.toLowerCase().includes(searchLower) ||
+      (transaction.description && transaction.description.toLowerCase().includes(searchLower)) ||
+      transaction.amount.toString().includes(searchLower)
+    );
+  });
 
   useEffect(() => {
+    fetchAccounts();
     fetchTransactions();
   }, [user]);
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold">Transactions</h1>
             <p className="text-muted-foreground">
@@ -251,7 +287,20 @@ export default function Transactions() {
           </Card>
         </div>
 
-        {/* Transactions List */}
+        {/* Search */}
+        <div className="flex gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search transactions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        {/* Transactions Grid */}
         <Card>
           <CardHeader>
             <CardTitle>Transaction History</CardTitle>
@@ -264,57 +313,21 @@ export default function Transactions() {
               <div className="text-center py-8 text-muted-foreground">
                 Loading transactions...
               </div>
-            ) : transactions.length === 0 ? (
+            ) : filteredTransactions.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No transactions found. Click "New Transaction" to get started.
+                {searchTerm ? 'No transactions match your search.' : 'No transactions found. Click "New Transaction" to get started.'}
               </div>
             ) : (
-              <div className="space-y-4">
-                {transactions.map((transaction) => {
-                  const typeInfo = getTransactionTypeInfo(transaction.transaction_type);
-                  const IconComponent = typeInfo.icon;
-                  const currency = transaction.trading_accounts?.currency || 'USD';
-
-                  return (
-                    <div
-                      key={transaction.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className={`p-2 rounded-full bg-muted ${typeInfo.color}`}>
-                          <IconComponent className="h-4 w-4" />
-                        </div>
-                         <div>
-                           <div className="flex items-center space-x-2">
-                             <p className="font-medium">{getTransactionTitle(transaction)}</p>
-                             <Badge variant="outline">
-                               {formatCurrency(Number(transaction.amount), currency)}
-                             </Badge>
-                           </div>
-                           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                             <span>{format(new Date(transaction.transaction_date), 'MMM dd, yyyy')}</span>
-                           </div>
-                          {transaction.description && (
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {transaction.description}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setTransactionToDelete(transaction.id);
-                          setDeleteDialogOpen(true);
-                        }}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  );
-                })}
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredTransactions.map((transaction) => (
+                  <TransactionCard
+                    key={transaction.id}
+                    transaction={transaction}
+                    onEdit={handleEdit}
+                    onDelete={setTransactionToDelete}
+                    onViewInvoice={handleViewInvoice}
+                  />
+                ))}
               </div>
             )}
           </CardContent>
@@ -327,13 +340,20 @@ export default function Transactions() {
         onTransactionAdded={fetchTransactions}
       />
 
+      <TransactionDetailDialog
+        transaction={selectedTransaction}
+        accounts={accounts}
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+        onUpdate={fetchTransactions}
+      />
+
       <ConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
+        open={!!transactionToDelete}
+        onOpenChange={() => setTransactionToDelete(null)}
         onConfirm={() => {
           if (transactionToDelete) {
             handleDelete(transactionToDelete);
-            setTransactionToDelete(null);
           }
         }}
         title="Delete Transaction"
