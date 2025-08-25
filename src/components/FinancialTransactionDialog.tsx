@@ -39,7 +39,7 @@ export const FinancialTransactionDialog = ({
     amount: '',
     description: '',
     transaction_date: new Date(),
-    trading_account_id: accountId || '',
+    trading_account_id: accountId || 'none',
   });
 
   const transactionTypes = [
@@ -79,7 +79,7 @@ export const FinancialTransactionDialog = ({
         amount: '',
         description: '',
         transaction_date: new Date(),
-        trading_account_id: accountId || '',
+        trading_account_id: accountId || 'none',
       });
     }
   }, [open, accountId, user]);
@@ -94,7 +94,7 @@ export const FinancialTransactionDialog = ({
         .from('financial_transactions')
         .insert([{
           user_id: user.id,
-          trading_account_id: formData.trading_account_id || null,
+          trading_account_id: formData.trading_account_id === 'none' ? null : formData.trading_account_id,
           transaction_type: formData.transaction_type,
           amount: parseFloat(formData.amount),
           description: formData.description || null,
@@ -131,7 +131,7 @@ export const FinancialTransactionDialog = ({
       amount: '',
       description: '',
       transaction_date: new Date(),
-      trading_account_id: accountId || '',
+      trading_account_id: accountId || 'none',
     });
   };
 
@@ -188,7 +188,7 @@ export const FinancialTransactionDialog = ({
                   <SelectValue placeholder="Select account" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No Account</SelectItem>
+                  <SelectItem value="none">No Account</SelectItem>
                   {tradingAccounts.map((account) => (
                     <SelectItem key={account.id} value={account.id}>
                       {account.name} ({account.currency})
