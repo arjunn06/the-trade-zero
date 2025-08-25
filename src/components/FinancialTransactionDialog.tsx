@@ -43,14 +43,12 @@ export const FinancialTransactionDialog = ({
   });
 
   const transactionTypes = [
-    { value: 'deposit', label: 'Deposit', icon: DollarSign, color: 'text-green-600' },
-    { value: 'withdrawal', label: 'Withdrawal', icon: DollarSign, color: 'text-red-600' },
-    { value: 'prop_firm_challenge', label: 'Prop Firm Challenge', icon: CreditCard, color: 'text-blue-600' },
-    { value: 'prop_firm_evaluation', label: 'Prop Firm Evaluation', icon: Award, color: 'text-purple-600' },
-    { value: 'prop_firm_funded', label: 'Prop Firm Funded Account', icon: Building2, color: 'text-orange-600' },
-    { value: 'payout', label: 'Payout', icon: DollarSign, color: 'text-emerald-600' },
-    { value: 'commission', label: 'Commission', icon: DollarSign, color: 'text-yellow-600' },
-    { value: 'other', label: 'Other', icon: DollarSign, color: 'text-gray-600' },
+    { value: 'deposit', label: 'Deposit', icon: DollarSign },
+    { value: 'withdrawal', label: 'Withdrawal', icon: DollarSign },
+    { value: 'prop_firm_evaluation', label: 'Prop Firm Evaluation', icon: Award },
+    { value: 'payout', label: 'Payout', icon: DollarSign },
+    { value: 'commission', label: 'Commission', icon: DollarSign },
+    { value: 'other', label: 'Other', icon: DollarSign },
   ];
 
   const fetchTradingAccounts = async () => {
@@ -143,7 +141,7 @@ export const FinancialTransactionDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {selectedType ? (
-              <selectedType.icon className={`h-5 w-5 ${selectedType.color}`} />
+              <selectedType.icon className="h-5 w-5" />
             ) : (
               <Receipt className="h-5 w-5" />
             )}
@@ -166,7 +164,7 @@ export const FinancialTransactionDialog = ({
               </SelectTrigger>
               <SelectContent>
                 {transactionTypes.map((type) => (
-                  <SelectItem key={type.value} value={type.value} className={type.color}>
+                  <SelectItem key={type.value} value={type.value}>
                     <div className="flex items-center gap-2">
                       <type.icon className="h-4 w-4" />
                       {type.label}
