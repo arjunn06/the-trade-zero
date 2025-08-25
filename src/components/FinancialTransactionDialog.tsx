@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,20 +7,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Receipt, DollarSign, CreditCard, Award } from 'lucide-react';
+import { CalendarIcon, Receipt, DollarSign, CreditCard, Award, Building2, TrendingUp, TrendingDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 interface FinancialTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  accountId: string;
-  accountName: string;
-  currency: string;
-  onTransactionAdded: () => void;
+  accountId?: string;
+  accountName?: string;
+  currency?: string;
+  onTransactionAdded?: () => void;
 }
 
 export const FinancialTransactionDialog = ({
@@ -28,26 +28,61 @@ export const FinancialTransactionDialog = ({
   onOpenChange,
   accountId,
   accountName,
-  currency,
+  currency = 'USD',
   onTransactionAdded
 }: FinancialTransactionDialogProps) => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [tradingAccounts, setTradingAccounts] = useState<Array<{ id: string; name: string; currency: string }>>([]);
   const [formData, setFormData] = useState({
     transaction_type: '',
     amount: '',
     description: '',
-    transaction_date: new Date()
+    transaction_date: new Date(),
+    trading_account_id: accountId || '',
   });
 
   const transactionTypes = [
-    { value: 'challenge_fee', label: 'Challenge Fee', icon: CreditCard, color: 'text-orange-600' },
-    { value: 'evaluation_fee', label: 'Evaluation Fee', icon: Award, color: 'text-blue-600' },
-    { value: 'funded_account_fee', label: 'Funded Account Fee', icon: Receipt, color: 'text-green-600' },
     { value: 'deposit', label: 'Deposit', icon: DollarSign, color: 'text-green-600' },
-    { value: 'withdrawal', label: 'Withdrawal', icon: DollarSign, color: 'text-red-600' }
+    { value: 'withdrawal', label: 'Withdrawal', icon: DollarSign, color: 'text-red-600' },
+    { value: 'prop_firm_challenge', label: 'Prop Firm Challenge', icon: CreditCard, color: 'text-blue-600' },
+    { value: 'prop_firm_evaluation', label: 'Prop Firm Evaluation', icon: Award, color: 'text-purple-600' },
+    { value: 'prop_firm_funded', label: 'Prop Firm Funded Account', icon: Building2, color: 'text-orange-600' },
+    { value: 'payout', label: 'Payout', icon: DollarSign, color: 'text-emerald-600' },
+    { value: 'commission', label: 'Commission', icon: DollarSign, color: 'text-yellow-600' },
+    { value: 'other', label: 'Other', icon: DollarSign, color: 'text-gray-600' },
   ];
+
+  const fetchTradingAccounts = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('trading_accounts')
+        .select('id, name, currency')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setTradingAccounts(data || []);
+    } catch (error) {
+      console.error('Error fetching trading accounts:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      fetchTradingAccounts();
+      setFormData({
+        transaction_type: '',
+        amount: '',
+        description: '',
+        transaction_date: new Date(),
+        trading_account_id: accountId || '',
+      });
+    }
+  }, [open, accountId, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +94,7 @@ export const FinancialTransactionDialog = ({
         .from('financial_transactions')
         .insert([{
           user_id: user.id,
-          trading_account_id: accountId,
+          trading_account_id: formData.trading_account_id || null,
           transaction_type: formData.transaction_type,
           amount: parseFloat(formData.amount),
           description: formData.description || null,
@@ -73,7 +108,9 @@ export const FinancialTransactionDialog = ({
         description: `${transactionTypes.find(t => t.value === formData.transaction_type)?.label} recorded successfully`
       });
 
-      onTransactionAdded();
+      if (onTransactionAdded) {
+        onTransactionAdded();
+      }
       onOpenChange(false);
       resetForm();
     } catch (error) {
@@ -93,7 +130,8 @@ export const FinancialTransactionDialog = ({
       transaction_type: '',
       amount: '',
       description: '',
-      transaction_date: new Date()
+      transaction_date: new Date(),
+      trading_account_id: accountId || '',
     });
   };
 
@@ -112,7 +150,7 @@ export const FinancialTransactionDialog = ({
             Financial Transaction
           </DialogTitle>
           <DialogDescription>
-            Record financial expenses for {accountName}
+            {accountName ? `Record financial expenses for ${accountName}` : 'Record a financial transaction'}
           </DialogDescription>
         </DialogHeader>
 
@@ -138,6 +176,28 @@ export const FinancialTransactionDialog = ({
               </SelectContent>
             </Select>
           </div>
+
+          {!accountId && (
+            <div>
+              <Label htmlFor="trading_account">Trading Account (Optional)</Label>
+              <Select
+                value={formData.trading_account_id}
+                onValueChange={(value) => setFormData({ ...formData, trading_account_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select account" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No Account</SelectItem>
+                  {tradingAccounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.name} ({account.currency})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div>
             <Label htmlFor="amount">Amount ({currency})</Label>

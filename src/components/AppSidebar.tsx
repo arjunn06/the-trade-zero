@@ -10,7 +10,8 @@ import {
   Target,
   TrendingUp,
   LogOut,
-  Crown
+  Crown,
+  Receipt
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NavLink, useLocation } from 'react-router-dom';
@@ -41,6 +42,7 @@ const systemItems = [
   { title: 'Trading Accounts', url: '/accounts', icon: Building2 },
   { title: 'Strategies', url: '/strategies', icon: Target },
   { title: 'Confluence', url: '/confluence', icon: BookOpen },
+  { title: 'Transactions', url: '/transactions', icon: Receipt },
   { title: 'Notes', url: '/notes', icon: StickyNote },
   { title: 'Upgrade', url: '/upgrade', icon: Crown },
 ];

@@ -12,11 +12,8 @@ import { LoadingTable, LoadingCard } from '@/components/ui/loading-spinner';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumFeature } from '@/components/PremiumFeature';
 import { CsvImportSection } from '@/components/CsvImportSection';
-
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useUndoToast } from '@/components/UndoToast';
-import { FinancialTransactionDialog } from '@/components/FinancialTransactionDialog';
-import { FinancialTransactionHistory } from '@/components/FinancialTransactionHistory';
 import { PropFirmProgress } from '@/components/PropFirmProgress';
 import { DrawdownMonitor } from '@/components/DrawdownMonitor';
 import {
@@ -83,8 +80,6 @@ const TradingAccounts = () => {
   const [selectedAccount, setSelectedAccount] = useState<TradingAccount | null>(null);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [uploadingCertificate, setUploadingCertificate] = useState(false);
-  const [financialTransactionDialogOpen, setFinancialTransactionDialogOpen] = useState(false);
-  const [financialHistoryDialogOpen, setFinancialHistoryDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     account_type: '',
@@ -821,18 +816,7 @@ const TradingAccounts = () => {
                       >
                         Account Performance
                       </Button>
-                      <div className="grid grid-cols-2 gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => {
-                            setSelectedAccount(account);
-                            setFinancialTransactionDialogOpen(true);
-                          }}
-                          title="Financial Transactions"
-                        >
-                          <Receipt className="h-4 w-4" />
-                        </Button>
+                       <div className="grid grid-cols-2 gap-1">
                         <Button 
                           variant="ghost" 
                           size="sm" 
@@ -840,20 +824,6 @@ const TradingAccounts = () => {
                           title="Edit Account"
                         >
                           <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex space-x-1 mt-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => {
-                            setSelectedAccount(account);
-                            setFinancialHistoryDialogOpen(true);
-                          }}
-                          className="flex-1"
-                        >
-                          <Receipt className="h-4 w-4 mr-1" />
-                          Financial History
                         </Button>
                         <Button 
                           variant="ghost" 
@@ -892,27 +862,6 @@ const TradingAccounts = () => {
         variant="destructive"
       />
 
-      {selectedAccount && (
-        <>
-          <FinancialTransactionDialog
-            open={financialTransactionDialogOpen}
-            onOpenChange={setFinancialTransactionDialogOpen}
-            accountId={selectedAccount.id}
-            accountName={selectedAccount.name}
-            currency={selectedAccount.currency}
-            onTransactionAdded={fetchAccounts}
-          />
-
-          <FinancialTransactionHistory
-            open={financialHistoryDialogOpen}
-            onOpenChange={setFinancialHistoryDialogOpen}
-            accountId={selectedAccount.id}
-            accountName={selectedAccount.name}
-            currency={selectedAccount.currency}
-            onTransactionDeleted={fetchAccounts}
-          />
-        </>
-      )}
 
       </div>
     </DashboardLayout>

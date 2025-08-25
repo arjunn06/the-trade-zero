@@ -21,6 +21,7 @@ import StrategyAnalytics from "./pages/StrategyAnalytics";
 import Notes from "./pages/Notes";
 import Calendar from "./pages/Calendar";
 import Confluence from "./pages/Confluence";
+import Transactions from "./pages/Transactions";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
 import Upgrade from "./pages/Upgrade";
@@ -74,6 +75,7 @@ const App = () => (
             <Route path="/strategies/:id/analytics" element={<ProtectedRoute><StrategyAnalytics /></ProtectedRoute>} />
             <Route path="/upgrade" element={<ProtectedRoute><Upgrade /></ProtectedRoute>} />
             <Route path="/confluence" element={<ProtectedRoute><Confluence /></ProtectedRoute>} />
+            <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
             <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/payment-cancel" element={<PaymentCancel />} />
