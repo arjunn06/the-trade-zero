@@ -86,37 +86,49 @@ export const FinancialTransactionDialog = ({
     e.preventDefault();
     if (!user) return;
 
+    // Basic validation: amount must be a positive number
+    const amount = parseFloat(formData.amount);
+    if (!isFinite(amount) || amount <= 0) {
+      toast({
+        title: "Invalid amount",
+        description: "Please enter a valid amount greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await supabase
         .from('financial_transactions')
-        .insert([{
-          user_id: user.id,
-          trading_account_id: formData.trading_account_id === 'none' ? null : formData.trading_account_id,
-          transaction_type: formData.transaction_type,
-          amount: parseFloat(formData.amount),
-          description: formData.description || null,
-          transaction_date: formData.transaction_date.toISOString()
-        }]);
+        .insert([
+          {
+            user_id: user.id,
+            trading_account_id:
+              formData.trading_account_id === 'none' ? null : formData.trading_account_id,
+            transaction_type: formData.transaction_type,
+            amount,
+            description: formData.description || null,
+            transaction_date: formData.transaction_date.toISOString(),
+          },
+        ]);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: `${transactionTypes.find(t => t.value === formData.transaction_type)?.label} recorded successfully`
+        description: `${transactionTypes.find((t) => t.value === formData.transaction_type)?.label} recorded successfully`,
       });
 
-      if (onTransactionAdded) {
-        onTransactionAdded();
-      }
+      onTransactionAdded?.();
       onOpenChange(false);
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error recording financial transaction:', error);
       toast({
         title: "Error",
-        description: "Failed to record transaction",
-        variant: "destructive"
+        description: `Failed to record transaction${error?.message ? `: ${error.message}` : ''}`,
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
