@@ -36,9 +36,7 @@ interface TransactionMetrics {
 const transactionTypes = [
   { value: 'deposit', label: 'Deposit', icon: TrendingUp, color: 'text-green-600' },
   { value: 'withdrawal', label: 'Withdrawal', icon: TrendingDown, color: 'text-red-600' },
-  { value: 'prop_firm_challenge', label: 'Prop Firm Challenge', icon: Building2, color: 'text-blue-600' },
-  { value: 'prop_firm_evaluation', label: 'Prop Firm Evaluation', icon: Building2, color: 'text-purple-600' },
-  { value: 'prop_firm_funded', label: 'Prop Firm Funded Account', icon: Building2, color: 'text-orange-600' },
+  { value: 'evaluation_fee', label: 'Evaluation Fee', icon: Building2, color: 'text-purple-600' },
   { value: 'payout', label: 'Payout', icon: DollarSign, color: 'text-emerald-600' },
   { value: 'commission', label: 'Commission', icon: DollarSign, color: 'text-yellow-600' },
   { value: 'other', label: 'Other', icon: DollarSign, color: 'text-gray-600' },
@@ -110,9 +108,7 @@ export default function Transactions() {
         case 'withdrawal':
           metrics.totalWithdrawals += amount;
           break;
-        case 'prop_firm_challenge':
-        case 'prop_firm_evaluation':
-        case 'prop_firm_funded':
+        case 'evaluation_fee':
           metrics.totalPropFirmSpend += amount;
           break;
         case 'payout':
@@ -156,6 +152,16 @@ export default function Transactions() {
       style: 'currency',
       currency: currency,
     }).format(amount);
+  };
+
+  const getTransactionTitle = (transaction: FinancialTransaction) => {
+    const typeInfo = getTransactionTypeInfo(transaction.transaction_type);
+    const accountName = transaction.trading_accounts?.name || 'No Account';
+    
+    // Create transaction title with proper preposition
+    const preposition = ['deposit', 'payout'].includes(transaction.transaction_type) ? 'to' : 'from';
+    
+    return `${typeInfo.label} ${preposition} ${accountName}`;
   };
 
   const getTransactionTypeInfo = (type: string) => {
@@ -278,22 +284,16 @@ export default function Transactions() {
                         <div className={`p-2 rounded-full bg-muted ${typeInfo.color}`}>
                           <IconComponent className="h-4 w-4" />
                         </div>
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <p className="font-medium">{typeInfo.label}</p>
-                            <Badge variant="outline">
-                              {formatCurrency(Number(transaction.amount), currency)}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                            <span>{format(new Date(transaction.transaction_date), 'MMM dd, yyyy')}</span>
-                            {transaction.trading_accounts && (
-                              <>
-                                <span>•</span>
-                                <span>{transaction.trading_accounts.name}</span>
-                              </>
-                            )}
-                          </div>
+                         <div>
+                           <div className="flex items-center space-x-2">
+                             <p className="font-medium">{getTransactionTitle(transaction)}</p>
+                             <Badge variant="outline">
+                               {formatCurrency(Number(transaction.amount), currency)}
+                             </Badge>
+                           </div>
+                           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                             <span>{format(new Date(transaction.transaction_date), 'MMM dd, yyyy')}</span>
+                           </div>
                           {transaction.description && (
                             <p className="text-sm text-muted-foreground mt-1">
                               {transaction.description}
