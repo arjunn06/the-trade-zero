@@ -155,6 +155,50 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          trading_account_id: string | null
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          trading_account_id?: string | null
+          transaction_date?: string
+          transaction_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          trading_account_id?: string | null
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_transactions_trading_account_id_fkey"
+            columns: ["trading_account_id"]
+            isOneToOne: false
+            referencedRelation: "trading_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           created_at: string
@@ -683,6 +727,7 @@ export type Database = {
           current_equity: number
           daily_loss_limit: number | null
           equity_goal: number | null
+          evaluation_certificate_url: string | null
           id: string
           initial_balance: number
           is_active: boolean
@@ -695,6 +740,7 @@ export type Database = {
           start_date: string | null
           target_completion_date: string | null
           trading_days_completed: number | null
+          trailing_drawdown_enabled: boolean | null
           updated_at: string
           user_id: string
         }
@@ -710,6 +756,7 @@ export type Database = {
           current_equity?: number
           daily_loss_limit?: number | null
           equity_goal?: number | null
+          evaluation_certificate_url?: string | null
           id?: string
           initial_balance?: number
           is_active?: boolean
@@ -722,6 +769,7 @@ export type Database = {
           start_date?: string | null
           target_completion_date?: string | null
           trading_days_completed?: number | null
+          trailing_drawdown_enabled?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -737,6 +785,7 @@ export type Database = {
           current_equity?: number
           daily_loss_limit?: number | null
           equity_goal?: number | null
+          evaluation_certificate_url?: string | null
           id?: string
           initial_balance?: number
           is_active?: boolean
@@ -749,6 +798,7 @@ export type Database = {
           start_date?: string | null
           target_completion_date?: string | null
           trading_days_completed?: number | null
+          trailing_drawdown_enabled?: boolean | null
           updated_at?: string
           user_id?: string
         }

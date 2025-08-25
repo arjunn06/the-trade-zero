@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Building2, Edit, Trash2, DollarSign, History, BarChart3 } from 'lucide-react';
+import { Plus, Building2, Edit, Trash2, DollarSign, History, BarChart3, Upload, Receipt } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +17,8 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useUndoToast } from '@/components/UndoToast';
 import { AccountTransactionDialog } from '@/components/AccountTransactionDialog';
 import { AccountTransactionHistory } from '@/components/AccountTransactionHistory';
+import { FinancialTransactionDialog } from '@/components/FinancialTransactionDialog';
+import { FinancialTransactionHistory } from '@/components/FinancialTransactionHistory';
 import { PropFirmProgress } from '@/components/PropFirmProgress';
 import { DrawdownMonitor } from '@/components/DrawdownMonitor';
 import {
@@ -63,6 +65,8 @@ interface TradingAccount {
   trading_days_completed: number;
   start_date?: string;
   target_completion_date?: string;
+  trailing_drawdown_enabled?: boolean;
+  evaluation_certificate_url?: string;
 }
 
 const TradingAccounts = () => {
@@ -81,6 +85,10 @@ const TradingAccounts = () => {
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<TradingAccount | null>(null);
+  const [certificateFile, setCertificateFile] = useState<File | null>(null);
+  const [uploadingCertificate, setUploadingCertificate] = useState(false);
+  const [financialTransactionDialogOpen, setFinancialTransactionDialogOpen] = useState(false);
+  const [financialHistoryDialogOpen, setFinancialHistoryDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     account_type: '',
@@ -92,7 +100,8 @@ const TradingAccounts = () => {
     max_loss_limit: '',
     daily_loss_limit: '',
     minimum_trading_days: '',
-    start_date: new Date()
+    start_date: new Date(),
+    trailing_drawdown_enabled: false
   });
 
   // Premium limits for basic users
@@ -193,12 +202,15 @@ const TradingAccounts = () => {
         max_loss_limit: formData.account_type === 'prop firm' && formData.max_loss_limit ? parseFloat(formData.max_loss_limit) : null,
         daily_loss_limit: formData.account_type === 'prop firm' && formData.daily_loss_limit ? parseFloat(formData.daily_loss_limit) : null,
         minimum_trading_days: formData.account_type === 'prop firm' && formData.minimum_trading_days ? parseInt(formData.minimum_trading_days) : null,
+        trailing_drawdown_enabled: formData.account_type === 'prop firm' ? formData.trailing_drawdown_enabled : false,
         start_date: formData.account_type === 'prop firm' ? formData.start_date.toISOString() : null,
         target_completion_date: formData.account_type === 'prop firm' && formData.minimum_trading_days 
           ? addDays(formData.start_date, parseInt(formData.minimum_trading_days)).toISOString() 
           : null,
         user_id: user.id
       };
+
+      let accountId = editingAccount?.id;
 
       if (editingAccount) {
         const updateData = {
@@ -221,8 +233,14 @@ const TradingAccounts = () => {
           .single();
 
         if (error) throw error;
+        accountId = newAccount.id;
 
         toast({ title: "Success", description: "Account created successfully" });
+      }
+
+      // Handle certificate upload if file is selected
+      if (certificateFile && accountId) {
+        await handleCertificateUpload(accountId);
       }
 
       setDialogOpen(false);
@@ -252,7 +270,8 @@ const TradingAccounts = () => {
       max_loss_limit: account.max_loss_limit?.toString() || '',
       daily_loss_limit: account.daily_loss_limit?.toString() || '',
       minimum_trading_days: account.minimum_trading_days?.toString() || '',
-      start_date: account.start_date ? new Date(account.start_date) : new Date()
+      start_date: account.start_date ? new Date(account.start_date) : new Date(),
+      trailing_drawdown_enabled: account.trailing_drawdown_enabled || false
     });
     setDialogOpen(true);
   };
@@ -338,8 +357,51 @@ const TradingAccounts = () => {
       max_loss_limit: '',
       daily_loss_limit: '',
       minimum_trading_days: '',
-      start_date: new Date()
+      start_date: new Date(),
+      trailing_drawdown_enabled: false
     });
+    setCertificateFile(null);
+  };
+
+  const handleCertificateUpload = async (accountId: string) => {
+    if (!certificateFile || !user) return;
+
+    setUploadingCertificate(true);
+    try {
+      const fileExt = certificateFile.name.split('.').pop();
+      const fileName = `${user.id}/${accountId}/certificate.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('trade-screenshots')
+        .upload(fileName, certificateFile, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('trade-screenshots')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('trading_accounts')
+        .update({ evaluation_certificate_url: urlData.publicUrl })
+        .eq('id', accountId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Success",
+        description: "Certificate uploaded successfully"
+      });
+    } catch (error) {
+      console.error('Error uploading certificate:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload certificate",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingCertificate(false);
+    }
   };
 
   const formatCurrency = (amount: number, currency: string) => {
@@ -554,36 +616,76 @@ const TradingAccounts = () => {
                           </div>
                         </div>
 
-                        <div>
-                          <Label>Challenge Start Date</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !formData.start_date && "text-muted-foreground"
-                                )}
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {formData.start_date ? (
-                                  format(formData.start_date, "PPP")
-                                ) : (
-                                  <span>Pick start date</span>
-                                )}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={formData.start_date}
-                                onSelect={(date) => date && setFormData({ ...formData, start_date: date })}
-                                initialFocus
-                                className={cn("p-3 pointer-events-auto")}
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
+                         <div>
+                           <Label>Challenge Start Date</Label>
+                           <Popover>
+                             <PopoverTrigger asChild>
+                               <Button
+                                 variant="outline"
+                                 className={cn(
+                                   "w-full justify-start text-left font-normal",
+                                   !formData.start_date && "text-muted-foreground"
+                                 )}
+                               >
+                                 <CalendarIcon className="mr-2 h-4 w-4" />
+                                 {formData.start_date ? (
+                                   format(formData.start_date, "PPP")
+                                 ) : (
+                                   <span>Pick start date</span>
+                                 )}
+                               </Button>
+                             </PopoverTrigger>
+                             <PopoverContent className="w-auto p-0" align="start">
+                               <Calendar
+                                 mode="single"
+                                 selected={formData.start_date}
+                                 onSelect={(date) => date && setFormData({ ...formData, start_date: date })}
+                                 initialFocus
+                                 className={cn("p-3 pointer-events-auto")}
+                               />
+                             </PopoverContent>
+                           </Popover>
+                         </div>
+
+                         <div className="flex items-center space-x-2">
+                           <Checkbox
+                             id="trailing_drawdown"
+                             checked={formData.trailing_drawdown_enabled}
+                             onCheckedChange={(checked) => 
+                               setFormData({ ...formData, trailing_drawdown_enabled: !!checked })
+                             }
+                           />
+                           <Label htmlFor="trailing_drawdown" className="text-sm">
+                             Enable Trailing Drawdown Rule
+                           </Label>
+                         </div>
+                         
+                         <div>
+                           <Label htmlFor="certificate">Evaluation Pass Certificate (Optional)</Label>
+                           <Input
+                             id="certificate"
+                             type="file"
+                             accept=".jpg,.jpeg,.png,.pdf"
+                             onChange={(e) => setCertificateFile(e.target.files?.[0] || null)}
+                             className="cursor-pointer"
+                           />
+                           <p className="text-xs text-muted-foreground mt-1">
+                             Upload your evaluation pass certificate (JPG, PNG, or PDF)
+                           </p>
+                           {editingAccount?.evaluation_certificate_url && (
+                             <div className="mt-2">
+                               <a 
+                                 href={editingAccount.evaluation_certificate_url} 
+                                 target="_blank" 
+                                 rel="noopener noreferrer"
+                                 className="text-sm text-primary hover:underline flex items-center gap-1"
+                               >
+                                 <Upload className="h-3 w-3" />
+                                 View current certificate
+                               </a>
+                             </div>
+                           )}
+                         </div>
                       </div>
                     </div>
                   )}
@@ -723,7 +825,7 @@ const TradingAccounts = () => {
                       >
                         Account Performance
                       </Button>
-                      <div className="flex space-x-1">
+                      <div className="grid grid-cols-2 gap-1">
                         <Button 
                           variant="ghost" 
                           size="sm" 
@@ -731,7 +833,6 @@ const TradingAccounts = () => {
                             setSelectedAccount(account);
                             setTransactionDialogOpen(true);
                           }}
-                          className="flex-1"
                           title="Add Transaction"
                         >
                           <DollarSign className="h-4 w-4" />
@@ -741,17 +842,51 @@ const TradingAccounts = () => {
                           size="sm" 
                           onClick={() => {
                             setSelectedAccount(account);
+                            setFinancialTransactionDialogOpen(true);
+                          }}
+                          title="Financial Transactions"
+                        >
+                          <Receipt className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            setSelectedAccount(account);
                             setHistoryDialogOpen(true);
                           }}
-                          className="flex-1"
                           title="Transaction History"
                         >
                           <History className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(account)} className="flex-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleEdit(account)} 
+                          title="Edit Account"
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account)} className="flex-1">
+                      </div>
+                      <div className="flex space-x-1 mt-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            setSelectedAccount(account);
+                            setFinancialHistoryDialogOpen(true);
+                          }}
+                          className="flex-1"
+                        >
+                          <Receipt className="h-4 w-4 mr-1" />
+                          Financial History
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDeleteClick(account)}
+                          className="text-destructive hover:text-destructive"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -797,6 +932,24 @@ const TradingAccounts = () => {
           <AccountTransactionHistory
             open={historyDialogOpen}
             onOpenChange={setHistoryDialogOpen}
+            accountId={selectedAccount.id}
+            accountName={selectedAccount.name}
+            currency={selectedAccount.currency}
+            onTransactionDeleted={fetchAccounts}
+          />
+
+          <FinancialTransactionDialog
+            open={financialTransactionDialogOpen}
+            onOpenChange={setFinancialTransactionDialogOpen}
+            accountId={selectedAccount.id}
+            accountName={selectedAccount.name}
+            currency={selectedAccount.currency}
+            onTransactionAdded={fetchAccounts}
+          />
+
+          <FinancialTransactionHistory
+            open={financialHistoryDialogOpen}
+            onOpenChange={setFinancialHistoryDialogOpen}
             accountId={selectedAccount.id}
             accountName={selectedAccount.name}
             currency={selectedAccount.currency}
