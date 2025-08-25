@@ -141,9 +141,11 @@ const AccountPerformance = () => {
     const grossLoss = Math.abs(losses.reduce((sum, trade) => sum + trade.pnl!, 0));
     const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
     
-    // Calculate net transactions (deposits - withdrawals)
+    // Calculate net transactions affecting equity: +deposit/+payout, -withdrawal; exclude fees/commission/other
     const totalTransactions = transactions.reduce((sum, tx) => {
-      return sum + (tx.transaction_type === 'deposit' ? tx.amount : -tx.amount);
+      if (tx.transaction_type === 'deposit' || tx.transaction_type === 'payout') return sum + tx.amount;
+      if (tx.transaction_type === 'withdrawal') return sum - tx.amount;
+      return sum;
     }, 0);
     
     // Current equity includes initial balance, PnL from trades, and net transactions

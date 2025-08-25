@@ -291,7 +291,11 @@ const Dashboard = () => {
         
         const accountTransactions = allTransactions.filter(tx => tx.trading_account_id === account.id);
         const totalTransactions = accountTransactions.reduce((sum, tx) => {
-          return sum + (tx.transaction_type === 'deposit' ? tx.amount : -tx.amount);
+          // Equity adjustments:
+          // + deposit, + payout, - withdrawal, exclude evaluation_fee/commission/other
+          if (tx.transaction_type === 'deposit' || tx.transaction_type === 'payout') return sum + tx.amount;
+          if (tx.transaction_type === 'withdrawal') return sum - tx.amount;
+          return sum;
         }, 0);
         
         // Equity = initial balance + PnL + net transactions (deposits - withdrawals)
