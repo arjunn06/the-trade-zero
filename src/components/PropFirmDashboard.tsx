@@ -38,10 +38,16 @@ const PropFirmDashboard = ({ accounts, user, formatCurrency }: PropFirmDashboard
           
           const accountTransactions = (transactionsResult.data || []).filter(tx => tx.trading_account_id === account.id);
           const totalTransactions = accountTransactions.reduce((sum, tx) => {
-            // Positive transactions (increase equity): deposit, payout
-            // Negative transactions (decrease equity): withdrawal, evaluation_fee, commission, other
-            const isPositive = ['deposit', 'payout'].includes(tx.transaction_type);
-            return sum + (isPositive ? tx.amount : -tx.amount);
+            // Only include transactions that affect account equity
+            // Positive: deposit, payout
+            // Negative: withdrawal
+            // Excluded: evaluation_fee, commission, other (for reference only)
+            if (['deposit', 'payout'].includes(tx.transaction_type)) {
+              return sum + tx.amount;
+            } else if (tx.transaction_type === 'withdrawal') {
+              return sum - tx.amount;
+            }
+            return sum; // evaluation_fee, commission, other don't affect equity
           }, 0);
           
           equities[account.id] = account.initial_balance + accountPnl + totalTransactions;
