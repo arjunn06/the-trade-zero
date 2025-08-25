@@ -153,7 +153,10 @@ const TradingAccounts = () => {
         
         const accountTransactions = transactions.filter(tx => tx.trading_account_id === account.id);
         const totalTransactions = accountTransactions.reduce((sum, tx) => {
-          return sum + (tx.transaction_type === 'deposit' ? tx.amount : -tx.amount);
+          // Positive transactions (increase equity): deposit, payout
+          // Negative transactions (decrease equity): withdrawal, evaluation_fee, commission, other
+          const isPositive = ['deposit', 'payout'].includes(tx.transaction_type);
+          return sum + (isPositive ? tx.amount : -tx.amount);
         }, 0);
         
         // Equity = initial balance + PnL + net transactions (deposits - withdrawals)
