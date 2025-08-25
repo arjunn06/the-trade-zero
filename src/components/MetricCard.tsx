@@ -14,11 +14,12 @@ interface MetricCardProps {
   };
   icon?: ReactNode;
   className?: string;
+  onClick?: () => void;
 }
 
-export function MetricCard({ title, value, change, icon, className }: MetricCardProps) {
+export function MetricCard({ title, value, change, icon, className, onClick }: MetricCardProps) {
   return (
-    <Card className={cn("metric-card group", className)}>
+    <Card className={cn("metric-card group", className)} onClick={onClick}>
       <CardContent className="p-3 sm:p-4 md:p-6">
         <div className="flex items-start justify-between">
           <div className="space-y-2 flex-1">

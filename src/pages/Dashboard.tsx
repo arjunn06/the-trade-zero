@@ -20,6 +20,7 @@ import { QuickTradeWidget } from '@/components/QuickTradeWidget';
 import { AccountFilter } from '@/components/AccountFilter';
 import { PropFirmDashboard } from '@/components/PropFirmDashboard';
 import PerformanceScore from '@/components/PerformanceScore';
+import { MetricHistoryDialog } from '@/components/MetricHistoryDialog';
 
 interface AccountGoalsSectionProps {
   accounts: any[];
@@ -182,6 +183,8 @@ const Dashboard = () => {
   const [assetPerformance, setAssetPerformance] = useState<any[]>([]);
   const [monthlyPerformance, setMonthlyPerformance] = useState<any[]>([]);
   const [riskMetrics, setRiskMetrics] = useState<any>({});
+  const [metricDialogOpen, setMetricDialogOpen] = useState(false);
+  const [selectedMetric, setSelectedMetric] = useState<'winRate' | 'profitFactor' | 'maxDrawdown' | 'avgReturn' | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -478,6 +481,11 @@ const Dashboard = () => {
   const formatPercentage = (value: number) => 
     CurrencyFormatter.formatPercentage(value);
 
+  const handleMetricClick = (metricType: 'winRate' | 'profitFactor' | 'maxDrawdown' | 'avgReturn') => {
+    setSelectedMetric(metricType);
+    setMetricDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -595,7 +603,8 @@ const Dashboard = () => {
                 isPositive: stats.winRate >= 50
               }}
               icon={<Target className="h-5 w-5" />}
-              className="stagger-fade"
+              className="stagger-fade cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => handleMetricClick('winRate')}
             />
             <MetricCard
               title="Total Trades"
@@ -621,7 +630,8 @@ const Dashboard = () => {
                 isPositive: stats.profitFactor >= 1
               }}
               icon={<BarChart3 className="h-5 w-5" />}
-              className="stagger-fade"
+              className="stagger-fade cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => handleMetricClick('profitFactor')}
             />
             <MetricCard
               title="Max Drawdown"
@@ -632,7 +642,8 @@ const Dashboard = () => {
                 isPositive: stats.maxDrawdown <= 15
               }}
               icon={<TrendingDown className="h-5 w-5" />}
-              className="stagger-fade"
+              className="stagger-fade cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => handleMetricClick('maxDrawdown')}
             />
             <MetricCard
               title="Best Trade"
@@ -654,7 +665,8 @@ const Dashboard = () => {
                 isPositive: stats.expectancy >= 0
               }}
               icon={<Clock className="h-5 w-5" />}
-              className="stagger-fade"
+              className="stagger-fade cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => handleMetricClick('avgReturn')}
             />
           </div>
         </div>
@@ -962,6 +974,15 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Metric History Dialog */}
+      <MetricHistoryDialog
+        open={metricDialogOpen}
+        onOpenChange={setMetricDialogOpen}
+        metricType={selectedMetric}
+        selectedAccountIds={selectedAccountIds}
+        timeFilter={timeFilter}
+      />
     </DashboardLayout>
   );
 };
