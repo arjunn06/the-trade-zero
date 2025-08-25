@@ -26,7 +26,7 @@ const PropFirmDashboard = ({ accounts, user, formatCurrency }: PropFirmDashboard
             .select('pnl, trading_account_id')
             .eq('user_id', user.id),
           supabase
-            .from('account_transactions')
+            .from('financial_transactions')
             .select('trading_account_id, amount, transaction_type')
             .eq('user_id', user.id)
         ]);

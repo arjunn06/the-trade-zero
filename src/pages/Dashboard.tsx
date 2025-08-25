@@ -206,7 +206,7 @@ const Dashboard = () => {
           .eq('user_id', user.id)
           .eq('is_active', true), // Only fetch active accounts by default
         supabase
-          .from('account_transactions')
+          .from('financial_transactions')
           .select('trading_account_id, amount, transaction_type')
           .eq('user_id', user.id)
       ]);

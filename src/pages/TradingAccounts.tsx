@@ -15,8 +15,6 @@ import { CsvImportSection } from '@/components/CsvImportSection';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useUndoToast } from '@/components/UndoToast';
-import { AccountTransactionDialog } from '@/components/AccountTransactionDialog';
-import { AccountTransactionHistory } from '@/components/AccountTransactionHistory';
 import { FinancialTransactionDialog } from '@/components/FinancialTransactionDialog';
 import { FinancialTransactionHistory } from '@/components/FinancialTransactionHistory';
 import { PropFirmProgress } from '@/components/PropFirmProgress';
@@ -82,8 +80,6 @@ const TradingAccounts = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<TradingAccount | null>(null);
   const [accountEquities, setAccountEquities] = useState<Record<string, number>>({});
-  const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
-  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<TradingAccount | null>(null);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [uploadingCertificate, setUploadingCertificate] = useState(false);
@@ -141,7 +137,7 @@ const TradingAccounts = () => {
           .eq('user_id', user.id)
           .not('pnl', 'is', null),
         supabase
-          .from('account_transactions')
+          .from('financial_transactions')
           .select('trading_account_id, amount, transaction_type')
           .eq('user_id', user.id)
       ]);
@@ -831,33 +827,11 @@ const TradingAccounts = () => {
                           size="sm" 
                           onClick={() => {
                             setSelectedAccount(account);
-                            setTransactionDialogOpen(true);
-                          }}
-                          title="Add Transaction"
-                        >
-                          <DollarSign className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => {
-                            setSelectedAccount(account);
                             setFinancialTransactionDialogOpen(true);
                           }}
                           title="Financial Transactions"
                         >
                           <Receipt className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => {
-                            setSelectedAccount(account);
-                            setHistoryDialogOpen(true);
-                          }}
-                          title="Transaction History"
-                        >
-                          <History className="h-4 w-4" />
                         </Button>
                         <Button 
                           variant="ghost" 
@@ -920,24 +894,6 @@ const TradingAccounts = () => {
 
       {selectedAccount && (
         <>
-          <AccountTransactionDialog
-            open={transactionDialogOpen}
-            onOpenChange={setTransactionDialogOpen}
-            accountId={selectedAccount.id}
-            accountName={selectedAccount.name}
-            currency={selectedAccount.currency}
-            onTransactionAdded={fetchAccounts}
-          />
-          
-          <AccountTransactionHistory
-            open={historyDialogOpen}
-            onOpenChange={setHistoryDialogOpen}
-            accountId={selectedAccount.id}
-            accountName={selectedAccount.name}
-            currency={selectedAccount.currency}
-            onTransactionDeleted={fetchAccounts}
-          />
-
           <FinancialTransactionDialog
             open={financialTransactionDialogOpen}
             onOpenChange={setFinancialTransactionDialogOpen}

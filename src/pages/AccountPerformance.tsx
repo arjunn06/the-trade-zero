@@ -95,9 +95,9 @@ const AccountPerformance = () => {
       if (tradesError) throw tradesError;
       setTrades(tradesData || []);
 
-      // Fetch account transactions
+      // Fetch financial transactions
       const { data: transactionsData, error: transactionsError } = await supabase
-        .from('account_transactions')
+        .from('financial_transactions')
         .select('*')
         .eq('trading_account_id', id)
         .eq('user_id', user.id);

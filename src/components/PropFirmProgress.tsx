@@ -23,6 +23,7 @@ interface PropFirmProgressProps {
     trading_days_completed: number;
     start_date?: string;
     target_completion_date?: string;
+    trailing_drawdown_enabled?: boolean;
   };
   currentEquity: number;
   className?: string;
@@ -60,8 +61,17 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
   const profitProgress = profitGoal > 0 ? Math.min(Math.max((currentPnl / profitGoal) * 100, 0), 100) : 0;
   const remainingProfit = profitGoal > 0 ? Math.max(profitGoal - currentPnl, 0) : 0;
   
-  // Use the account's current_drawdown if available, otherwise calculate from equity difference
-  const drawdownUsed = (account.current_drawdown ?? Math.max(0, account.initial_balance - currentEquity));
+  // Calculate drawdown based on trailing drawdown setting
+  let drawdownUsed: number;
+  if (account.trailing_drawdown_enabled) {
+    // For trailing drawdown, calculate from highest equity point
+    // For now, we'll use the account's current_drawdown value which should be maintained by the system
+    drawdownUsed = account.current_drawdown ?? 0;
+  } else {
+    // For static drawdown, calculate from initial balance
+    drawdownUsed = Math.max(0, account.initial_balance - currentEquity);
+  }
+  
   const remainingDrawdown = account.max_loss_limit ? Math.max(0, account.max_loss_limit - drawdownUsed) : 0;
   const drawdownProgress = account.max_loss_limit ? Math.min(Math.max((drawdownUsed / account.max_loss_limit) * 100, 0), 100) : 0;
   
@@ -115,7 +125,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <Target className="h-4 w-4" />
-          Prop Firm Progress
+          {account.name} - Progress
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -149,7 +159,7 @@ export const PropFirmProgress = ({ account, currentEquity, className }: PropFirm
         {account.max_loss_limit && (
           <div className="space-y-2">
             <div className="flex justify-between text-xs">
-              <span>Max Drawdown</span>
+              <span>Max Loss Limit {account.trailing_drawdown_enabled ? '(Trailing)' : ''}</span>
               <span className="text-destructive">
                 {formatCurrency(drawdownUsed)} / {formatCurrency(account.max_loss_limit)}
               </span>

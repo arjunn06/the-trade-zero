@@ -14,42 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      account_transactions: {
-        Row: {
-          amount: number
-          created_at: string
-          description: string | null
-          id: string
-          trading_account_id: string
-          transaction_date: string
-          transaction_type: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          description?: string | null
-          id?: string
-          trading_account_id: string
-          transaction_date?: string
-          transaction_type: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          description?: string | null
-          id?: string
-          trading_account_id?: string
-          transaction_date?: string
-          transaction_type?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       app_analytics: {
         Row: {
           created_at: string
