@@ -50,6 +50,17 @@ const PropFirmDashboard = ({ accounts, user, formatCurrency }: PropFirmDashboard
             return sum; // evaluation_fee, commission, other don't affect equity
           }, 0);
           
+          // Debug logging for prop firm account balance calculation
+          if (account.name.includes('FundingPips')) {
+            console.log(`PropFirm Debug ${account.name}:`, {
+              initialBalance: account.initial_balance,
+              accountPnl,
+              totalTransactions,
+              accountTransactions,
+              calculatedEquity: account.initial_balance + accountPnl + totalTransactions
+            });
+          }
+          
           equities[account.id] = account.initial_balance + accountPnl + totalTransactions;
         });
         setAccountEquities(equities);

@@ -165,6 +165,17 @@ const TradingAccounts = () => {
           return sum; // evaluation_fee, commission, other don't affect equity
         }, 0);
         
+        // Debug logging for account balance calculation
+        if (account.name.includes('FundingPips')) {
+          console.log(`Debug ${account.name}:`, {
+            initialBalance: account.initial_balance,
+            totalPnl,
+            totalTransactions,
+            accountTransactions,
+            calculatedEquity: account.initial_balance + totalPnl + totalTransactions
+          });
+        }
+        
         // Equity = initial balance + PnL + net transactions (deposits - withdrawals)
         equities[account.id] = account.initial_balance + totalPnl + totalTransactions;
       });
