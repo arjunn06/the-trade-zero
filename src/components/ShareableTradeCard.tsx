@@ -157,7 +157,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                   {trade.symbol}
                 </h1>
                 <div 
-                  className="h-6 px-3 rounded-full inline-flex items-center leading-none align-middle"
+                  className="h-6 px-3 rounded-full inline-flex items-center leading-none align-middle translate-y-[2px]"
                   data-share-pill
                   style={{ 
                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
