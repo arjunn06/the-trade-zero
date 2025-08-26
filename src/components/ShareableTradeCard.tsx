@@ -2,11 +2,10 @@ import React, { useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { TrendingUp, TrendingDown, Download, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
-import { toPng } from 'html-to-image';
 
 interface Trade {
   id: string;
@@ -74,43 +73,33 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
       }
 
       const rect = cardRef.current.getBoundingClientRect();
-      let dataUrl: string | null = null;
-      try {
-        dataUrl = await toPng(cardRef.current, {
-          cacheBust: true,
-          pixelRatio: 4,
-          backgroundColor: 'transparent',
-          canvasWidth: Math.round(rect.width),
-          canvasHeight: Math.round(rect.height),
-          style: { borderRadius: '0px', overflow: 'visible' },
-        });
-      } catch (e) {
-        // Fallback to html2canvas if html-to-image fails
-        const canvas = await html2canvas(cardRef.current, {
-          backgroundColor: null,
-          scale: 4,
-          width: Math.round(rect.width),
-          height: Math.round(rect.height),
-          useCORS: true,
-          allowTaint: false,
-          foreignObjectRendering: false,
-          logging: false,
-          onclone: (doc) => {
-            const pill = doc.querySelector('[data-share-pill]') as HTMLElement | null;
-            if (pill) {
-              pill.style.backdropFilter = 'none';
-              // @ts-ignore - vendor prefix for Safari
-              pill.style.webkitBackdropFilter = 'none';
-            }
-            const root = doc.querySelector('[data-share-root]') as HTMLElement | null;
-            if (root) {
-              root.style.borderRadius = '0px';
-              root.style.overflow = 'visible';
-            }
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: null,
+        scale: 4,
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+        useCORS: true,
+        allowTaint: false,
+        foreignObjectRendering: false,
+        logging: false,
+        imageTimeout: 0,
+        onclone: (doc) => {
+          const pill = doc.querySelector('[data-share-pill]') as HTMLElement | null;
+          if (pill) {
+            pill.style.backdropFilter = 'none';
+            // @ts-ignore - vendor prefix for Safari
+            pill.style.webkitBackdropFilter = 'none';
+            pill.style.display = 'inline-flex';
+            pill.style.width = 'auto';
           }
-        });
-        dataUrl = canvas.toDataURL('image/png');
-      }
+          const root = doc.querySelector('[data-share-root]') as HTMLElement | null;
+          if (root) {
+            root.style.borderRadius = '0px';
+            root.style.overflow = 'visible';
+          }
+        }
+      });
+      const dataUrl = canvas.toDataURL('image/png');
 
       const link = document.createElement('a');
       link.download = `trade-${trade.symbol}-${new Date().toISOString().split('T')[0]}.png`;
@@ -135,6 +124,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
               Download
             </Button>
           </DialogTitle>
+          <DialogDescription className="sr-only">Share and download a static trade summary image.</DialogDescription>
         </DialogHeader>
         
         <div className="p-6 pt-4">
