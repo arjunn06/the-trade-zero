@@ -128,7 +128,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
             {/* Content */}
             <div className="relative z-10 flex flex-col h-full">
               {/* Header with Symbol and Trade Type - horizontal alignment with 16px gap */}
-              <div className="flex items-start gap-4 justify-center">
+              <div className="flex items-start gap-4">
                 <h1 
                   className="text-white leading-none font-cirka-bold" 
                   style={{ 
