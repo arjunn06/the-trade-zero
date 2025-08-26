@@ -19,8 +19,8 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				'sans': ['Proxima Nova', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-				'proxima': ['Proxima Nova', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+				'sans': ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+				'proxima': ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
 				'cirka': ['Cirka', 'serif'],
 				'cirka-bold': ['Cirka Bold', 'Cirka', 'serif'],
 				'cirka-light': ['Cirka Light', 'Cirka', 'serif'],
