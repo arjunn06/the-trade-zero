@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, TrendingUp, TrendingDown, ImageIcon, Edit, Trash2, Calendar, CheckSquare } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, ImageIcon, Edit, Trash2, Calendar, CheckSquare, Share2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { ShareableTradeCard } from '@/components/ShareableTradeCard';
 
 interface Trade {
   id: string;
@@ -62,6 +63,7 @@ const TradeDetail = () => {
   const [confluenceItems, setConfluenceItems] = useState<ConfluenceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [screenshotDialog, setScreenshotDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
   useEffect(() => {
     if (user && id) {
@@ -254,6 +256,10 @@ const TradeDetail = () => {
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </Button>
+              <Button variant="outline" onClick={() => setShowShareDialog(true)} className="flex-1">
+                <Share2 className="h-4 w-4 mr-2" />
+                Share
+              </Button>
               <Button variant="destructive" onClick={handleDelete} className="flex-1">
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
@@ -290,6 +296,10 @@ const TradeDetail = () => {
             <Button variant="outline" onClick={() => navigate(`/trades/edit/${trade.id}`)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit
+            </Button>
+            <Button variant="outline" onClick={() => setShowShareDialog(true)}>
+              <Share2 className="h-4 w-4 mr-2" />
+              Share
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
               <Trash2 className="h-4 w-4 mr-2" />
@@ -557,6 +567,15 @@ const TradeDetail = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Shareable Trade Card */}
+        {trade && (
+          <ShareableTradeCard 
+            trade={trade}
+            isOpen={showShareDialog}
+            onClose={() => setShowShareDialog(false)}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
