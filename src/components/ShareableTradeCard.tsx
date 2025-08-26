@@ -80,16 +80,14 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[700px] p-0">
-        <DialogHeader className="p-6 pb-0 pr-12">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle className="flex items-center justify-between">
             <span>Share Trade</span>
-          </DialogTitle>
-          <div className="mt-4">
             <Button onClick={downloadAsImage} size="sm" className="gap-2">
               <Download className="h-4 w-4" />
               Download
             </Button>
-          </div>
+          </DialogTitle>
         </DialogHeader>
         
         <div className="p-6 pt-4">
@@ -106,16 +104,15 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
             {/* Content */}
             <div className="relative z-10 flex flex-col h-full">
               {/* Header with Symbol and Trade Type - horizontal alignment with 16px gap */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-start gap-4">
                 <h1 
-                  className="text-white leading-none" 
+                  className="text-white leading-none font-cirka-bold" 
                   style={{ 
                     color: '#FFF',
                     fontSize: '52px',
                     fontStyle: 'normal',
                     fontWeight: 700,
-                    lineHeight: 'normal',
-                    fontFamily: 'Cirka Bold, serif'
+                    lineHeight: 'normal'
                   }}
                 >
                   {trade.symbol}
@@ -128,11 +125,10 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                   }}
                 >
                   <span 
-                    className="text-white" 
+                    className="text-white font-cirka-light" 
                     style={{ 
                       fontSize: '14px',
-                      fontWeight: 300,
-                      fontFamily: 'Cirka Light, serif'
+                      fontWeight: 300
                     }}
                   >
                     {trade.trade_type}
