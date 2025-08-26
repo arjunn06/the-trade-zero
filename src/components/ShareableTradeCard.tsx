@@ -93,8 +93,13 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
         <div className="p-6 pt-4">
           <div 
             ref={cardRef}
-            className="w-[600px] h-[400px] bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 rounded-2xl p-8 relative overflow-hidden mx-auto"
-            style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+            className="w-[600px] h-[400px] rounded-2xl p-8 relative overflow-hidden mx-auto"
+            style={{ 
+              backgroundImage: `url('/lovable-uploads/d2ebd9e4-65b8-4650-9df3-b2d4d5ace41a.png')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              fontFamily: 'system-ui, -apple-system, sans-serif'
+            }}
           >
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-10">
@@ -106,8 +111,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
             {/* Header */}
             <div className="relative z-10 mb-8">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <h1 className="text-3xl font-bold text-white">{trade.symbol}</h1>
+                 <div className="flex items-center gap-3">
+                   <h1 className="text-3xl font-bold text-white" style={{ fontFamily: 'Cirka, serif' }}>{trade.symbol}</h1>
                   <Badge 
                     variant={trade.trade_type === 'long' ? 'default' : 'secondary'}
                     className="text-sm px-3 py-1 bg-white/20 text-white border-white/30"
@@ -166,7 +171,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                 <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2">
                   <TrendingUp className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-xl font-bold text-white">The Trade Zero</span>
+                <span className="text-xl font-bold text-white" style={{ fontFamily: 'Cirka, serif' }}>The Trade Zero</span>
               </div>
             </div>
           </div>
