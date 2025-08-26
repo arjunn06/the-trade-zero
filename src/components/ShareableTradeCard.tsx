@@ -143,7 +143,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                   {trade.symbol}
                 </h1>
                 <div 
-                  className="px-3 py-1 rounded-full"
+                  className="px-3 py-1 rounded-full self-center"
                   data-share-pill
                   style={{ 
                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -235,7 +235,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
 
               {/* Footer - 60px from P&L, left aligned */}
               <div style={{ marginTop: '60px' }}>
-                <div className="flex items-start">
+                <div className="flex items-center">
                   <div>
                     <span 
                       className="text-white/60 uppercase font-proxima block" 
