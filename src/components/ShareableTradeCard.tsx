@@ -131,26 +131,26 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
             </div>
 
             {/* Main Content */}
-            <div className="relative z-10 grid grid-cols-2 gap-6 mb-6">
-              <div className="space-y-4">
+            <div className="relative z-10 grid grid-cols-2 gap-8 mb-8">
+              <div className="space-y-6">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Entry Price</p>
-                  <p className="text-xl font-semibold text-foreground">{trade.entry_price}</p>
+                  <p className="text-2xl font-semibold text-foreground">{trade.entry_price}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Quantity</p>
-                  <p className="text-lg font-medium text-foreground">{trade.quantity}</p>
+                  <p className="text-xl font-medium text-foreground">{trade.quantity}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Entry Date</p>
-                  <p className="text-sm text-foreground">{formatDate(trade.entry_date)}</p>
+                  <p className="text-base text-foreground">{formatDate(trade.entry_date)}</p>
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Exit Price</p>
-                  <p className="text-xl font-semibold text-foreground">{trade.exit_price || 'Open'}</p>
+                  <p className="text-2xl font-semibold text-foreground">{trade.exit_price || 'Open'}</p>
                 </div>
                 
                 {trade.pnl && (
@@ -165,23 +165,17 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                 {trade.exit_date && (
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Exit Date</p>
-                    <p className="text-sm text-foreground">{formatDate(trade.exit_date)}</p>
+                    <p className="text-base text-foreground">{formatDate(trade.exit_date)}</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Footer */}
-            <div className="absolute bottom-6 left-8 right-8 flex justify-between items-center border-t pt-4">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Share2 className="h-4 w-4" />
-                <span className="text-sm">Shared from TradeTracker</span>
+            <div className="absolute bottom-6 left-8 right-8 flex justify-center items-center border-t pt-4">
+              <div className="flex items-center gap-2 text-foreground">
+                <span className="text-lg font-bold">Trade Zero</span>
               </div>
-              {trade.strategies && (
-                <Badge variant="outline" className="text-xs">
-                  {trade.strategies.name}
-                </Badge>
-              )}
             </div>
           </div>
         </div>
