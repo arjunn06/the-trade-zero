@@ -108,13 +108,14 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
               {/* Header with Symbol and Trade Type - horizontal alignment with 16px gap */}
               <div className="flex items-center gap-4">
                 <h1 
-                  className="text-white leading-none font-cirka-bold" 
+                  className="text-white leading-none" 
                   style={{ 
                     color: '#FFF',
                     fontSize: '52px',
                     fontStyle: 'normal',
                     fontWeight: 700,
-                    lineHeight: 'normal'
+                    lineHeight: 'normal',
+                    fontFamily: 'Cirka Bold, serif'
                   }}
                 >
                   {trade.symbol}
@@ -127,10 +128,11 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                   }}
                 >
                   <span 
-                    className="text-white font-cirka-light" 
+                    className="text-white" 
                     style={{ 
                       fontSize: '14px',
-                      fontWeight: 300
+                      fontWeight: 300,
+                      fontFamily: 'Cirka Light, serif'
                     }}
                   >
                     {trade.trade_type}
