@@ -103,8 +103,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
           >
             {/* Content */}
             <div className="relative z-10 flex flex-col h-full">
-              {/* Header with Symbol and Trade Type - horizontal alignment with 40px gap */}
-              <div className="flex items-start gap-10">
+              {/* Header with Symbol and Trade Type - horizontal alignment with 16px gap */}
+              <div className="flex items-start gap-4">
                 <h1 
                   className="text-white leading-none font-cirka-bold" 
                   style={{ 
@@ -136,8 +136,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                 </div>
               </div>
 
-              {/* Price Section - 40px vertical spacing from header */}
-              <div style={{ marginTop: '40px' }}>
+              {/* Price Section - 16px vertical spacing from header */}
+              <div style={{ marginTop: '16px' }}>
                 <div className="flex items-center gap-3">
                   <span 
                     className="text-white font-proxima" 
@@ -167,8 +167,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                 </div>
               </div>
 
-              {/* Quantity - 120px from entry/exit price */}
-              <div style={{ marginTop: '120px' }}>
+              {/* Quantity - 40px from entry/exit price */}
+              <div style={{ marginTop: '40px' }}>
                 <p 
                   className="text-white/70 mb-1 uppercase font-proxima" 
                   style={{ 
@@ -190,9 +190,9 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                 </p>
               </div>
 
-              {/* P&L - 200px from quantity */}
+              {/* P&L - 60px from quantity */}
               {trade.pnl && (
-                <div style={{ marginTop: '200px' }}>
+                <div style={{ marginTop: '60px' }}>
                   <p 
                     className="font-proxima" 
                     style={{ 
@@ -206,8 +206,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                 </div>
               )}
 
-              {/* Footer - 200px from P&L, left aligned */}
-              <div style={{ marginTop: '200px' }}>
+              {/* Footer - 60px from P&L, left aligned */}
+              <div style={{ marginTop: '60px' }}>
                 <div className="flex items-start">
                   <div>
                     <span 
