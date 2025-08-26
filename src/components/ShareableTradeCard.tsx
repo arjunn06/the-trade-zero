@@ -103,8 +103,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
           >
             {/* Content */}
             <div className="relative z-10 flex flex-col h-full">
-              {/* Header with Symbol and Trade Type */}
-              <div className="flex items-start justify-between mb-4">
+              {/* Header with Symbol and Trade Type - horizontal alignment with 40px gap */}
+              <div className="flex items-start gap-10">
                 <h1 
                   className="text-white leading-none font-cirka-bold" 
                   style={{ 
@@ -125,10 +125,10 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                   }}
                 >
                   <span 
-                    className="text-white font-proxima" 
+                    className="text-white font-cirka-light" 
                     style={{ 
                       fontSize: '14px',
-                      fontWeight: 400
+                      fontWeight: 300
                     }}
                   >
                     {trade.trade_type}
@@ -136,8 +136,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                 </div>
               </div>
 
-              {/* Price Section */}
-              <div className="mb-6">
+              {/* Price Section - 40px vertical spacing from header */}
+              <div style={{ marginTop: '40px' }}>
                 <div className="flex items-center gap-3">
                   <span 
                     className="text-white font-proxima" 
@@ -151,7 +151,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                   >
                     {trade.entry_price}
                   </span>
-                  <span className="text-white/70" style={{ fontSize: '18px' }}>→</span>
+                  <span className="text-white/70 font-proxima" style={{ fontSize: '18px' }}>→</span>
                   <span 
                     className="text-white font-proxima" 
                     style={{ 
@@ -167,13 +167,14 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                 </div>
               </div>
 
-              {/* Quantity */}
-              <div className="mb-6">
+              {/* Quantity - 120px from entry/exit price */}
+              <div style={{ marginTop: '120px' }}>
                 <p 
-                  className="text-white/70 mb-1 uppercase tracking-wider font-proxima" 
+                  className="text-white/70 mb-1 uppercase font-proxima" 
                   style={{ 
                     fontSize: '10px',
-                    fontWeight: 400
+                    fontWeight: 400,
+                    letterSpacing: '0.1em'
                   }}
                 >
                   QUANTITY
@@ -189,14 +190,15 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                 </p>
               </div>
 
-              {/* P&L */}
+              {/* P&L - 200px from quantity */}
               {trade.pnl && (
-                <div className="mb-8">
+                <div style={{ marginTop: '200px' }}>
                   <p 
-                    className={`font-proxima ${trade.pnl >= 0 ? 'text-yellow-400' : 'text-red-400'}`} 
+                    className="font-proxima" 
                     style={{ 
                       fontSize: '48px',
-                      fontWeight: 700
+                      fontWeight: 700,
+                      color: trade.pnl >= 0 ? '#EADF8B' : '#FF9A9A'
                     }}
                   >
                     {trade.pnl >= 0 ? '+' : ''}{formatCurrency(trade.pnl, trade.trading_accounts.currency)}
@@ -204,32 +206,33 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                 </div>
               )}
 
-              {/* Footer - Pushed to bottom */}
-              <div className="mt-auto">
-                <div className="flex items-center justify-center">
-                  <div className="flex items-center gap-2">
+              {/* Footer - 200px from P&L, left aligned */}
+              <div style={{ marginTop: '200px' }}>
+                <div className="flex items-start">
+                  <div>
                     <span 
-                      className="text-white/60 uppercase tracking-wider font-proxima" 
+                      className="text-white/60 uppercase font-proxima block" 
                       style={{ 
                         fontSize: '10px',
-                        fontWeight: 400
+                        fontWeight: 400,
+                        letterSpacing: '0.1em'
                       }}
                     >
                       SHARED FROM
                     </span>
+                    <div className="flex items-center gap-1 mt-1">
+                      <TrendingUp className="h-3 w-3 text-white" />
+                      <span 
+                        className="text-white font-proxima" 
+                        style={{ 
+                          fontSize: '14px',
+                          fontWeight: 600
+                        }}
+                      >
+                        TheTradeZero
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-center gap-1 mt-1">
-                  <TrendingUp className="h-3 w-3 text-white" />
-                  <span 
-                    className="text-white font-proxima" 
-                    style={{ 
-                      fontSize: '14px',
-                      fontWeight: 600
-                    }}
-                  >
-                    TheTradeZero
-                  </span>
                 </div>
               </div>
             </div>
