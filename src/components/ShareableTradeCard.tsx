@@ -137,7 +137,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
             {/* Content */}
             <div className="relative z-10 flex flex-col h-full">
               {/* Header with Symbol and Trade Type - horizontal alignment with 16px gap */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-baseline gap-4">
                 <h1 
                   className="text-white leading-none font-cirka-bold" 
                   style={{ 
@@ -152,7 +152,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                   {trade.symbol}
                 </h1>
                 <div 
-                  className="h-7 px-3 rounded-full self-center inline-flex items-center leading-none"
+                  className="h-6 px-3 rounded-full inline-flex items-center leading-none translate-y-[-2px]"
                   data-share-pill
                   style={{ 
                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -258,13 +258,13 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                       SHARED FROM
                     </span>
                     <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="h-[14px] w-[14px] text-white shrink-0 relative top-[1px]" />
+                      <TrendingUp className="h-[14px] w-[14px] text-white shrink-0" />
                       <span 
                         className="text-white font-proxima leading-none" 
                         style={{ 
                           fontSize: '14px',
                           fontWeight: 600,
-                          lineHeight: '1'
+                          lineHeight: '14px'
                         }}
                       >
                         TheTradeZero
