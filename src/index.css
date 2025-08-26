@@ -7,6 +7,32 @@
 All colors MUST be HSL.
 */
 
+/* Cirka font faces */
+@font-face {
+  font-family: 'Cirka';
+  src: url('../Cirka-Variable.ttf') format('truetype-variations'),
+       url('../Cirka-Bold.otf') format('opentype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cirka Bold';
+  src: url('../Cirka-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cirka Light';
+  src: url('../Cirka-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

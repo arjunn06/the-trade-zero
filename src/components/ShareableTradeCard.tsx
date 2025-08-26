@@ -106,14 +106,13 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
               {/* Header with Symbol and Trade Type */}
               <div className="flex items-start justify-between mb-4">
                 <h1 
-                  className="text-white leading-none" 
+                  className="text-white leading-none font-cirka-bold" 
                   style={{ 
                     color: '#FFF',
-                    fontFamily: 'Cirka',
                     fontSize: '52px',
                     fontStyle: 'normal',
                     fontWeight: 700,
-                    lineHeight: '0.9'
+                    lineHeight: 'normal'
                   }}
                 >
                   {trade.symbol}
@@ -126,9 +125,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                   }}
                 >
                   <span 
-                    className="text-white" 
+                    className="text-white font-proxima" 
                     style={{ 
-                      fontFamily: 'Proxima Nova',
                       fontSize: '14px',
                       fontWeight: 400
                     }}
@@ -142,10 +140,9 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
               <div className="mb-6">
                 <div className="flex items-center gap-3">
                   <span 
-                    className="text-white" 
+                    className="text-white font-proxima" 
                     style={{ 
                       color: '#FFF',
-                      fontFamily: 'Proxima Nova',
                       fontSize: '22px',
                       fontStyle: 'normal',
                       fontWeight: 400,
@@ -156,10 +153,9 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                   </span>
                   <span className="text-white/70" style={{ fontSize: '18px' }}>→</span>
                   <span 
-                    className="text-white" 
+                    className="text-white font-proxima" 
                     style={{ 
                       color: '#FFF',
-                      fontFamily: 'Proxima Nova',
                       fontSize: '22px',
                       fontStyle: 'normal',
                       fontWeight: 400,
@@ -174,9 +170,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
               {/* Quantity */}
               <div className="mb-6">
                 <p 
-                  className="text-white/70 mb-1 uppercase tracking-wider" 
+                  className="text-white/70 mb-1 uppercase tracking-wider font-proxima" 
                   style={{ 
-                    fontFamily: 'Proxima Nova',
                     fontSize: '10px',
                     fontWeight: 400
                   }}
@@ -184,9 +179,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                   QUANTITY
                 </p>
                 <p 
-                  className="text-white" 
+                  className="text-white font-proxima" 
                   style={{ 
-                    fontFamily: 'Proxima Nova',
                     fontSize: '18px',
                     fontWeight: 600
                   }}
@@ -199,9 +193,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
               {trade.pnl && (
                 <div className="mb-8">
                   <p 
-                    className={trade.pnl >= 0 ? 'text-yellow-400' : 'text-red-400'} 
+                    className={`font-proxima ${trade.pnl >= 0 ? 'text-yellow-400' : 'text-red-400'}`} 
                     style={{ 
-                      fontFamily: 'Proxima Nova',
                       fontSize: '48px',
                       fontWeight: 700
                     }}
@@ -216,9 +209,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                 <div className="flex items-center justify-center">
                   <div className="flex items-center gap-2">
                     <span 
-                      className="text-white/60 uppercase tracking-wider" 
+                      className="text-white/60 uppercase tracking-wider font-proxima" 
                       style={{ 
-                        fontFamily: 'Proxima Nova',
                         fontSize: '10px',
                         fontWeight: 400
                       }}
@@ -230,9 +222,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                 <div className="flex items-center justify-center gap-1 mt-1">
                   <TrendingUp className="h-3 w-3 text-white" />
                   <span 
-                    className="text-white" 
+                    className="text-white font-proxima" 
                     style={{ 
-                      fontFamily: 'Proxima Nova',
                       fontSize: '14px',
                       fontWeight: 600
                     }}

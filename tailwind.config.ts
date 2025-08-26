@@ -21,6 +21,9 @@ export default {
 			fontFamily: {
 				'sans': ['Proxima Nova', 'ui-sans-serif', 'system-ui', 'sans-serif'],
 				'proxima': ['Proxima Nova', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+				'cirka': ['Cirka', 'serif'],
+				'cirka-bold': ['Cirka Bold', 'Cirka', 'serif'],
+				'cirka-light': ['Cirka Light', 'Cirka', 'serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
