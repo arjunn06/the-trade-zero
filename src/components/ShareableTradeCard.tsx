@@ -56,21 +56,42 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
     if (!cardRef.current) return;
 
     try {
-      // Wait for fonts to load
-      await document.fonts.ready;
-      
+      // Ensure web fonts are ready
+      await (document as any).fonts?.ready;
+
+      // Preload background image (if any) to avoid blank canvas
+      const style = window.getComputedStyle(cardRef.current);
+      const bgImage = style.backgroundImage;
+      const match = bgImage && bgImage !== 'none' ? bgImage.match(/url\(["']?(.*?)["']?\)/) : null;
+      if (match?.[1]) {
+        await new Promise<void>((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve();
+          img.onerror = reject;
+          img.src = match[1];
+        });
+      }
+
       const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: 'transparent',
-        scale: 2,
+        backgroundColor: null,
+        scale: Math.min(2, window.devicePixelRatio || 2),
         useCORS: true,
-        allowTaint: true,
-        foreignObjectRendering: true,
-        logging: false
+        allowTaint: false,
+        foreignObjectRendering: false,
+        logging: false,
+        onclone: (doc) => {
+          const pill = doc.querySelector('[data-share-pill]') as HTMLElement | null;
+          if (pill) {
+            pill.style.backdropFilter = 'none';
+            // @ts-ignore - vendor prefix for Safari
+            pill.style.webkitBackdropFilter = 'none';
+          }
+        }
       });
 
       const link = document.createElement('a');
       link.download = `trade-${trade.symbol}-${new Date().toISOString().split('T')[0]}.png`;
-      link.href = canvas.toDataURL();
+      link.href = canvas.toDataURL('image/png');
       link.click();
 
       toast.success('Trade card downloaded successfully!');
@@ -123,6 +144,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                 </h1>
                 <div 
                   className="px-3 py-1 rounded-full"
+                  data-share-pill
                   style={{ 
                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
                     backdropFilter: 'blur(10px)'
