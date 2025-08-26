@@ -75,7 +75,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
       const rect = cardRef.current.getBoundingClientRect();
       const canvas = await html2canvas(cardRef.current, {
         backgroundColor: null,
-        scale: Math.max(3, window.devicePixelRatio || 1),
+        scale: 4,
         width: Math.round(rect.width),
         height: Math.round(rect.height),
         useCORS: true,
@@ -152,7 +152,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                   {trade.symbol}
                 </h1>
                 <div 
-                  className="px-3 py-1 rounded-full self-center flex items-center leading-none"
+                  className="h-7 px-3 rounded-full self-center inline-flex items-center leading-none"
                   data-share-pill
                   style={{ 
                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -258,7 +258,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                       SHARED FROM
                     </span>
                     <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="h-3 w-3 text-white shrink-0" />
+                      <TrendingUp className="h-[14px] w-[14px] text-white shrink-0 relative top-[1px]" />
                       <span 
                         className="text-white font-proxima leading-none" 
                         style={{ 
