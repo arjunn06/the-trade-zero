@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, ImageIcon, Edit, Trash2, Eye, X, Copy, MoreHorizontal } from 'lucide-react';
+import { TrendingUp, TrendingDown, ImageIcon, Edit, Trash2, Eye, X, Copy, MoreHorizontal, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
@@ -10,6 +10,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ShareableTradeCard } from '@/components/ShareableTradeCard';
+import { useState } from 'react';
 
 interface Trade {
   id: string;
@@ -43,6 +45,7 @@ interface TradeCardProps {
 
 export function TradeCard({ trade, onClose, onDelete, onDuplicate, onViewScreenshots }: TradeCardProps) {
   const navigate = useNavigate();
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
   const formatCurrency = (amount: number, currency: string = 'USD') => {
     return new Intl.NumberFormat('en-US', {
@@ -110,6 +113,10 @@ export function TradeCard({ trade, onClose, onDelete, onDuplicate, onViewScreens
                     Copy to Account
                   </DropdownMenuItem>
                 )}
+                <DropdownMenuItem onClick={(e) => handleActionClick(e, () => setShowShareDialog(true))}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share Trade
+                </DropdownMenuItem>
                 {trade.status === 'open' && onClose && (
                   <DropdownMenuItem onClick={(e) => handleActionClick(e, () => onClose(trade))}>
                     <X className="h-4 w-4 mr-2" />
@@ -225,6 +232,12 @@ export function TradeCard({ trade, onClose, onDelete, onDuplicate, onViewScreens
           )}
         </div>
       </CardContent>
+      
+      <ShareableTradeCard 
+        trade={trade}
+        isOpen={showShareDialog}
+        onClose={() => setShowShareDialog(false)}
+      />
     </Card>
   );
 }
