@@ -186,7 +186,7 @@ export function CustomizableCsvExport({ accountId, accountName }: CustomizableCs
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full">
           <FileSpreadsheet className="h-4 w-4 mr-2" />
-          Custom CSV Export
+          Export Trades
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
