@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { TrendingUp, TrendingDown, Download, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 
 interface Trade {
   id: string;
@@ -73,33 +74,47 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
       }
 
       const rect = cardRef.current.getBoundingClientRect();
-      const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: null,
-        scale: 4,
-        width: Math.round(rect.width),
-        height: Math.round(rect.height),
-        useCORS: true,
-        allowTaint: false,
-        foreignObjectRendering: false,
-        logging: false,
-        onclone: (doc) => {
-          const pill = doc.querySelector('[data-share-pill]') as HTMLElement | null;
-          if (pill) {
-            pill.style.backdropFilter = 'none';
-            // @ts-ignore - vendor prefix for Safari
-            pill.style.webkitBackdropFilter = 'none';
+      let dataUrl: string | null = null;
+      try {
+        dataUrl = await toPng(cardRef.current, {
+          cacheBust: true,
+          pixelRatio: 4,
+          backgroundColor: 'transparent',
+          canvasWidth: Math.round(rect.width),
+          canvasHeight: Math.round(rect.height),
+          style: { borderRadius: '0px', overflow: 'visible' },
+        });
+      } catch (e) {
+        // Fallback to html2canvas if html-to-image fails
+        const canvas = await html2canvas(cardRef.current, {
+          backgroundColor: null,
+          scale: 4,
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+          useCORS: true,
+          allowTaint: false,
+          foreignObjectRendering: false,
+          logging: false,
+          onclone: (doc) => {
+            const pill = doc.querySelector('[data-share-pill]') as HTMLElement | null;
+            if (pill) {
+              pill.style.backdropFilter = 'none';
+              // @ts-ignore - vendor prefix for Safari
+              pill.style.webkitBackdropFilter = 'none';
+            }
+            const root = doc.querySelector('[data-share-root]') as HTMLElement | null;
+            if (root) {
+              root.style.borderRadius = '0px';
+              root.style.overflow = 'visible';
+            }
           }
-          const root = doc.querySelector('[data-share-root]') as HTMLElement | null;
-          if (root) {
-            root.style.borderRadius = '0px';
-            root.style.overflow = 'visible';
-          }
-        }
-      });
+        });
+        dataUrl = canvas.toDataURL('image/png');
+      }
 
       const link = document.createElement('a');
       link.download = `trade-${trade.symbol}-${new Date().toISOString().split('T')[0]}.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.href = dataUrl;
       link.click();
 
       toast.success('Trade card downloaded successfully!');
@@ -137,22 +152,22 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
             {/* Content */}
             <div className="relative z-10 flex flex-col h-full">
               {/* Header with Symbol and Trade Type - horizontal alignment with 16px gap */}
-              <div className="flex items-baseline gap-4">
+              <div className="flex items-center gap-4">
                 <h1 
-                  className="text-white leading-none font-cirka-bold" 
+                  className="text-white leading-none font-cirka-bold inline-block align-middle" 
                   style={{ 
                     color: '#FFF',
                     fontSize: '52px',
                     fontStyle: 'normal',
                     fontWeight: 700,
-                    lineHeight: 'normal',
+                    lineHeight: '1',
                     fontFamily: '"Cirka Bold", "Proxima Nova", system-ui, sans-serif'
                   }}
                 >
                   {trade.symbol}
                 </h1>
                 <div 
-                  className="h-6 px-3 rounded-full inline-flex items-center leading-none translate-y-[-2px]"
+                  className="h-6 px-3 rounded-full inline-flex items-center leading-none align-middle"
                   data-share-pill
                   style={{ 
                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
