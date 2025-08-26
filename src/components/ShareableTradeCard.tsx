@@ -72,9 +72,12 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
         });
       }
 
+      const rect = cardRef.current.getBoundingClientRect();
       const canvas = await html2canvas(cardRef.current, {
         backgroundColor: null,
-        scale: Math.min(2, window.devicePixelRatio || 2),
+        scale: Math.max(3, window.devicePixelRatio || 1),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
         useCORS: true,
         allowTaint: false,
         foreignObjectRendering: false,
@@ -85,6 +88,11 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
             pill.style.backdropFilter = 'none';
             // @ts-ignore - vendor prefix for Safari
             pill.style.webkitBackdropFilter = 'none';
+          }
+          const root = doc.querySelector('[data-share-root]') as HTMLElement | null;
+          if (root) {
+            root.style.borderRadius = '0px';
+            root.style.overflow = 'visible';
           }
         }
       });
@@ -117,6 +125,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
         <div className="p-6 pt-4">
           <div 
             ref={cardRef}
+            data-share-root
             className="w-[500px] h-[500px] rounded-xl p-6 relative overflow-hidden mx-auto"
             style={{ 
               backgroundImage: `url('/lovable-uploads/d2ebd9e4-65b8-4650-9df3-b2d4d5ace41a.png')`,
@@ -143,7 +152,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                   {trade.symbol}
                 </h1>
                 <div 
-                  className="px-3 py-1 rounded-full self-center"
+                  className="px-3 py-1 rounded-full self-center flex items-center leading-none"
                   data-share-pill
                   style={{ 
                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -155,7 +164,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                     style={{ 
                       fontSize: '14px',
                       fontWeight: 300,
-                      fontFamily: '"Cirka Light", "Proxima Nova", system-ui, sans-serif'
+                      fontFamily: '"Cirka Light", "Proxima Nova", system-ui, sans-serif',
+                      lineHeight: '1'
                     }}
                   >
                     {trade.trade_type}
@@ -248,12 +258,13 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                       SHARED FROM
                     </span>
                     <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="h-3 w-3 text-white" />
+                      <TrendingUp className="h-3 w-3 text-white shrink-0" />
                       <span 
-                        className="text-white font-proxima" 
+                        className="text-white font-proxima leading-none" 
                         style={{ 
                           fontSize: '14px',
-                          fontWeight: 600
+                          fontWeight: 600,
+                          lineHeight: '1'
                         }}
                       >
                         TheTradeZero
