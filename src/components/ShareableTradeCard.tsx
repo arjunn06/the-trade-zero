@@ -61,8 +61,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
         scale: 2,
         useCORS: true,
         allowTaint: true,
-        width: 600,
-        height: 400
+        width: 1920,
+        height: 1920
       });
 
       const link = document.createElement('a');
@@ -93,7 +93,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
         <div className="p-6 pt-4">
           <div 
             ref={cardRef}
-            className="w-[600px] h-[400px] rounded-2xl p-8 relative overflow-hidden mx-auto"
+            className="w-[1920px] h-[1920px] rounded-2xl p-24 relative overflow-hidden mx-auto"
             style={{ 
               backgroundImage: `url('/lovable-uploads/d2ebd9e4-65b8-4650-9df3-b2d4d5ace41a.png')`,
               backgroundSize: 'cover',
@@ -104,23 +104,53 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
             {/* Content */}
             <div className="relative z-10 flex flex-col h-full">
               {/* Title */}
-              <div className="mb-6">
-                <h1 className="text-4xl font-bold text-white mb-2" style={{ fontFamily: 'Cirka, serif', fontWeight: 'bold' }}>
+              <div className="mb-16">
+                <h1 
+                  className="text-white mb-6" 
+                  style={{ 
+                    color: '#FFF',
+                    fontFamily: 'Cirka',
+                    fontSize: '200px',
+                    fontStyle: 'normal',
+                    fontWeight: 700,
+                    lineHeight: 'normal'
+                  }}
+                >
                   {trade.symbol}
                 </h1>
-                <p className="text-white/60 text-lg" style={{ fontFamily: 'Proxima Nova, sans-serif', fontWeight: '300' }}>
+                <p className="text-white/60 text-6xl" style={{ fontFamily: 'Proxima Nova, sans-serif', fontWeight: '300' }}>
                   {trade.trade_type.toUpperCase()}
                 </p>
               </div>
 
               {/* Price Section */}
-              <div className="mb-8">
-                <div className="flex items-center gap-4 mb-2">
-                  <span className="text-2xl font-semibold text-white" style={{ fontFamily: 'Proxima Nova, sans-serif' }}>
+              <div className="mb-24">
+                <div className="flex items-center gap-12 mb-6">
+                  <span 
+                    className="text-white" 
+                    style={{ 
+                      color: '#FFF',
+                      fontFamily: 'Proxima Nova',
+                      fontSize: '88px',
+                      fontStyle: 'normal',
+                      fontWeight: 400,
+                      lineHeight: 'normal'
+                    }}
+                  >
                     {trade.entry_price}
                   </span>
-                  <span className="text-white/70 text-xl">→</span>
-                  <span className="text-2xl font-semibold text-white" style={{ fontFamily: 'Proxima Nova, sans-serif' }}>
+                  <span className="text-white/70 text-6xl">→</span>
+                  <span 
+                    className="text-white" 
+                    style={{ 
+                      color: '#FFF',
+                      fontFamily: 'Proxima Nova',
+                      fontSize: '88px',
+                      fontStyle: 'normal',
+                      fontWeight: 400,
+                      lineHeight: 'normal'
+                    }}
+                  >
                     {trade.exit_price || 'Open'}
                   </span>
                 </div>
