@@ -56,13 +56,16 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
     if (!cardRef.current) return;
 
     try {
+      // Wait for fonts to load
+      await document.fonts.ready;
+      
       const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: '#ffffff',
+        backgroundColor: 'transparent',
         scale: 2,
         useCORS: true,
         allowTaint: true,
-        width: 500,
-        height: 500
+        foreignObjectRendering: true,
+        logging: false
       });
 
       const link = document.createElement('a');
@@ -98,7 +101,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
               backgroundImage: `url('/lovable-uploads/d2ebd9e4-65b8-4650-9df3-b2d4d5ace41a.png')`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              fontFamily: 'system-ui, -apple-system, sans-serif'
+              fontFamily: '"Proxima Nova", system-ui, -apple-system, sans-serif'
             }}
           >
             {/* Content */}
@@ -112,7 +115,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                     fontSize: '52px',
                     fontStyle: 'normal',
                     fontWeight: 700,
-                    lineHeight: 'normal'
+                    lineHeight: 'normal',
+                    fontFamily: '"Cirka Bold", "Proxima Nova", system-ui, sans-serif'
                   }}
                 >
                   {trade.symbol}
@@ -128,7 +132,8 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                     className="text-white font-cirka-light" 
                     style={{ 
                       fontSize: '14px',
-                      fontWeight: 300
+                      fontWeight: 300,
+                      fontFamily: '"Cirka Light", "Proxima Nova", system-ui, sans-serif'
                     }}
                   >
                     {trade.trade_type}
