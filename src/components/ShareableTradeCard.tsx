@@ -80,14 +80,16 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[700px] p-0">
-        <DialogHeader className="p-6 pb-0">
+        <DialogHeader className="p-6 pb-0 pr-12">
           <DialogTitle className="flex items-center justify-between">
             <span>Share Trade</span>
+          </DialogTitle>
+          <div className="mt-4">
             <Button onClick={downloadAsImage} size="sm" className="gap-2">
               <Download className="h-4 w-4" />
               Download
             </Button>
-          </DialogTitle>
+          </div>
         </DialogHeader>
         
         <div className="p-6 pt-4">
