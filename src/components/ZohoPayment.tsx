@@ -138,9 +138,7 @@ export function ZohoPayment({ plan, amount, onSuccess, onCancel }: ZohoPaymentPr
 // These will be implemented when integrating with actual Zoho Payments API
 
 export const zohoPaymentConfig = {
-  // TODO: Add Zoho Payments configuration
-  merchantId: 'your-merchant-id',
-  apiKey: 'your-api-key',
+  // Sensitive credentials are NOT stored client-side. Use an Edge Function with Supabase secrets.
   environment: 'sandbox',
   currency: 'USD',
   returnUrl: window.location.origin + '/payment-success',

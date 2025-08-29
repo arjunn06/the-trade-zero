@@ -26,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { secureLocalStorage } from '@/utils/secureStorage';
 
 interface UserProfileManagerProps {
   collapsed?: boolean;
@@ -52,16 +53,22 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
 
   // Check if OpenAI key exists on component mount
   useEffect(() => {
-    // Note: OpenAI keys are now handled server-side via Supabase secrets
-    // This localStorage check is kept for backwards compatibility but will be deprecated
-    const existingKey = localStorage.getItem('openai_api_key');
-    if (existingKey) {
-      setOpenAIKeyExists(true);
-      setOpenAIKey(existingKey.substring(0, 8) + '...' + existingKey.substring(existingKey.length - 4));
-    }
+    (async () => {
+      // Migrate legacy key from localStorage to encrypted secure storage
+      const legacy = localStorage.getItem('openai_api_key');
+      if (legacy) {
+        await secureLocalStorage.setItem('openai_api_key', legacy, { encrypt: true });
+        localStorage.removeItem('openai_api_key');
+      }
+      const existing = await secureLocalStorage.getItem('openai_api_key');
+      if (existing) {
+        setOpenAIKeyExists(true);
+        setOpenAIKey(existing.substring(0, 8) + '...' + existing.substring(existing.length - 4));
+      }
+    })();
   }, []);
 
-  const handleSaveOpenAIKey = () => {
+  const handleSaveOpenAIKey = async () => {
     if (!openAIKey.trim()) {
       toast({
         variant: "destructive",
@@ -71,7 +78,7 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
       return;
     }
 
-    localStorage.setItem('openai_api_key', openAIKey);
+    await secureLocalStorage.setItem('openai_api_key', openAIKey, { encrypt: true });
     setOpenAIKeyExists(true);
     const maskedKey = openAIKey.substring(0, 8) + '...' + openAIKey.substring(openAIKey.length - 4);
     setOpenAIKey(maskedKey);
@@ -79,12 +86,12 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
     
     toast({
       title: "API Key saved",
-      description: "Your OpenAI API key has been saved successfully."
+      description: "Your OpenAI API key has been stored securely (encrypted)."
     });
   };
 
-  const handleDeleteOpenAIKey = () => {
-    localStorage.removeItem('openai_api_key');
+  const handleDeleteOpenAIKey = async () => {
+    secureLocalStorage.removeItem('openai_api_key');
     setOpenAIKey('');
     setOpenAIKeyExists(false);
     setShowOpenAIKey(false);
@@ -95,8 +102,8 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
     });
   };
 
-  const handleEditOpenAIKey = () => {
-    const existingKey = localStorage.getItem('openai_api_key');
+  const handleEditOpenAIKey = async () => {
+    const existingKey = await secureLocalStorage.getItem('openai_api_key');
     setOpenAIKey(existingKey || '');
     setShowOpenAIKey(true);
   };

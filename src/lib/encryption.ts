@@ -2,6 +2,7 @@
  * Encryption utilities for sensitive data like API tokens
  * Uses Web Crypto API for AES-GCM encryption
  */
+import { supabase } from '@/integrations/supabase/client';
 
 class EncryptionManager {
   private static instance: EncryptionManager;
@@ -18,21 +19,49 @@ class EncryptionManager {
 
   private async getKey(): Promise<CryptoKey> {
     if (!this.key) {
-      // In a production environment, this should be derived from a secure source
-      // For now, we'll use a deterministic key based on user session
+      // Derive key per-session/per-user to avoid hardcoded secrets
+      let baseBytes: Uint8Array;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const seed = session?.access_token || sessionStorage.getItem('enc_seed');
+        if (seed) {
+          baseBytes = new TextEncoder().encode(seed.slice(0, 64));
+        } else {
+          const rand = new Uint8Array(32);
+          crypto.getRandomValues(rand);
+          const randB64 = btoa(String.fromCharCode(...rand));
+          sessionStorage.setItem('enc_seed', randB64);
+          baseBytes = rand;
+        }
+      } catch {
+        const rand = new Uint8Array(32);
+        crypto.getRandomValues(rand);
+        baseBytes = rand;
+      }
+
       const keyMaterial = await crypto.subtle.importKey(
         'raw',
-        new TextEncoder().encode('your-32-char-secret-key-here!!!'),
+        baseBytes.buffer as ArrayBuffer,
         { name: 'PBKDF2' },
         false,
         ['deriveKey']
       );
 
+      // Randomized salt persisted only for current session
+      let saltStr = sessionStorage.getItem('enc_salt');
+      if (!saltStr) {
+        const salt = new Uint8Array(16);
+        crypto.getRandomValues(salt);
+        saltStr = btoa(String.fromCharCode(...salt));
+        sessionStorage.setItem('enc_salt', saltStr);
+      }
+      const saltBytes = new Uint8Array(atob(saltStr).split('').map(c => c.charCodeAt(0)));
+
       this.key = await crypto.subtle.deriveKey(
         {
           name: 'PBKDF2',
-          salt: new TextEncoder().encode('secure-salt'),
-          iterations: 100000,
+          salt: saltBytes,
+          iterations: 150000,
           hash: 'SHA-256',
         },
         keyMaterial,
