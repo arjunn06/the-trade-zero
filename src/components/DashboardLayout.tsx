@@ -1,8 +1,11 @@
 
 import { ReactNode } from 'react';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { MobileHeader } from '@/components/MobileHeader';
+import { NotificationCenter } from '@/components/NotificationCenter';
+import { SearchCommand } from '@/components/SearchCommand';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -13,12 +16,28 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
-        {/* Mobile header for smaller screens */}
+        
+        {/* Enhanced header for desktop */}
+        <div className="hidden lg:block fixed top-0 right-0 left-64 z-40">
+          <header className="glass-nav border-b h-16 px-6 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger />
+              <SearchCommand />
+            </div>
+            <div className="flex items-center gap-3">
+              <NotificationCenter />
+              <ThemeToggle />
+            </div>
+          </header>
+        </div>
+        
+        {/* Mobile header */}
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50">
           <MobileHeader />
         </div>
-        <main className="flex-1 transition-all duration-300 ease-in-out lg:ml-[var(--sidebar-width)] p-2 sm:p-4 md:p-6 lg:p-8 xl:p-10 lg:pt-8 pt-16">
-          <div className="animate-fade-in">
+        
+        <main className="flex-1 transition-all duration-300 ease-in-out lg:ml-64 lg:pt-16 pt-16 p-2 sm:p-4 md:p-6 lg:p-8 xl:p-10">
+          <div className="animate-fade-in max-w-full">
             {children}
           </div>
         </main>

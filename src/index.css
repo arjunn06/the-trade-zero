@@ -44,7 +44,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 15%;
 
-    --primary: 0 0% 0%;
+    --primary: 220 100% 50%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 96%;
@@ -53,8 +53,8 @@ All colors MUST be HSL.
     --muted: 220 14% 96%;
     --muted-foreground: 220 9% 46%;
 
-    --accent: 0 0% 0%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 220 100% 95%;
+    --accent-foreground: 220 100% 20%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -67,7 +67,7 @@ All colors MUST be HSL.
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 0 0% 0%;
+    --ring: 220 100% 50%;
 
     --radius: 0.75rem;
     --sidebar-background: 0 0% 100%;
@@ -79,13 +79,35 @@ All colors MUST be HSL.
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 220 100% 50%;
 
-    /* Trading specific colors */
+    /* Enhanced trading colors */
     --profit: 142 76% 36%;
     --loss: 0 84% 60%;
     --breakeven: 220 9% 46%;
     
-    /* Brand logo color */
+    /* Brand system */
     --brand-blue: 220 100% 50%;
+    --brand-gradient-start: 220 100% 50%;
+    --brand-gradient-end: 280 100% 70%;
+    
+    /* Enhanced design system */
+    --surface-elevated: 0 0% 98%;
+    --surface-hover: 220 14% 93%;
+    --text-subtle: 220 9% 65%;
+    --text-disabled: 220 9% 80%;
+    
+    /* Glass morphism */
+    --glass-bg: 0 0% 100% / 0.8;
+    --glass-border: 220 13% 91% / 0.5;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    
+    /* Interactive states */
+    --focus-ring: 220 100% 50% / 0.2;
+    --hover-overlay: 220 100% 50% / 0.05;
   }
 
   .dark {
@@ -98,7 +120,7 @@ All colors MUST be HSL.
     --popover: 0 0% 6%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 0 0% 98%;
+    --primary: 220 100% 60%;
     --primary-foreground: 0 0% 3%;
 
     --secondary: 0 0% 12%;
@@ -107,8 +129,8 @@ All colors MUST be HSL.
     --muted: 0 0% 12%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 0 0% 98%;
-    --accent-foreground: 0 0% 3%;
+    --accent: 220 100% 15%;
+    --accent-foreground: 220 100% 85%;
 
     --destructive: 0 63% 50%;
     --destructive-foreground: 220 14% 96%;
@@ -121,7 +143,7 @@ All colors MUST be HSL.
 
     --border: 0 0% 18%;
     --input: 0 0% 18%;
-    --ring: 0 0% 98%;
+    --ring: 220 100% 60%;
 
     --sidebar-background: 0 0% 6%;
     --sidebar-foreground: 0 0% 96%;
@@ -132,17 +154,35 @@ All colors MUST be HSL.
     --sidebar-border: 0 0% 18%;
     --sidebar-ring: 220 100% 60%;
 
-    /* Trading specific colors */
+    /* Enhanced trading colors */
     --profit: 142 76% 40%;
     --loss: 0 63% 50%;
     --breakeven: 220 9% 56%;
     
-    /* Brand logo color */
+    /* Brand system */
     --brand-blue: 220 100% 60%;
-
-    /* Gradient colors for modern effects */
-    --gradient-start: 220 100% 60%;
-    --gradient-end: 280 100% 70%;
+    --brand-gradient-start: 220 100% 60%;
+    --brand-gradient-end: 280 100% 70%;
+    
+    /* Enhanced design system */
+    --surface-elevated: 0 0% 8%;
+    --surface-hover: 0 0% 15%;
+    --text-subtle: 0 0% 55%;
+    --text-disabled: 0 0% 35%;
+    
+    /* Glass morphism */
+    --glass-bg: 0 0% 6% / 0.8;
+    --glass-border: 0 0% 18% / 0.5;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.25);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+    
+    /* Interactive states */
+    --focus-ring: 220 100% 60% / 0.3;
+    --hover-overlay: 220 100% 60% / 0.1;
   }
 }
 
@@ -173,20 +213,26 @@ All colors MUST be HSL.
 }
 
 @layer components {
+  /* Enhanced metric cards with better visual hierarchy */
   .metric-card {
-    @apply bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-primary/20;
+    @apply bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-primary/20 relative overflow-hidden group;
+  }
+  
+  .metric-card::before {
+    @apply absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none;
+    content: '';
   }
   
   .metric-value {
-    @apply text-2xl font-semibold tracking-tight;
+    @apply text-2xl font-semibold tracking-tight relative z-10;
   }
   
   .metric-label {
-    @apply text-sm font-medium text-muted-foreground;
+    @apply text-sm font-medium text-muted-foreground relative z-10;
   }
   
   .metric-change {
-    @apply text-xs font-medium flex items-center gap-1 mt-1 transition-colors duration-200;
+    @apply text-xs font-medium flex items-center gap-1 mt-1 transition-colors duration-200 relative z-10;
   }
   
   .profit-text {
@@ -197,13 +243,22 @@ All colors MUST be HSL.
     @apply text-loss;
   }
 
-  /* Interactive Elements */
+  /* Glass morphism effects */
+  .glass-card {
+    @apply bg-white/80 dark:bg-black/80 backdrop-blur-sm border border-white/20 dark:border-white/10 shadow-lg;
+  }
+  
+  .glass-nav {
+    @apply bg-white/95 dark:bg-black/95 backdrop-blur-md border-b border-white/20 dark:border-white/10;
+  }
+
+  /* Enhanced interactive elements */
   .story-link {
     @apply relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left;
   }
   
   .hover-scale {
-    @apply transition-transform duration-200 hover:scale-105 active:scale-95;
+    @apply transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer;
   }
   
   .hover-lift {
@@ -216,6 +271,7 @@ All colors MUST be HSL.
 
   .stagger-fade {
     animation: fade-in 0.5s ease-out forwards;
+    opacity: 0;
   }
 
   .stagger-fade:nth-child(1) { animation-delay: 0.1s; }
@@ -223,38 +279,99 @@ All colors MUST be HSL.
   .stagger-fade:nth-child(3) { animation-delay: 0.3s; }
   .stagger-fade:nth-child(4) { animation-delay: 0.4s; }
   .stagger-fade:nth-child(5) { animation-delay: 0.5s; }
+  .stagger-fade:nth-child(6) { animation-delay: 0.6s; }
 
   /* Enhanced form controls */
   .form-input {
-    @apply transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-primary/50;
+    @apply transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-primary/50 bg-background border-border;
   }
 
-  /* Better dropdown styling */
+  /* Modern dropdown styling */
   .dropdown-content {
-    @apply bg-popover border border-border shadow-lg rounded-lg backdrop-blur-sm z-50;
+    @apply bg-popover border border-border shadow-xl rounded-lg backdrop-blur-sm z-50 animate-fade-in;
   }
 
   .dropdown-item {
-    @apply hover:bg-accent hover:text-accent-foreground transition-colors duration-150 rounded-sm;
+    @apply hover:bg-accent hover:text-accent-foreground transition-colors duration-150 rounded-sm relative;
   }
 
-  /* Loading states */
+  /* Enhanced loading states */
   .skeleton {
-    @apply animate-pulse bg-muted rounded;
+    @apply animate-pulse bg-muted rounded relative overflow-hidden;
+  }
+  
+  .skeleton::after {
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-slide-in-right;
+    content: '';
   }
 
-  /* Card hover effects */
+  /* Modern card hover effects */
   .interactive-card {
-    @apply transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:border-primary/30 cursor-pointer;
+    @apply transition-all duration-300 hover:shadow-xl hover:scale-[1.02] hover:border-primary/30 cursor-pointer group relative overflow-hidden;
+  }
+  
+  .interactive-card::before {
+    @apply absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300;
+    content: '';
   }
 
-  /* Button enhancements */
+  /* Enhanced button styles */
   .btn-primary {
-    @apply transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-95;
+    @apply transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-95 relative overflow-hidden;
+  }
+  
+  .btn-primary::before {
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500;
+    content: '';
   }
 
   .btn-ghost {
     @apply transition-all duration-200 hover:bg-accent/80 hover:scale-105 active:scale-95;
+  }
+  
+  /* Status indicators */
+  .status-indicator {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .status-success {
+    @apply bg-success/10 text-success border border-success/20;
+  }
+  
+  .status-error {
+    @apply bg-destructive/10 text-destructive border border-destructive/20;
+  }
+  
+  .status-warning {
+    @apply bg-warning/10 text-warning border border-warning/20;
+  }
+  
+  .status-info {
+    @apply bg-primary/10 text-primary border border-primary/20;
+  }
+  
+  /* Enhanced progress bars */
+  .progress-bar {
+    @apply relative overflow-hidden bg-muted rounded-full;
+  }
+  
+  .progress-fill {
+    @apply h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-500 ease-out relative;
+  }
+  
+  .progress-fill::after {
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-slide-in-right;
+    content: '';
+  }
+  
+  /* Modern tab styling */
+  .tab-trigger {
+    @apply relative transition-all duration-200 hover:text-foreground;
+  }
+  
+  .tab-trigger[data-state="active"]::after {
+    @apply absolute bottom-0 left-0 right-0 h-0.5 bg-primary;
+    content: '';
   }
 }
 
