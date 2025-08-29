@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Calculator, Calendar, FileText, TrendingUp, Settings, Users, DollarSign } from 'lucide-react';
+import { Search, Calculator, Calendar, FileText, TrendingUp, Settings, Users, DollarSign, BarChart3 } from 'lucide-react';
 import {
   CommandDialog,
   CommandEmpty,
@@ -96,6 +96,15 @@ export function SearchCommand() {
       icon: Users,
       category: 'Navigation',
       keywords: ['brokers', 'balance', 'equity']
+    },
+    {
+      id: 'reports',
+      title: 'Weekly Reports',
+      description: 'View detailed weekly trading reports',
+      url: '/reports',
+      icon: BarChart3,
+      category: 'Navigation',
+      keywords: ['analytics', 'performance', 'weekly', 'summary']
     },
     
     // Quick Actions

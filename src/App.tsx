@@ -30,6 +30,7 @@ import Refund from "./pages/Refund";
 import Welcome from "./pages/Welcome";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
+import WeeklyReport from "./pages/WeeklyReport";
 import NotFound from "./pages/NotFound";
 import { AdminLogin } from "./pages/admin/AdminLogin";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
@@ -75,6 +76,7 @@ const App = () => (
             <Route path="/strategies/:id/analytics" element={<ProtectedRoute><StrategyAnalytics /></ProtectedRoute>} />
             <Route path="/upgrade" element={<ProtectedRoute><Upgrade /></ProtectedRoute>} />
             <Route path="/confluence" element={<ProtectedRoute><Confluence /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><WeeklyReport /></ProtectedRoute>} />
             <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
             <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
