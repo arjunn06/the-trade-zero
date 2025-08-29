@@ -41,7 +41,7 @@ export function NotificationCenter() {
         type: 'info',
         read: false,
         createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-        actionUrl: '/reports'
+        actionUrl: '/dashboard' // Changed from /reports to existing route
       },
       {
         id: '2',
