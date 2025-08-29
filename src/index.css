@@ -223,7 +223,7 @@ All colors MUST be HSL.
     content: '';
   }
   
-  .group:hover .metric-card::before {
+  .metric-card:hover::before {
     @apply opacity-100;
   }
   
@@ -311,12 +311,15 @@ All colors MUST be HSL.
 
   /* Modern card hover effects */
   .interactive-card {
-    @apply transition-all duration-300 hover:shadow-xl hover:scale-[1.02] hover:border-primary/30 cursor-pointer group relative overflow-hidden;
+    @apply transition-all duration-300 hover:shadow-xl hover:scale-[1.02] hover:border-primary/30 cursor-pointer relative overflow-hidden;
   }
   
   .interactive-card::before {
-    @apply absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300;
+    @apply absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity duration-300;
     content: '';
+  }
+  .interactive-card:hover::before {
+    @apply opacity-100;
   }
 
   /* Enhanced button styles */
@@ -325,8 +328,12 @@ All colors MUST be HSL.
   }
   
   .btn-primary::before {
-    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500;
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] transition-transform duration-500;
     content: '';
+  }
+  
+  .btn-primary:hover::before {
+    @apply translate-x-[100%];
   }
 
   .btn-ghost {
