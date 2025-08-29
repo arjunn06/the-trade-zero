@@ -215,12 +215,16 @@ All colors MUST be HSL.
 @layer components {
   /* Enhanced metric cards with better visual hierarchy */
   .metric-card {
-    @apply bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-primary/20 relative overflow-hidden group;
+    @apply bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-primary/20 relative overflow-hidden;
   }
   
   .metric-card::before {
-    @apply absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none;
+    @apply absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity duration-300 pointer-events-none;
     content: '';
+  }
+  
+  .group:hover .metric-card::before {
+    @apply opacity-100;
   }
   
   .metric-value {
