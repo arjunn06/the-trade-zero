@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,9 +7,10 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { LoadingCard } from '@/components/ui/loading-spinner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subWeeks, subMonths, isWithinInterval, getWeek, getMonth, getYear } from 'date-fns';
-import { TrendingUp, TrendingDown, Calendar as CalendarIcon, Target, DollarSign, BarChart3 } from 'lucide-react';
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subWeeks, subMonths, isWithinInterval, getWeek, getMonth, getYear, getDaysInMonth, getDay, addDays } from 'date-fns';
+import { TrendingUp, TrendingDown, Calendar as CalendarIcon, Target, DollarSign, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AccountFilter } from '@/components/AccountFilter';
+import { cn } from '@/lib/utils';
 
 interface DayPnL {
   date: string;
@@ -278,44 +278,101 @@ export default function CalendarPage() {
     return dayPnLData.find(data => data.date === dateKey);
   };
 
-  const getDayComponent = (day: Date) => {
-    const pnlData = getDayPnL(day);
-    const isSelected = date && format(day, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
-    const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
-    
-    if (!pnlData) {
-      return (
-        <div className={`w-full h-full flex flex-col items-center justify-center p-2 rounded-md transition-all hover:bg-muted/50 ${
-          isSelected ? 'bg-primary text-primary-foreground ring-2 ring-primary' : 
-          isToday ? 'ring-2 ring-blue-500 bg-blue-500/10' : ''
-        }`}>
-          <div className="text-sm font-medium">{day.getDate()}</div>
-        </div>
-      );
+  const renderCalendar = () => {
+    if (!date) return null;
+
+    const monthStart = startOfMonth(date);
+    const monthEnd = endOfMonth(date);
+    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 }); // Start week on Monday
+    const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
+
+    const days = [];
+    let currentDate = startDate;
+
+    while (currentDate <= endDate) {
+      days.push(new Date(currentDate));
+      currentDate = addDays(currentDate, 1);
     }
 
-    const isProfit = pnlData.pnl > 0;
-    const isLoss = pnlData.pnl < 0;
+    const weekDays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
     return (
-      <div className={`w-full h-full flex flex-col items-center justify-center p-2 rounded-md transition-all hover:opacity-80 ${
-        isSelected ? 'ring-2 ring-primary' : 
-        isToday ? 'ring-2 ring-blue-500' : ''
-      } ${
-        isProfit ? 'bg-green-500/20 text-green-400' : 
-        isLoss ? 'bg-red-500/20 text-red-400' : 'bg-muted/50'
-      }`}>
-        <div className="text-sm font-medium text-foreground">{day.getDate()}</div>
-        <div className={`text-xs font-bold ${
-          isProfit ? 'text-green-400' : 
-          isLoss ? 'text-red-400' : 'text-muted-foreground'
-        }`}>
-          {isProfit ? '+' : ''}${Math.abs(pnlData.pnl) >= 1000 ? 
-            `${(pnlData.pnl / 1000).toFixed(1)}k` : 
-            pnlData.pnl.toFixed(0)
-          }
+      <div className="w-full">
+        {/* Calendar Header */}
+        <div className="flex items-center justify-between mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() - 1, 1))}
+            className="h-8 w-8 p-0"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <h3 className="text-lg font-semibold">
+            {format(date, 'MMMM yyyy')}
+          </h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() + 1, 1))}
+            className="h-8 w-8 p-0"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
-        <div className="text-xs text-muted-foreground">{pnlData.trades} trades</div>
+
+        {/* Week Day Headers */}
+        <div className="grid grid-cols-7 gap-px mb-2">
+          {weekDays.map((day) => (
+            <div key={day} className="text-center py-2 text-sm text-muted-foreground font-medium">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-7 gap-px bg-border">
+          {days.map((day, index) => {
+            const pnlData = getDayPnL(day);
+            const isSelected = date && format(day, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+            const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+            const isCurrentMonth = getMonth(day) === getMonth(date);
+            
+            return (
+              <div
+                key={index}
+                onClick={() => setDate(day)}
+                className={cn(
+                  "h-20 bg-background cursor-pointer border transition-all hover:bg-muted/50 flex flex-col justify-between p-2",
+                  isToday && "ring-2 ring-blue-500",
+                  isSelected && "ring-2 ring-primary",
+                  !isCurrentMonth && "opacity-40"
+                )}
+              >
+                <div className="text-sm font-medium text-foreground">
+                  {day.getDate()}
+                </div>
+                
+                {pnlData && isCurrentMonth && (
+                  <div className="flex flex-col items-center">
+                    <div className={cn(
+                      "text-sm font-bold",
+                      pnlData.pnl >= 0 ? "text-green-400" : "text-red-400"
+                    )}>
+                      {pnlData.pnl >= 0 ? '+' : ''}${Math.abs(pnlData.pnl) >= 1000 ? 
+                        `${(pnlData.pnl / 1000).toFixed(1)}k` : 
+                        pnlData.pnl.toFixed(2)
+                      }
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {pnlData.trades} trades
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -391,24 +448,8 @@ export default function CalendarPage() {
                 Click on any date to view detailed trading metrics. Green indicates profit, red indicates loss.
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-4">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                className="w-full [&_.rdp-table]:w-full [&_.rdp-cell]:h-20 [&_.rdp-day]:h-full [&_.rdp-day]:w-full"
-                components={{
-                  Day: ({ date: dayDate, ...props }) => (
-                    <div 
-                      {...props}
-                      className="relative w-full h-full cursor-pointer"
-                      onClick={() => setDate(dayDate)}
-                    >
-                      {getDayComponent(dayDate)}
-                    </div>
-                  )
-                }}
-              />
+            <CardContent className="p-6">
+              {renderCalendar()}
             </CardContent>
           </Card>
 
