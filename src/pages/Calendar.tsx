@@ -7,7 +7,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { LoadingCard } from '@/components/ui/loading-spinner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subWeeks, subMonths, isWithinInterval, getWeek, getMonth, getYear, getDaysInMonth, getDay, addDays } from 'date-fns';
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subWeeks, subMonths, isWithinInterval, getWeek, getMonth, getYear, getDaysInMonth, getDay, addDays, differenceInDays } from 'date-fns';
 import { TrendingUp, TrendingDown, Calendar as CalendarIcon, Target, DollarSign, BarChart3, ChevronLeft, ChevronRight, FileText, Clock } from 'lucide-react';
 import { AccountFilter } from '@/components/AccountFilter';
 import { cn } from '@/lib/utils';
@@ -339,24 +339,96 @@ export default function CalendarPage() {
             const isSelected = date && format(day, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
             const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
             const isCurrentMonth = getMonth(day) === getMonth(date);
+            const isSunday = getDay(day) === 0; // Sunday = 0
+            
+            // Calculate weekly summary for Sunday cells
+            let weeklyData = null;
+            if (isSunday && isCurrentMonth) {
+              const weekStart = startOfWeek(day, { weekStartsOn: 0 }); // Week starts on Sunday
+              const weekEnd = endOfWeek(day, { weekStartsOn: 0 });
+              const weekNumber = Math.ceil(differenceInDays(day, startOfMonth(date)) / 7) + 1;
+              
+              // Get all trades for this week
+              const weekTrades = dayPnLData.filter(trade => {
+                const tradeDate = new Date(trade.date);
+                return tradeDate >= weekStart && tradeDate <= weekEnd && 
+                       getMonth(tradeDate) === getMonth(date) && 
+                       getYear(tradeDate) === getYear(date);
+              });
+              
+              if (weekTrades.length > 0) {
+                const weekPnL = weekTrades.reduce((sum, trade) => sum + trade.pnl, 0);
+                const weekTradeCount = weekTrades.reduce((sum, trade) => sum + trade.trades, 0);
+                
+                weeklyData = {
+                  weekNumber,
+                  pnl: weekPnL,
+                  trades: weekTradeCount
+                };
+              }
+            }
             
             return (
               <div
                 key={index}
                 onClick={() => setDate(day)}
                 className={cn(
-                  "h-20 bg-background cursor-pointer border transition-all hover:bg-muted/50 flex flex-col justify-between p-2 hover-scale animate-fade-in",
+                  "min-h-[80px] bg-background cursor-pointer border transition-all hover:bg-muted/50 flex flex-col justify-between p-2 hover-scale animate-fade-in relative",
                   isToday && "ring-2 ring-primary/50",
                   isSelected && "ring-2 ring-primary",
-                  !isCurrentMonth && "opacity-40"
+                  !isCurrentMonth && "opacity-40",
+                  isSunday && weeklyData && "lg:min-h-[100px]" // Extra height for weekly summary
                 )}
               >
-                <div className="text-sm font-medium text-foreground">
-                  {day.getDate()}
+                {/* Day number */}
+                <div className="flex justify-between items-start">
+                  <div className="text-sm font-medium text-foreground">
+                    {day.getDate()}
+                  </div>
                 </div>
                 
-                {pnlData && isCurrentMonth && (
-                  <div className="flex flex-col items-center">
+                {/* Weekly Summary for Sundays */}
+                {isSunday && weeklyData && isCurrentMonth && (
+                  <div className="absolute top-6 right-1 bg-card border border-border rounded-lg p-2 shadow-lg min-w-[80px] max-w-[90px] animate-fade-in">
+                    <div className="text-xs font-medium text-muted-foreground mb-1">
+                      Week {weeklyData.weekNumber}
+                    </div>
+                    <div className={cn(
+                      "text-sm font-bold mb-1 leading-tight",
+                      weeklyData.pnl >= 0 ? "text-success" : "text-destructive"
+                    )}>
+                      {weeklyData.pnl >= 0 ? '+' : ''}${Math.abs(weeklyData.pnl) >= 1000 ? 
+                        `${(weeklyData.pnl / 1000).toFixed(1)}k` : 
+                        weeklyData.pnl.toFixed(0)
+                      }
+                    </div>
+                    <div className="text-xs text-muted-foreground leading-tight">
+                      {weeklyData.trades} trade{weeklyData.trades !== 1 ? 's' : ''}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Regular Daily Summary for other days */}
+                {!isSunday && pnlData && isCurrentMonth && (
+                  <div className="flex flex-col items-center mt-auto">
+                    <div className={cn(
+                      "text-sm font-bold",
+                      pnlData.pnl >= 0 ? "text-success" : "text-destructive"
+                    )}>
+                      {pnlData.pnl >= 0 ? '+' : ''}${Math.abs(pnlData.pnl) >= 1000 ? 
+                        `${(pnlData.pnl / 1000).toFixed(1)}k` : 
+                        pnlData.pnl.toFixed(2)
+                      }
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {pnlData.trades} trades
+                    </div>
+                  </div>
+                )}
+                
+                {/* Daily Summary for Sunday if no weekly data */}
+                {isSunday && !weeklyData && pnlData && isCurrentMonth && (
+                  <div className="flex flex-col items-center mt-auto">
                     <div className={cn(
                       "text-sm font-bold",
                       pnlData.pnl >= 0 ? "text-success" : "text-destructive"
