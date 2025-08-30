@@ -584,7 +584,7 @@ export default function CalendarPage() {
 
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
                   <div className="text-sm text-muted-foreground mb-1">Profitable Days</div>
-                  <div className="text-xl font-bold text-profit">{periodMetrics.profitableDays}</div>
+                  <div className="text-xl font-bold text-profit">{periodMetrics.profitableDays} out of {periodMetrics.tradingDays}</div>
                 </div>
 
                 <div className="text-center p-4 bg-muted/50 rounded-lg">

@@ -25,6 +25,7 @@ interface WeeklyStats {
   profitFactor: number;
   expectancy: number;
   profitableDays: number;
+  totalTradingDays: number;
   weekStart: Date;
   weekEnd: Date;
 }
@@ -102,6 +103,7 @@ export default function WeeklyReport() {
         dailyPnLMap[dateKey] = (dailyPnLMap[dateKey] || 0) + (trade.pnl || 0);
       });
       const profitableDays = Object.values(dailyPnLMap).filter(pnl => pnl > 0).length;
+      const totalTradingDays = Object.keys(dailyPnLMap).length;
 
       const stats: WeeklyStats = {
         totalPnl,
@@ -116,6 +118,7 @@ export default function WeeklyReport() {
         profitFactor: totalLosses > 0 ? totalWins / totalLosses : 0,
         expectancy: weekTrades.length > 0 ? totalPnl / weekTrades.length : 0,
         profitableDays,
+        totalTradingDays,
         weekStart,
         weekEnd
       };
@@ -402,7 +405,7 @@ export default function WeeklyReport() {
 
                    <div className="text-center">
                      <div className="text-2xl font-bold text-success">
-                       {weeklyStats.profitableDays}
+                       {weeklyStats.profitableDays} out of {weeklyStats.totalTradingDays}
                      </div>
                      <div className="text-sm text-muted-foreground">
                        Profitable Days

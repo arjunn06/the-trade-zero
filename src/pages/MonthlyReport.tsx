@@ -24,6 +24,7 @@ interface MonthlyStats {
   profitFactor: number;
   expectancy: number;
   profitableDays: number;
+  totalTradingDays: number;
   monthStart: Date;
   monthEnd: Date;
 }
@@ -99,6 +100,7 @@ export default function MonthlyReport() {
         dailyPnLMap[dateKey] = (dailyPnLMap[dateKey] || 0) + (trade.pnl || 0);
       });
       const profitableDays = Object.values(dailyPnLMap).filter(pnl => pnl > 0).length;
+      const totalTradingDays = Object.keys(dailyPnLMap).length;
 
       const stats: MonthlyStats = {
         totalPnl,
@@ -113,6 +115,7 @@ export default function MonthlyReport() {
         profitFactor: totalLosses > 0 ? totalWins / totalLosses : 0,
         expectancy: monthTrades.length > 0 ? totalPnl / monthTrades.length : 0,
         profitableDays,
+        totalTradingDays,
         monthStart,
         monthEnd,
       };
@@ -304,7 +307,7 @@ export default function MonthlyReport() {
                   </div>
 
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-success">{monthlyStats.profitableDays}</div>
+                    <div className="text-2xl font-bold text-success">{monthlyStats.profitableDays} out of {monthlyStats.totalTradingDays}</div>
                     <div className="text-sm text-muted-foreground">Profitable Days</div>
                   </div>
                 </div>
