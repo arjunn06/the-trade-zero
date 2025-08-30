@@ -23,6 +23,7 @@ interface MonthlyStats {
   worstTrade: number;
   profitFactor: number;
   expectancy: number;
+  profitableDays: number;
   monthStart: Date;
   monthEnd: Date;
 }
@@ -91,6 +92,14 @@ export default function MonthlyReport() {
       const totalWins = winningTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
       const totalLosses = Math.abs(losingTrades.reduce((sum, t) => sum + (t.pnl || 0), 0));
 
+      // Calculate profitable days
+      const dailyPnLMap: Record<string, number> = {};
+      monthTrades.forEach(trade => {
+        const dateKey = format(new Date(trade.exit_date), 'yyyy-MM-dd');
+        dailyPnLMap[dateKey] = (dailyPnLMap[dateKey] || 0) + (trade.pnl || 0);
+      });
+      const profitableDays = Object.values(dailyPnLMap).filter(pnl => pnl > 0).length;
+
       const stats: MonthlyStats = {
         totalPnl,
         totalTrades: monthTrades.length,
@@ -103,6 +112,7 @@ export default function MonthlyReport() {
         worstTrade: monthTrades.length > 0 ? Math.min(...monthTrades.map((t) => t.pnl || 0)) : 0,
         profitFactor: totalLosses > 0 ? totalWins / totalLosses : 0,
         expectancy: monthTrades.length > 0 ? totalPnl / monthTrades.length : 0,
+        profitableDays,
         monthStart,
         monthEnd,
       };
@@ -277,7 +287,7 @@ export default function MonthlyReport() {
                 <CardDescription>Key performance indicators for the selected month</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <div className="text-center">
                     <div className="text-2xl font-bold">${monthlyStats.expectancy.toFixed(2)}</div>
                     <div className="text-sm text-muted-foreground">Expected Value per Trade</div>
@@ -291,6 +301,11 @@ export default function MonthlyReport() {
                   <div className="text-center">
                     <div className="text-2xl font-bold">{monthlyStats.winRate.toFixed(1)}%</div>
                     <div className="text-sm text-muted-foreground">Win Rate</div>
+                  </div>
+
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-success">{monthlyStats.profitableDays}</div>
+                    <div className="text-sm text-muted-foreground">Profitable Days</div>
                   </div>
                 </div>
               </CardContent>

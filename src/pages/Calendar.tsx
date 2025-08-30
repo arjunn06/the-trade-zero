@@ -497,44 +497,44 @@ export default function CalendarPage() {
             <CardContent className="p-4">
               {weeklySummaries.length > 0 ? (
                 <div className="space-y-3">
-                  {/* Header */}
-                  <div className="grid grid-cols-3 gap-2 pb-2 border-b text-xs font-medium text-muted-foreground">
-                    <div>Week</div>
-                    <div className="text-right">P&L</div>
-                    <div className="text-right">Trades</div>
-                  </div>
-                  
-                  {/* Week Rows */}
-                  {weeklySummaries.map((week, index) => (
-                    <div 
-                      key={`${week.year}-${week.weekNumber}`}
-                      className={cn(
-                        "grid grid-cols-3 gap-2 py-3 px-3 rounded-lg transition-all",
-                        week.isCurrentWeek ? 'bg-primary/10 border border-primary' : 'bg-muted/30'
-                      )}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">Week {index + 1}</span>
-                        {week.isCurrentWeek && (
-                          <Badge variant="outline" className="text-xs px-1 py-0">Current</Badge>
-                        )}
-                      </div>
-                      
-                      <div className={cn(
-                        "text-right font-bold text-sm",
-                        week.totalPnl >= 0 ? "text-success" : "text-destructive"
-                      )}>
-                        {week.totalPnl >= 0 ? '+' : ''}${Math.abs(week.totalPnl) >= 1000 ? 
-                          `${(week.totalPnl / 1000).toFixed(1)}k` : 
-                          week.totalPnl.toFixed(2)
-                        }
-                      </div>
-                      
-                      <div className="text-right text-sm text-muted-foreground">
-                        {week.totalTrades}
-                      </div>
-                    </div>
-                  ))}
+                   {/* Header */}
+                   <div className="grid grid-cols-[1fr_auto_auto] gap-4 pb-2 border-b text-xs font-medium text-muted-foreground">
+                     <div>Week</div>
+                     <div className="text-center min-w-[60px]">P&L</div>
+                     <div className="text-center min-w-[50px]">Trades</div>
+                   </div>
+                   
+                   {/* Week Rows */}
+                   {weeklySummaries.map((week, index) => (
+                     <div 
+                       key={`${week.year}-${week.weekNumber}`}
+                       className={cn(
+                         "grid grid-cols-[1fr_auto_auto] gap-4 py-3 px-3 rounded-lg transition-all hover-scale animate-fade-in",
+                         week.isCurrentWeek ? 'bg-primary/10 border border-primary/50' : 'bg-muted/30 hover:bg-muted/50'
+                       )}
+                     >
+                       <div className="flex items-center gap-2 min-w-0">
+                         <span className="text-sm font-medium">Week {index + 1}</span>
+                         {week.isCurrentWeek && (
+                           <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-primary/5">Current</Badge>
+                         )}
+                       </div>
+                       
+                       <div className={cn(
+                         "text-center font-bold text-sm min-w-[60px]",
+                         week.totalPnl >= 0 ? "text-success" : "text-destructive"
+                       )}>
+                         {week.totalPnl >= 0 ? '+' : ''}${Math.abs(week.totalPnl) >= 1000 ? 
+                           `${(week.totalPnl / 1000).toFixed(1)}k` : 
+                           week.totalPnl.toFixed(2)
+                         }
+                       </div>
+                       
+                       <div className="text-center text-sm text-muted-foreground min-w-[50px]">
+                         {week.totalTrades}
+                       </div>
+                     </div>
+                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8">

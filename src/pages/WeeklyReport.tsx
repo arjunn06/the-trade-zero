@@ -24,6 +24,7 @@ interface WeeklyStats {
   worstTrade: number;
   profitFactor: number;
   expectancy: number;
+  profitableDays: number;
   weekStart: Date;
   weekEnd: Date;
 }
@@ -94,6 +95,14 @@ export default function WeeklyReport() {
       const totalWins = winningTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
       const totalLosses = Math.abs(losingTrades.reduce((sum, t) => sum + (t.pnl || 0), 0));
 
+      // Calculate profitable days
+      const dailyPnLMap: Record<string, number> = {};
+      weekTrades.forEach(trade => {
+        const dateKey = format(new Date(trade.entry_date), 'yyyy-MM-dd');
+        dailyPnLMap[dateKey] = (dailyPnLMap[dateKey] || 0) + (trade.pnl || 0);
+      });
+      const profitableDays = Object.values(dailyPnLMap).filter(pnl => pnl > 0).length;
+
       const stats: WeeklyStats = {
         totalPnl,
         totalTrades: weekTrades.length,
@@ -106,6 +115,7 @@ export default function WeeklyReport() {
         worstTrade: weekTrades.length > 0 ? Math.min(...weekTrades.map(t => t.pnl || 0)) : 0,
         profitFactor: totalLosses > 0 ? totalWins / totalLosses : 0,
         expectancy: weekTrades.length > 0 ? totalPnl / weekTrades.length : 0,
+        profitableDays,
         weekStart,
         weekEnd
       };
@@ -362,34 +372,43 @@ export default function WeeklyReport() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold">
-                      ${weeklyStats.expectancy.toFixed(2)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Expected Value per Trade
-                    </div>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="text-2xl font-bold">
-                      {weeklyStats.profitFactor.toFixed(2)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Profit Factor
-                    </div>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="text-2xl font-bold">
-                      {weeklyStats.winRate.toFixed(1)}%
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Win Rate
-                    </div>
-                  </div>
-                </div>
+                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                   <div className="text-center">
+                     <div className="text-2xl font-bold">
+                       ${weeklyStats.expectancy.toFixed(2)}
+                     </div>
+                     <div className="text-sm text-muted-foreground">
+                       Expected Value per Trade
+                     </div>
+                   </div>
+                   
+                   <div className="text-center">
+                     <div className="text-2xl font-bold">
+                       {weeklyStats.profitFactor.toFixed(2)}
+                     </div>
+                     <div className="text-sm text-muted-foreground">
+                       Profit Factor
+                     </div>
+                   </div>
+                   
+                   <div className="text-center">
+                     <div className="text-2xl font-bold">
+                       {weeklyStats.winRate.toFixed(1)}%
+                     </div>
+                     <div className="text-sm text-muted-foreground">
+                       Win Rate
+                     </div>
+                   </div>
+
+                   <div className="text-center">
+                     <div className="text-2xl font-bold text-success">
+                       {weeklyStats.profitableDays}
+                     </div>
+                     <div className="text-sm text-muted-foreground">
+                       Profitable Days
+                     </div>
+                   </div>
+                 </div>
               </CardContent>
             </Card>
           </>
