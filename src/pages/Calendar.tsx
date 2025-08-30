@@ -8,9 +8,10 @@ import { LoadingCard } from '@/components/ui/loading-spinner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subWeeks, subMonths, isWithinInterval, getWeek, getMonth, getYear, getDaysInMonth, getDay, addDays } from 'date-fns';
-import { TrendingUp, TrendingDown, Calendar as CalendarIcon, Target, DollarSign, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar as CalendarIcon, Target, DollarSign, BarChart3, ChevronLeft, ChevronRight, FileText, Clock } from 'lucide-react';
 import { AccountFilter } from '@/components/AccountFilter';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 interface DayPnL {
   date: string;
@@ -54,6 +55,7 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [weeklySummaries, setWeeklySummaries] = useState<WeeklySummary[]>([]);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -389,6 +391,11 @@ export default function CalendarPage() {
     }).format(amount);
   };
 
+  // Check if today is Saturday or first day of month to show recap options
+  const today = new Date();
+  const isSaturday = getDay(today) === 6; // Saturday = 6
+  const isFirstOfMonth = today.getDate() === 1;
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -426,6 +433,32 @@ export default function CalendarPage() {
           <div>
             <h1 className="text-3xl font-bold">P&L Calendar</h1>
             <p className="text-muted-foreground">Track your daily trading performance</p>
+            
+            {/* Recap Options */}
+            <div className="flex gap-2 mt-3">
+              {isSaturday && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/weekly-report')}
+                  className="flex items-center gap-2"
+                >
+                  <Clock className="h-4 w-4" />
+                  View Weekly Recap
+                </Button>
+              )}
+              {isFirstOfMonth && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/monthly-report')}
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  View Monthly Recap
+                </Button>
+              )}
+            </div>
           </div>
           <div className="min-w-[200px]">
             <AccountFilter
