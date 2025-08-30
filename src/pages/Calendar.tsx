@@ -345,8 +345,8 @@ export default function CalendarPage() {
                 key={index}
                 onClick={() => setDate(day)}
                 className={cn(
-                  "h-20 bg-background cursor-pointer border transition-all hover:bg-muted/50 flex flex-col justify-between p-2",
-                  isToday && "ring-2 ring-blue-500",
+                  "h-20 bg-background cursor-pointer border transition-all hover:bg-muted/50 flex flex-col justify-between p-2 hover-scale animate-fade-in",
+                  isToday && "ring-2 ring-primary/50",
                   isSelected && "ring-2 ring-primary",
                   !isCurrentMonth && "opacity-40"
                 )}
@@ -359,7 +359,7 @@ export default function CalendarPage() {
                   <div className="flex flex-col items-center">
                     <div className={cn(
                       "text-sm font-bold",
-                      pnlData.pnl >= 0 ? "text-green-400" : "text-red-400"
+                      pnlData.pnl >= 0 ? "text-success" : "text-destructive"
                     )}>
                       {pnlData.pnl >= 0 ? '+' : ''}${Math.abs(pnlData.pnl) >= 1000 ? 
                         `${(pnlData.pnl / 1000).toFixed(1)}k` : 
@@ -522,7 +522,7 @@ export default function CalendarPage() {
                       
                       <div className={cn(
                         "text-right font-bold text-sm",
-                        week.totalPnl >= 0 ? "text-green-400" : "text-red-400"
+                        week.totalPnl >= 0 ? "text-success" : "text-destructive"
                       )}>
                         {week.totalPnl >= 0 ? '+' : ''}${Math.abs(week.totalPnl) >= 1000 ? 
                           `${(week.totalPnl / 1000).toFixed(1)}k` : 
