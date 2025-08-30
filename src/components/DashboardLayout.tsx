@@ -22,11 +22,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <header className="glass-nav border-b h-16 px-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
-              <SearchCommand />
-            </div>
-            <div className="flex items-center gap-3">
-              <NotificationCenter />
-              <ThemeToggle />
             </div>
           </header>
         </div>
