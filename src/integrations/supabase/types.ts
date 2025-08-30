@@ -813,7 +813,15 @@ export type Database = {
         Args: { access_type: string; connection_id: string }
         Returns: undefined
       }
+      check_invitation_rate_limit: {
+        Args: { admin_user_id: string }
+        Returns: boolean
+      }
       cleanup_expired_auth_states: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_invitations: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
@@ -865,6 +873,19 @@ export type Database = {
           new_refresh_token: string
         }
         Returns: boolean
+      }
+      use_invitation_token: {
+        Args: { input_token: string; user_id: string }
+        Returns: boolean
+      }
+      validate_invitation_token: {
+        Args: { input_token: string }
+        Returns: {
+          email: string
+          invitation_id: string
+          is_valid: boolean
+          premium_access: boolean
+        }[]
       }
       validate_numeric_input: {
         Args: { input_value: number; max_val?: number; min_val?: number }
