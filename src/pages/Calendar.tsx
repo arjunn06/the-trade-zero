@@ -12,7 +12,6 @@ import { TrendingUp, TrendingDown, Calendar as CalendarIcon, Target, DollarSign,
 import { AccountFilter } from '@/components/AccountFilter';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-
 interface DayPnL {
   date: string;
   pnl: number;
@@ -21,7 +20,6 @@ interface DayPnL {
   bestTrade: number;
   worstTrade: number;
 }
-
 interface PeriodMetrics {
   totalPnl: number;
   totalTrades: number;
@@ -33,7 +31,6 @@ interface PeriodMetrics {
   profitableDays: number;
   tradingDays: number;
 }
-
 interface WeeklySummary {
   weekNumber: number;
   year: number;
@@ -43,7 +40,6 @@ interface WeeklySummary {
   totalTrades: number;
   isCurrentWeek: boolean;
 }
-
 export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedDateTrades, setSelectedDateTrades] = useState<any[]>([]);
@@ -51,25 +47,27 @@ export default function CalendarPage() {
   const [periodMetrics, setPeriodMetrics] = useState<PeriodMetrics | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month'>('week');
   const [selectedAccount, setSelectedAccount] = useState<string>('');
-  const [tradingAccounts, setTradingAccounts] = useState<{ id: string; name: string; }[]>([]);
+  const [tradingAccounts, setTradingAccounts] = useState<{
+    id: string;
+    name: string;
+  }[]>([]);
   const [loading, setLoading] = useState(true);
   const [weeklySummaries, setWeeklySummaries] = useState<WeeklySummary[]>([]);
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const navigate = useNavigate();
-
   useEffect(() => {
     if (user) {
       fetchPnLData();
       fetchTradingAccounts();
     }
   }, [user]);
-
   useEffect(() => {
     if (user) {
       fetchPnLData();
     }
   }, [user, selectedAccount]);
-
   useEffect(() => {
     if (date && user) {
       fetchTradesForDate(date);
@@ -77,70 +75,62 @@ export default function CalendarPage() {
       calculateWeeklySummaries();
     }
   }, [date, user, selectedPeriod, dayPnLData, selectedAccount]);
-
   const fetchTradingAccounts = async () => {
     if (!user) return;
-
     try {
-      const { data, error } = await supabase
-        .from('trading_accounts')
-        .select('id, name')
-        .eq('user_id', user.id)
-        .order('name');
-
+      const {
+        data,
+        error
+      } = await supabase.from('trading_accounts').select('id, name').eq('user_id', user.id).order('name');
       if (error) throw error;
       setTradingAccounts(data || []);
     } catch (error) {
       console.error('Error fetching trading accounts:', error);
     }
   };
-
   const fetchPnLData = async () => {
     try {
-      let query = supabase
-        .from('trades')
-        .select('exit_date, entry_date, pnl, symbol, trade_type, trading_account_id')
-        .eq('user_id', user?.id)
-        .eq('status', 'closed')
-        .not('pnl', 'is', null);
-
+      let query = supabase.from('trades').select('exit_date, entry_date, pnl, symbol, trade_type, trading_account_id').eq('user_id', user?.id).eq('status', 'closed').not('pnl', 'is', null);
       if (selectedAccount) {
         query = query.eq('trading_account_id', selectedAccount);
       }
-
-      const { data: trades, error } = await query;
-
+      const {
+        data: trades,
+        error
+      } = await query;
       if (error) throw error;
-
-      const pnlByDate = trades.reduce((acc: Record<string, { pnl: number; trades: any[]; }>, trade) => {
+      const pnlByDate = trades.reduce((acc: Record<string, {
+        pnl: number;
+        trades: any[];
+      }>, trade) => {
         if (trade.exit_date && trade.pnl !== null) {
           const dateKey = format(new Date(trade.exit_date), 'yyyy-MM-dd');
           if (!acc[dateKey]) {
-            acc[dateKey] = { pnl: 0, trades: [] };
+            acc[dateKey] = {
+              pnl: 0,
+              trades: []
+            };
           }
           acc[dateKey].pnl += Number(trade.pnl);
           acc[dateKey].trades.push(trade);
         }
         return acc;
       }, {});
-
       const dayPnLArray = Object.entries(pnlByDate).map(([date, data]) => {
         const winningTrades = data.trades.filter(t => Number(t.pnl) > 0);
         const losingTrades = data.trades.filter(t => Number(t.pnl) < 0);
-        const winRate = data.trades.length > 0 ? (winningTrades.length / data.trades.length) * 100 : 0;
+        const winRate = data.trades.length > 0 ? winningTrades.length / data.trades.length * 100 : 0;
         const bestTrade = data.trades.length > 0 ? Math.max(...data.trades.map(t => Number(t.pnl))) : 0;
         const worstTrade = data.trades.length > 0 ? Math.min(...data.trades.map(t => Number(t.pnl))) : 0;
-
         return {
           date,
           pnl: data.pnl,
           trades: data.trades.length,
           winRate,
           bestTrade,
-          worstTrade,
+          worstTrade
         };
       });
-
       setDayPnLData(dayPnLArray);
     } catch (error) {
       console.error('Error fetching P&L data:', error);
@@ -148,13 +138,11 @@ export default function CalendarPage() {
       setLoading(false);
     }
   };
-
   const calculateWeeklySummaries = () => {
     if (!date || dayPnLData.length === 0) {
       setWeeklySummaries([]);
       return;
     }
-
     const currentMonth = getMonth(date);
     const currentYear = getYear(date);
     const weeksMap = new Map<string, WeeklySummary>();
@@ -164,14 +152,19 @@ export default function CalendarPage() {
       const dayDate = new Date(dayData.date);
       const dayMonth = getMonth(dayDate);
       const dayYear = getYear(dayDate);
-      
+
       // Only include days from the current month/year
       if (dayMonth === currentMonth && dayYear === currentYear) {
-        const weekStart = startOfWeek(dayDate, { weekStartsOn: 1 });
-        const weekEnd = endOfWeek(dayDate, { weekStartsOn: 1 });
-        const weekNumber = getWeek(dayDate, { weekStartsOn: 1 });
+        const weekStart = startOfWeek(dayDate, {
+          weekStartsOn: 1
+        });
+        const weekEnd = endOfWeek(dayDate, {
+          weekStartsOn: 1
+        });
+        const weekNumber = getWeek(dayDate, {
+          weekStartsOn: 1
+        });
         const weekKey = `${dayYear}-${weekNumber}`;
-
         if (!weeksMap.has(weekKey)) {
           weeksMap.set(weekKey, {
             weekNumber,
@@ -180,71 +173,66 @@ export default function CalendarPage() {
             endDate: weekEnd,
             totalPnl: 0,
             totalTrades: 0,
-            isCurrentWeek: isWithinInterval(date, { start: weekStart, end: weekEnd })
+            isCurrentWeek: isWithinInterval(date, {
+              start: weekStart,
+              end: weekEnd
+            })
           });
         }
-
         const weekSummary = weeksMap.get(weekKey)!;
         weekSummary.totalPnl += dayData.pnl;
         weekSummary.totalTrades += dayData.trades;
       }
     });
-
     const summaries = Array.from(weeksMap.values()).sort((a, b) => a.weekNumber - b.weekNumber);
     setWeeklySummaries(summaries);
   };
-
   const fetchTradesForDate = async (selectedDate: Date) => {
     try {
-      let query = supabase
-        .from('trades')
-        .select(`
+      let query = supabase.from('trades').select(`
           *,
           trading_accounts!inner(name, currency),
           strategies(name)
-        `)
-        .eq('user_id', user?.id)
-        .gte('exit_date', startOfDay(selectedDate).toISOString())
-        .lte('exit_date', endOfDay(selectedDate).toISOString())
-        .eq('status', 'closed');
-
+        `).eq('user_id', user?.id).gte('exit_date', startOfDay(selectedDate).toISOString()).lte('exit_date', endOfDay(selectedDate).toISOString()).eq('status', 'closed');
       if (selectedAccount) {
         query = query.eq('trading_account_id', selectedAccount);
       }
-
-      const { data: trades, error } = await query;
-
+      const {
+        data: trades,
+        error
+      } = await query;
       if (error) throw error;
       setSelectedDateTrades(trades || []);
     } catch (error) {
       console.error('Error fetching trades for date:', error);
     }
   };
-
   const calculatePeriodMetrics = () => {
     if (!date || dayPnLData.length === 0) return;
-
     let startDate: Date;
     let endDate: Date;
-
     if (selectedPeriod === 'week') {
-      startDate = startOfWeek(date, { weekStartsOn: 1 });
-      endDate = endOfWeek(date, { weekStartsOn: 1 });
+      startDate = startOfWeek(date, {
+        weekStartsOn: 1
+      });
+      endDate = endOfWeek(date, {
+        weekStartsOn: 1
+      });
     } else {
       startDate = startOfMonth(date);
       endDate = endOfMonth(date);
     }
-
     const periodData = dayPnLData.filter(day => {
       const dayDate = new Date(day.date);
-      return isWithinInterval(dayDate, { start: startDate, end: endDate });
+      return isWithinInterval(dayDate, {
+        start: startDate,
+        end: endDate
+      });
     });
-
     if (periodData.length === 0) {
       setPeriodMetrics(null);
       return;
     }
-
     const totalPnl = periodData.reduce((sum, day) => sum + day.pnl, 0);
     const totalTrades = periodData.reduce((sum, day) => sum + day.trades, 0);
     const profitableDays = periodData.filter(day => day.pnl > 0).length;
@@ -253,15 +241,12 @@ export default function CalendarPage() {
     const worstDay = Math.min(...allPnLs);
 
     // Calculate win rate across all trades in period
-    const allWins = periodData.reduce((sum, day) => sum + (day.winRate / 100 * day.trades), 0);
-    const winRate = totalTrades > 0 ? (allWins / totalTrades) * 100 : 0;
-
+    const allWins = periodData.reduce((sum, day) => sum + day.winRate / 100 * day.trades, 0);
+    const winRate = totalTrades > 0 ? allWins / totalTrades * 100 : 0;
     const profitableDayPnLs = periodData.filter(day => day.pnl > 0).map(day => day.pnl);
     const losingDayPnLs = periodData.filter(day => day.pnl < 0).map(day => day.pnl);
-    
     const avgWin = profitableDayPnLs.length > 0 ? profitableDayPnLs.reduce((sum, pnl) => sum + pnl, 0) / profitableDayPnLs.length : 0;
     const avgLoss = losingDayPnLs.length > 0 ? losingDayPnLs.reduce((sum, pnl) => sum + pnl, 0) / losingDayPnLs.length : 0;
-
     setPeriodMetrics({
       totalPnl,
       totalTrades,
@@ -274,112 +259,85 @@ export default function CalendarPage() {
       tradingDays: periodData.length
     });
   };
-
   const getDayPnL = (day: Date) => {
     const dateKey = format(day, 'yyyy-MM-dd');
     return dayPnLData.find(data => data.date === dateKey);
   };
-
   const renderCalendar = () => {
     if (!date) return null;
-
     const monthStart = startOfMonth(date);
     const monthEnd = endOfMonth(date);
-    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 }); // Start week on Monday
-    const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
-
+    const startDate = startOfWeek(monthStart, {
+      weekStartsOn: 1
+    }); // Start week on Monday
+    const endDate = endOfWeek(monthEnd, {
+      weekStartsOn: 1
+    });
     const days = [];
     let currentDate = startDate;
-
     while (currentDate <= endDate) {
       days.push(new Date(currentDate));
       currentDate = addDays(currentDate, 1);
     }
-
     const weekDays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
-
-    return (
-      <div className="w-full">
+    return <div className="w-full">
         {/* Calendar Header */}
         <div className="flex items-center justify-between mb-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() - 1, 1))}
-            className="h-8 w-8 p-0"
-          >
+          <Button variant="ghost" size="sm" onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() - 1, 1))} className="h-8 w-8 p-0">
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <h3 className="text-lg font-semibold">
             {format(date, 'MMMM yyyy')}
           </h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() + 1, 1))}
-            className="h-8 w-8 p-0"
-          >
+          <Button variant="ghost" size="sm" onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() + 1, 1))} className="h-8 w-8 p-0">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
 
         {/* Week Day Headers */}
         <div className="grid grid-cols-7 gap-px mb-2">
-          {weekDays.map((day) => (
-            <div key={day} className="text-center py-2 text-sm text-muted-foreground font-medium">
+          {weekDays.map(day => <div key={day} className="text-center py-2 text-sm text-muted-foreground font-medium">
               {day}
-            </div>
-          ))}
+            </div>)}
         </div>
 
         {/* Calendar Grid */}
         <div className="grid grid-cols-7 gap-px bg-border">
           {days.map((day, index) => {
-            const pnlData = getDayPnL(day);
-            const isSelected = date && format(day, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
-            const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
-            const isCurrentMonth = getMonth(day) === getMonth(date);
-            const isSunday = getDay(day) === 0; // Sunday = 0
-            
-            // Calculate weekly summary for Sunday cells
-            let weeklyData = null;
-            if (isSunday && isCurrentMonth) {
-              const weekStart = startOfWeek(day, { weekStartsOn: 0 }); // Week starts on Sunday
-              const weekEnd = endOfWeek(day, { weekStartsOn: 0 });
-              const weekNumber = Math.ceil(differenceInDays(day, startOfMonth(date)) / 7) + 1;
-              
-              // Get all trades for this week
-              const weekTrades = dayPnLData.filter(trade => {
-                const tradeDate = new Date(trade.date);
-                return tradeDate >= weekStart && tradeDate <= weekEnd && 
-                       getMonth(tradeDate) === getMonth(date) && 
-                       getYear(tradeDate) === getYear(date);
-              });
-              
-              if (weekTrades.length > 0) {
-                const weekPnL = weekTrades.reduce((sum, trade) => sum + trade.pnl, 0);
-                const weekTradeCount = weekTrades.reduce((sum, trade) => sum + trade.trades, 0);
-                
-                weeklyData = {
-                  weekNumber,
-                  pnl: weekPnL,
-                  trades: weekTradeCount
-                };
-              }
+          const pnlData = getDayPnL(day);
+          const isSelected = date && format(day, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+          const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+          const isCurrentMonth = getMonth(day) === getMonth(date);
+          const isSunday = getDay(day) === 0; // Sunday = 0
+
+          // Calculate weekly summary for Sunday cells
+          let weeklyData = null;
+          if (isSunday && isCurrentMonth) {
+            const weekStart = startOfWeek(day, {
+              weekStartsOn: 0
+            }); // Week starts on Sunday
+            const weekEnd = endOfWeek(day, {
+              weekStartsOn: 0
+            });
+            const weekNumber = Math.ceil(differenceInDays(day, startOfMonth(date)) / 7) + 1;
+
+            // Get all trades for this week
+            const weekTrades = dayPnLData.filter(trade => {
+              const tradeDate = new Date(trade.date);
+              return tradeDate >= weekStart && tradeDate <= weekEnd && getMonth(tradeDate) === getMonth(date) && getYear(tradeDate) === getYear(date);
+            });
+            if (weekTrades.length > 0) {
+              const weekPnL = weekTrades.reduce((sum, trade) => sum + trade.pnl, 0);
+              const weekTradeCount = weekTrades.reduce((sum, trade) => sum + trade.trades, 0);
+              weeklyData = {
+                weekNumber,
+                pnl: weekPnL,
+                trades: weekTradeCount
+              };
             }
-            
-            return (
-              <div
-                key={index}
-                onClick={() => setDate(day)}
-                className={cn(
-                  "min-h-[80px] bg-background cursor-pointer border transition-all hover:bg-muted/50 flex flex-col justify-between p-2 hover-scale animate-fade-in relative",
-                  isToday && "ring-2 ring-primary/50",
-                  isSelected && "ring-2 ring-primary",
-                  !isCurrentMonth && "opacity-40",
-                  isSunday && weeklyData && "lg:min-h-[100px]" // Extra height for weekly summary
-                )}
-              >
+          }
+          return <div key={index} onClick={() => setDate(day)} className={cn("min-h-[80px] bg-background cursor-pointer border transition-all hover:bg-muted/50 flex flex-col justify-between p-2 hover-scale animate-fade-in relative", isToday && "ring-2 ring-primary/50", isSelected && "ring-2 ring-primary", !isCurrentMonth && "opacity-40", isSunday && weeklyData && "lg:min-h-[100px]" // Extra height for weekly summary
+          )}>
                 {/* Day number */}
                 <div className="flex justify-between items-start">
                   <div className="text-sm font-medium text-foreground">
@@ -388,74 +346,46 @@ export default function CalendarPage() {
                 </div>
                 
                 {/* Weekly Summary for Sundays */}
-                {isSunday && weeklyData && isCurrentMonth && (
-                  <div className="absolute top-6 right-1 bg-card border border-border rounded-lg p-2 shadow-lg min-w-[80px] max-w-[90px] animate-fade-in">
+                {isSunday && weeklyData && isCurrentMonth && <div className="absolute top-6 right-1 bg-card border border-border rounded-lg p-2 shadow-lg min-w-[80px] max-w-[90px] animate-fade-in">
                     <div className="text-xs font-medium text-muted-foreground mb-1">
                       Week {weeklyData.weekNumber}
                     </div>
-                    <div className={cn(
-                      "text-sm font-bold mb-1 leading-tight",
-                      weeklyData.pnl >= 0 ? "text-success" : "text-destructive"
-                    )}>
-                      {weeklyData.pnl >= 0 ? '+' : ''}${Math.abs(weeklyData.pnl) >= 1000 ? 
-                        `${(weeklyData.pnl / 1000).toFixed(1)}k` : 
-                        weeklyData.pnl.toFixed(0)
-                      }
+                    <div className={cn("text-sm font-bold mb-1 leading-tight", weeklyData.pnl >= 0 ? "text-success" : "text-destructive")}>
+                      {weeklyData.pnl >= 0 ? '+' : ''}${Math.abs(weeklyData.pnl) >= 1000 ? `${(weeklyData.pnl / 1000).toFixed(1)}k` : weeklyData.pnl.toFixed(0)}
                     </div>
                     <div className="text-xs text-muted-foreground leading-tight">
                       {weeklyData.trades} trade{weeklyData.trades !== 1 ? 's' : ''}
                     </div>
-                  </div>
-                )}
+                  </div>}
                 
                 {/* Regular Daily Summary for other days */}
-                {!isSunday && pnlData && isCurrentMonth && (
-                  <div className="flex flex-col items-center mt-auto">
-                    <div className={cn(
-                      "text-sm font-bold",
-                      pnlData.pnl >= 0 ? "text-success" : "text-destructive"
-                    )}>
-                      {pnlData.pnl >= 0 ? '+' : ''}${Math.abs(pnlData.pnl) >= 1000 ? 
-                        `${(pnlData.pnl / 1000).toFixed(1)}k` : 
-                        pnlData.pnl.toFixed(2)
-                      }
+                {!isSunday && pnlData && isCurrentMonth && <div className="flex flex-col items-center mt-auto">
+                    <div className={cn("text-sm font-bold", pnlData.pnl >= 0 ? "text-success" : "text-destructive")}>
+                      {pnlData.pnl >= 0 ? '+' : ''}${Math.abs(pnlData.pnl) >= 1000 ? `${(pnlData.pnl / 1000).toFixed(1)}k` : pnlData.pnl.toFixed(2)}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {pnlData.trades} trades
                     </div>
-                  </div>
-                )}
+                  </div>}
                 
                 {/* Daily Summary for Sunday if no weekly data */}
-                {isSunday && !weeklyData && pnlData && isCurrentMonth && (
-                  <div className="flex flex-col items-center mt-auto">
-                    <div className={cn(
-                      "text-sm font-bold",
-                      pnlData.pnl >= 0 ? "text-success" : "text-destructive"
-                    )}>
-                      {pnlData.pnl >= 0 ? '+' : ''}${Math.abs(pnlData.pnl) >= 1000 ? 
-                        `${(pnlData.pnl / 1000).toFixed(1)}k` : 
-                        pnlData.pnl.toFixed(2)
-                      }
+                {isSunday && !weeklyData && pnlData && isCurrentMonth && <div className="flex flex-col items-center mt-auto">
+                    <div className={cn("text-sm font-bold", pnlData.pnl >= 0 ? "text-success" : "text-destructive")}>
+                      {pnlData.pnl >= 0 ? '+' : ''}${Math.abs(pnlData.pnl) >= 1000 ? `${(pnlData.pnl / 1000).toFixed(1)}k` : pnlData.pnl.toFixed(2)}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {pnlData.trades} trades
                     </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  </div>}
+              </div>;
+        })}
         </div>
-      </div>
-    );
+      </div>;
   };
-
   const selectedDayData = date ? getDayPnL(date) : null;
   const totalPnL = selectedDateTrades.reduce((sum, trade) => sum + (Number(trade.pnl) || 0), 0);
   const winningTrades = selectedDateTrades.filter(trade => Number(trade.pnl) > 0).length;
   const losingTrades = selectedDateTrades.filter(trade => Number(trade.pnl) < 0).length;
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -467,10 +397,8 @@ export default function CalendarPage() {
   const today = new Date();
   const isSaturday = getDay(today) === 6; // Saturday = 6
   const isFirstOfMonth = today.getDate() === 1;
-
   if (loading) {
-    return (
-      <DashboardLayout>
+    return <DashboardLayout>
         <div className="space-y-6">
           {/* Header Skeleton */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -494,12 +422,9 @@ export default function CalendarPage() {
           {/* Period Metrics Skeleton */}
           <LoadingCard className="h-64" />
         </div>
-      </DashboardLayout>
-    );
+      </DashboardLayout>;
   }
-
-  return (
-    <DashboardLayout>
+  return <DashboardLayout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -508,36 +433,18 @@ export default function CalendarPage() {
             
             {/* Recap Options */}
             <div className="flex gap-2 mt-3">
-              {isSaturday && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/weekly-report')}
-                  className="flex items-center gap-2"
-                >
+              {isSaturday && <Button variant="outline" size="sm" onClick={() => navigate('/weekly-report')} className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
                   View Weekly Recap
-                </Button>
-              )}
-              {isFirstOfMonth && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/monthly-report')}
-                  className="flex items-center gap-2"
-                >
+                </Button>}
+              {isFirstOfMonth && <Button variant="outline" size="sm" onClick={() => navigate('/monthly-report')} className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   View Monthly Recap
-                </Button>
-              )}
+                </Button>}
             </div>
           </div>
           <div className="min-w-[200px]">
-            <AccountFilter
-              value={selectedAccount || 'all'}
-              onValueChange={(value) => setSelectedAccount(value === 'all' ? '' : value)}
-              placeholder="All accounts"
-            />
+            <AccountFilter value={selectedAccount || 'all'} onValueChange={value => setSelectedAccount(value === 'all' ? '' : value)} placeholder="All accounts" />
           </div>
         </div>
 
@@ -559,68 +466,11 @@ export default function CalendarPage() {
           </Card>
 
           {/* Weekly Summaries */}
-          <Card className="bg-background border-border">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg">Weekly Summary</CardTitle>
-              <CardDescription>
-                {date ? format(date, 'MMMM yyyy') : 'Monthly overview'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-4">
-              {weeklySummaries.length > 0 ? (
-                <div className="space-y-3">
-                   {/* Header */}
-                   <div className="grid grid-cols-[1fr_auto_auto] gap-4 pb-2 border-b text-xs font-medium text-muted-foreground">
-                     <div>Week</div>
-                     <div className="text-center min-w-[60px]">P&L</div>
-                     <div className="text-center min-w-[50px]">Trades</div>
-                   </div>
-                   
-                   {/* Week Rows */}
-                   {weeklySummaries.map((week, index) => (
-                     <div 
-                       key={`${week.year}-${week.weekNumber}`}
-                       className={cn(
-                         "grid grid-cols-[1fr_auto_auto] gap-4 py-3 px-3 rounded-lg transition-all hover-scale animate-fade-in",
-                         week.isCurrentWeek ? 'bg-primary/10 border border-primary/50' : 'bg-muted/30 hover:bg-muted/50'
-                       )}
-                     >
-                       <div className="flex items-center gap-2 min-w-0">
-                         <span className="text-sm font-medium">Week {index + 1}</span>
-                         {week.isCurrentWeek && (
-                           <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-primary/5">Current</Badge>
-                         )}
-                       </div>
-                       
-                       <div className={cn(
-                         "text-center font-bold text-sm min-w-[60px]",
-                         week.totalPnl >= 0 ? "text-success" : "text-destructive"
-                       )}>
-                         {week.totalPnl >= 0 ? '+' : ''}${Math.abs(week.totalPnl) >= 1000 ? 
-                           `${(week.totalPnl / 1000).toFixed(1)}k` : 
-                           week.totalPnl.toFixed(2)
-                         }
-                       </div>
-                       
-                       <div className="text-center text-sm text-muted-foreground min-w-[50px]">
-                         {week.totalTrades}
-                       </div>
-                     </div>
-                   ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <CalendarIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">No trading data this month</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          
         </div>
 
         {/* Day Details Section - Only show when date is selected */}
-        {date && selectedDayData && (
-          <Card>
+        {date && selectedDayData && <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5" />
@@ -654,8 +504,7 @@ export default function CalendarPage() {
                 </div>
               </div>
             </CardContent>
-          </Card>
-        )}
+          </Card>}
 
         {/* Period Metrics */}
         <Card>
@@ -682,8 +531,7 @@ export default function CalendarPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {periodMetrics ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {periodMetrics ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -745,19 +593,15 @@ export default function CalendarPage() {
                     {formatCurrency(periodMetrics.avgWin)}
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8">
+              </div> : <div className="text-center py-8">
                 <BarChart3 className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                 <p className="text-muted-foreground">No trading data for this {selectedPeriod}</p>
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>
 
         {/* Trades for Selected Date */}
-        {selectedDateTrades.length > 0 && (
-          <Card>
+        {selectedDateTrades.length > 0 && <Card>
             <CardHeader>
               <CardTitle>Trades on {date ? format(date, 'MMMM dd, yyyy') : ''}</CardTitle>
               <CardDescription>
@@ -766,8 +610,7 @@ export default function CalendarPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {selectedDateTrades.map((trade) => (
-                  <div key={trade.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                {selectedDateTrades.map(trade => <div key={trade.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-4">
                       <Badge variant="outline" className="font-mono">
                         {trade.symbol}
@@ -794,13 +637,10 @@ export default function CalendarPage() {
                         Entry: {Number(trade.entry_price).toFixed(5)}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  </div>)}
               </div>
             </CardContent>
-          </Card>
-        )}
+          </Card>}
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 }
