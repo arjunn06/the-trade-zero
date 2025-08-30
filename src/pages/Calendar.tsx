@@ -448,9 +448,9 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-4">
+        <div className="grid gap-6">
           {/* Enhanced Calendar */}
-          <Card className="lg:col-span-3 bg-background border-border">
+          <Card className="bg-background border-border">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <CalendarIcon className="h-5 w-5" />
