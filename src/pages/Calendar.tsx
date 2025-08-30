@@ -8,7 +8,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { LoadingCard } from '@/components/ui/loading-spinner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subWeeks, subMonths, isWithinInterval } from 'date-fns';
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subWeeks, subMonths, isWithinInterval, getWeek, getMonth, getYear } from 'date-fns';
 import { TrendingUp, TrendingDown, Calendar as CalendarIcon, Target, DollarSign, BarChart3 } from 'lucide-react';
 import { AccountFilter } from '@/components/AccountFilter';
 
@@ -33,6 +33,16 @@ interface PeriodMetrics {
   tradingDays: number;
 }
 
+interface WeeklySummary {
+  weekNumber: number;
+  year: number;
+  startDate: Date;
+  endDate: Date;
+  totalPnl: number;
+  totalTrades: number;
+  isCurrentWeek: boolean;
+}
+
 export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedDateTrades, setSelectedDateTrades] = useState<any[]>([]);
@@ -42,6 +52,7 @@ export default function CalendarPage() {
   const [selectedAccount, setSelectedAccount] = useState<string>('');
   const [tradingAccounts, setTradingAccounts] = useState<{ id: string; name: string; }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [weeklySummaries, setWeeklySummaries] = useState<WeeklySummary[]>([]);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -61,6 +72,7 @@ export default function CalendarPage() {
     if (date && user) {
       fetchTradesForDate(date);
       calculatePeriodMetrics();
+      calculateWeeklySummaries();
     }
   }, [date, user, selectedPeriod, dayPnLData, selectedAccount]);
 
@@ -133,6 +145,51 @@ export default function CalendarPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateWeeklySummaries = () => {
+    if (!date || dayPnLData.length === 0) {
+      setWeeklySummaries([]);
+      return;
+    }
+
+    const currentMonth = getMonth(date);
+    const currentYear = getYear(date);
+    const weeksMap = new Map<string, WeeklySummary>();
+
+    // Get all weeks that have data in the current month
+    dayPnLData.forEach(dayData => {
+      const dayDate = new Date(dayData.date);
+      const dayMonth = getMonth(dayDate);
+      const dayYear = getYear(dayDate);
+      
+      // Only include days from the current month/year
+      if (dayMonth === currentMonth && dayYear === currentYear) {
+        const weekStart = startOfWeek(dayDate, { weekStartsOn: 1 });
+        const weekEnd = endOfWeek(dayDate, { weekStartsOn: 1 });
+        const weekNumber = getWeek(dayDate, { weekStartsOn: 1 });
+        const weekKey = `${dayYear}-${weekNumber}`;
+
+        if (!weeksMap.has(weekKey)) {
+          weeksMap.set(weekKey, {
+            weekNumber,
+            year: dayYear,
+            startDate: weekStart,
+            endDate: weekEnd,
+            totalPnl: 0,
+            totalTrades: 0,
+            isCurrentWeek: isWithinInterval(date, { start: weekStart, end: weekEnd })
+          });
+        }
+
+        const weekSummary = weeksMap.get(weekKey)!;
+        weekSummary.totalPnl += dayData.pnl;
+        weekSummary.totalTrades += dayData.trades;
+      }
+    });
+
+    const summaries = Array.from(weeksMap.values()).sort((a, b) => a.weekNumber - b.weekNumber);
+    setWeeklySummaries(summaries);
   };
 
   const fetchTradesForDate = async (selectedDate: Date) => {
@@ -224,10 +281,14 @@ export default function CalendarPage() {
   const getDayComponent = (day: Date) => {
     const pnlData = getDayPnL(day);
     const isSelected = date && format(day, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+    const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
     
     if (!pnlData) {
       return (
-        <div className={`w-full h-full flex flex-col items-center justify-center p-1 rounded-md transition-colors hover:bg-accent ${isSelected ? 'bg-primary text-primary-foreground' : ''}`}>
+        <div className={`w-full h-full flex flex-col items-center justify-center p-2 rounded-md transition-all hover:bg-muted/50 ${
+          isSelected ? 'bg-primary text-primary-foreground ring-2 ring-primary' : 
+          isToday ? 'ring-2 ring-blue-500 bg-blue-500/10' : ''
+        }`}>
           <div className="text-sm font-medium">{day.getDate()}</div>
         </div>
       );
@@ -237,23 +298,24 @@ export default function CalendarPage() {
     const isLoss = pnlData.pnl < 0;
 
     return (
-      <div className={`w-full h-full flex flex-col items-center justify-center p-1 rounded-md transition-colors hover:bg-accent ${
-        isSelected ? 'bg-primary text-primary-foreground' : 
-        isProfit ? 'bg-profit/10 hover:bg-profit/20' : 
-        isLoss ? 'bg-loss/10 hover:bg-loss/20' : ''
+      <div className={`w-full h-full flex flex-col items-center justify-center p-2 rounded-md transition-all hover:opacity-80 ${
+        isSelected ? 'ring-2 ring-primary' : 
+        isToday ? 'ring-2 ring-blue-500' : ''
+      } ${
+        isProfit ? 'bg-green-500/20 text-green-400' : 
+        isLoss ? 'bg-red-500/20 text-red-400' : 'bg-muted/50'
       }`}>
-        <div className="text-sm font-medium">{day.getDate()}</div>
+        <div className="text-sm font-medium text-foreground">{day.getDate()}</div>
         <div className={`text-xs font-bold ${
-          isSelected ? 'text-primary-foreground' :
-          isProfit ? 'text-profit' : 
-          isLoss ? 'text-loss' : 'text-muted-foreground'
+          isProfit ? 'text-green-400' : 
+          isLoss ? 'text-red-400' : 'text-muted-foreground'
         }`}>
-          ${Math.abs(pnlData.pnl) >= 1000 ? 
+          {isProfit ? '+' : ''}${Math.abs(pnlData.pnl) >= 1000 ? 
             `${(pnlData.pnl / 1000).toFixed(1)}k` : 
             pnlData.pnl.toFixed(0)
           }
         </div>
-        <div className="text-xs text-muted-foreground">{pnlData.trades}T</div>
+        <div className="text-xs text-muted-foreground">{pnlData.trades} trades</div>
       </div>
     );
   };
@@ -317,30 +379,29 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-4">
           {/* Enhanced Calendar */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <Card className="lg:col-span-3 bg-background border-border">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <CalendarIcon className="h-5 w-5" />
-                Trading Calendar
+                {date ? format(date, 'MMMM yyyy') : 'Trading Calendar'}
               </CardTitle>
               <CardDescription>
                 Click on any date to view detailed trading metrics. Green indicates profit, red indicates loss.
               </CardDescription>
             </CardHeader>
-            <CardContent className="overflow-x-auto">
-              <div className="min-w-[280px] max-w-full">
+            <CardContent className="p-4">
               <Calendar
                 mode="single"
                 selected={date}
                 onSelect={setDate}
-                className="rounded-md border w-full"
+                className="w-full [&_.rdp-table]:w-full [&_.rdp-cell]:h-20 [&_.rdp-day]:h-full [&_.rdp-day]:w-full"
                 components={{
                   Day: ({ date: dayDate, ...props }) => (
                     <div 
                       {...props}
-                      className="relative w-full h-16 cursor-pointer"
+                      className="relative w-full h-full cursor-pointer"
                       onClick={() => setDate(dayDate)}
                     >
                       {getDayComponent(dayDate)}
@@ -348,70 +409,90 @@ export default function CalendarPage() {
                   )
                 }}
               />
-              </div>
             </CardContent>
           </Card>
 
-          {/* Enhanced Day Details */}
+          {/* Weekly Summaries */}
+          <Card className="bg-background border-border">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg">Weekly Summary</CardTitle>
+              <CardDescription>
+                {date ? format(date, 'MMMM yyyy') : 'Monthly overview'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              {weeklySummaries.length > 0 ? (
+                weeklySummaries.map((week, index) => (
+                  <div 
+                    key={`${week.year}-${week.weekNumber}`}
+                    className={`p-4 rounded-lg border transition-all ${
+                      week.isCurrentWeek ? 'bg-primary/10 border-primary' : 'bg-muted/50 border-border'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-medium text-sm">Week {index + 1}</h4>
+                      {week.isCurrentWeek && (
+                        <Badge variant="outline" className="text-xs">Current</Badge>
+                      )}
+                    </div>
+                    <div className={`text-xl font-bold mb-1 ${
+                      week.totalPnl >= 0 ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {week.totalPnl >= 0 ? '+' : ''}{formatCurrency(week.totalPnl)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {week.totalTrades} trades
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <CalendarIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No trading data this month</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Day Details Section - Only show when date is selected */}
+        {date && selectedDayData && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5" />
-                {date ? format(date, 'MMM dd, yyyy') : 'Select a Date'}
+                {format(date, 'EEEE, MMMM dd, yyyy')}
               </CardTitle>
               <CardDescription>
                 Detailed metrics for the selected day
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {selectedDayData ? (
-                  <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="text-center p-3 bg-muted/50 rounded-lg">
-                        <div className="text-sm text-muted-foreground">Total P&L</div>
-                        <div className={`text-lg font-bold ${selectedDayData.pnl >= 0 ? 'text-profit' : 'text-loss'}`}>
-                          {formatCurrency(selectedDayData.pnl)}
-                        </div>
-                      </div>
-                      <div className="text-center p-3 bg-muted/50 rounded-lg">
-                        <div className="text-sm text-muted-foreground">Win Rate</div>
-                        <div className="text-lg font-bold">
-                          {selectedDayData.winRate.toFixed(1)}%
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="text-center p-3 bg-muted/50 rounded-lg">
-                        <div className="text-sm text-muted-foreground">Best Trade</div>
-                        <div className="text-lg font-bold text-profit">
-                          {formatCurrency(selectedDayData.bestTrade)}
-                        </div>
-                      </div>
-                      <div className="text-center p-3 bg-muted/50 rounded-lg">
-                        <div className="text-sm text-muted-foreground">Worst Trade</div>
-                        <div className="text-lg font-bold text-loss">
-                          {formatCurrency(selectedDayData.worstTrade)}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <div className="text-sm text-muted-foreground">Total Trades</div>
-                      <div className="text-lg font-bold">{selectedDayData.trades}</div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-8">
-                    <CalendarIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-muted-foreground">No trading data for this day</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground mb-1">Total P&L</div>
+                  <div className={`text-2xl font-bold ${selectedDayData.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {selectedDayData.pnl >= 0 ? '+' : ''}{formatCurrency(selectedDayData.pnl)}
                   </div>
-                )}
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground mb-1">Total Trades</div>
+                  <div className="text-2xl font-bold">{selectedDayData.trades}</div>
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground mb-1">Win Rate</div>
+                  <div className="text-2xl font-bold">{selectedDayData.winRate.toFixed(0)}%</div>
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground mb-1">Best Trade</div>
+                  <div className="text-2xl font-bold text-green-400">
+                    +{formatCurrency(selectedDayData.bestTrade)}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
-        </div>
+        )}
 
         {/* Period Metrics */}
         <Card>
