@@ -461,31 +461,48 @@ export default function CalendarPage() {
                 {date ? format(date, 'MMMM yyyy') : 'Monthly overview'}
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-4 space-y-4">
+            <CardContent className="p-4">
               {weeklySummaries.length > 0 ? (
-                weeklySummaries.map((week, index) => (
-                  <div 
-                    key={`${week.year}-${week.weekNumber}`}
-                    className={`p-4 rounded-lg border transition-all ${
-                      week.isCurrentWeek ? 'bg-primary/10 border-primary' : 'bg-muted/50 border-border'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="font-medium text-sm">Week {index + 1}</h4>
-                      {week.isCurrentWeek && (
-                        <Badge variant="outline" className="text-xs">Current</Badge>
-                      )}
-                    </div>
-                    <div className={`text-xl font-bold mb-1 ${
-                      week.totalPnl >= 0 ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      {week.totalPnl >= 0 ? '+' : ''}{formatCurrency(week.totalPnl)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {week.totalTrades} trades
-                    </div>
+                <div className="space-y-3">
+                  {/* Header */}
+                  <div className="grid grid-cols-3 gap-2 pb-2 border-b text-xs font-medium text-muted-foreground">
+                    <div>Week</div>
+                    <div className="text-right">P&L</div>
+                    <div className="text-right">Trades</div>
                   </div>
-                ))
+                  
+                  {/* Week Rows */}
+                  {weeklySummaries.map((week, index) => (
+                    <div 
+                      key={`${week.year}-${week.weekNumber}`}
+                      className={cn(
+                        "grid grid-cols-3 gap-2 py-3 px-3 rounded-lg transition-all",
+                        week.isCurrentWeek ? 'bg-primary/10 border border-primary' : 'bg-muted/30'
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">Week {index + 1}</span>
+                        {week.isCurrentWeek && (
+                          <Badge variant="outline" className="text-xs px-1 py-0">Current</Badge>
+                        )}
+                      </div>
+                      
+                      <div className={cn(
+                        "text-right font-bold text-sm",
+                        week.totalPnl >= 0 ? "text-green-400" : "text-red-400"
+                      )}>
+                        {week.totalPnl >= 0 ? '+' : ''}${Math.abs(week.totalPnl) >= 1000 ? 
+                          `${(week.totalPnl / 1000).toFixed(1)}k` : 
+                          week.totalPnl.toFixed(2)
+                        }
+                      </div>
+                      
+                      <div className="text-right text-sm text-muted-foreground">
+                        {week.totalTrades}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="text-center py-8">
                   <CalendarIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
