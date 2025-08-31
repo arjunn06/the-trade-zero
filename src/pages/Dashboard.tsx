@@ -492,9 +492,7 @@ const Dashboard = () => {
   };
 
   const handleViewComparison = (comparisonData: any) => {
-    console.log('Comparison data:', comparisonData);
-    // TODO: Navigate to comparison dashboard
-    // navigate('/comparison', { state: { comparisonData } });
+    navigate('/comparison', { state: { comparisonData } });
   };
 
   if (loading) {
