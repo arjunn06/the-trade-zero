@@ -208,8 +208,7 @@ const Dashboard = () => {
         supabase
           .from('trading_accounts')
           .select('*')
-          .eq('user_id', user.id)
-          .eq('is_active', true), // Only fetch active accounts by default
+          .eq('user_id', user.id),
         supabase
           .from('financial_transactions')
           .select('trading_account_id, amount, transaction_type')
@@ -238,9 +237,8 @@ const Dashboard = () => {
       // Filter trades by selected accounts
       let filteredTrades;
       if (selectedAccountIds.includes('all') || selectedAccountIds.length === 0) {
-        // Only include trades from active accounts when "All Active Accounts" is selected
-        const activeAccountIds = allAccounts.filter(acc => acc.is_active).map(acc => acc.id);
-        filteredTrades = allTrades.filter(trade => activeAccountIds.includes(trade.trading_account_id));
+        // Include trades from all accounts (both active and inactive) when "All Active Accounts" is selected
+        filteredTrades = allTrades;
       } else {
         filteredTrades = allTrades.filter(trade => selectedAccountIds.includes(trade.trading_account_id));
       }
