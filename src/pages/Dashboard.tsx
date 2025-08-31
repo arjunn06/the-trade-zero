@@ -492,10 +492,10 @@ const Dashboard = () => {
     setMetricDialogOpen(true);
   };
 
-  const handleExportChart = (comparisonData: any) => {
+  const handleViewComparison = (comparisonData: any) => {
     console.log('Comparison data:', comparisonData);
-    // TODO: Implement comparison chart export functionality
-    // This would navigate to a comparison dashboard or generate charts
+    // TODO: Navigate to comparison dashboard
+    // navigate('/comparison', { state: { comparisonData } });
   };
 
   if (loading) {
@@ -1005,7 +1005,7 @@ const Dashboard = () => {
         open={comparisonDialogOpen}
         onOpenChange={setComparisonDialogOpen}
         accounts={accounts}
-        onExportChart={handleExportChart}
+        onViewComparison={handleViewComparison}
       />
     </DashboardLayout>
   );
