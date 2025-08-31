@@ -1,4 +1,3 @@
-
 import { ReactNode } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -6,24 +5,19 @@ import { MobileHeader } from '@/components/MobileHeader';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { SearchCommand } from '@/components/SearchCommand';
 import { ThemeToggle } from '@/components/ThemeToggle';
-
 interface DashboardLayoutProps {
   children: ReactNode;
 }
-
-export function DashboardLayout({ children }: DashboardLayoutProps) {
-  return (
-    <SidebarProvider>
+export function DashboardLayout({
+  children
+}: DashboardLayoutProps) {
+  return <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         
         {/* Enhanced header for desktop */}
         <div className="hidden lg:block fixed top-0 right-0 left-64 z-40">
-          <header className="glass-nav border-b h-16 px-6 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger />
-            </div>
-          </header>
+          
         </div>
         
         {/* Mobile header */}
@@ -37,6 +31,5 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </main>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>;
 }
