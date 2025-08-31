@@ -237,8 +237,9 @@ const Dashboard = () => {
       // Filter trades by selected accounts
       let filteredTrades;
       if (selectedAccountIds.includes('all') || selectedAccountIds.length === 0) {
-        // Include trades from all accounts (both active and inactive) when "All Active Accounts" is selected
-        filteredTrades = allTrades;
+        // Include trades from active accounts only when "All Active Accounts" is selected
+        const activeAccountIds = allAccounts.filter(acc => acc.is_active).map(acc => acc.id);
+        filteredTrades = allTrades.filter(trade => activeAccountIds.includes(trade.trading_account_id));
       } else {
         filteredTrades = allTrades.filter(trade => selectedAccountIds.includes(trade.trading_account_id));
       }
@@ -275,7 +276,7 @@ const Dashboard = () => {
 
       // Filter accounts by selected accounts for balance calculations
       const accounts = selectedAccountIds.includes('all')
-        ? allAccounts
+        ? allAccounts.filter(acc => acc.is_active) // Only active accounts when "all" is selected
         : allAccounts.filter(account => selectedAccountIds.includes(account.id));
 
       // Calculate account totals from trades
