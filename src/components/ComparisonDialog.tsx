@@ -17,7 +17,6 @@ interface ComparisonDialogProps {
 
 interface ComparisonData {
   compareAcross: 'time' | 'accounts' | 'strategies';
-  timeRange?: 'year' | 'month' | 'date';
   fromDate?: Date;
   toDate?: Date;
   fromAccount?: string;
@@ -28,7 +27,6 @@ interface ComparisonData {
 
 export const ComparisonDialog = ({ open, onOpenChange, accounts, onViewComparison }: ComparisonDialogProps) => {
   const [compareAcross, setCompareAcross] = useState<'time' | 'accounts' | 'strategies'>('time');
-  const [timeRange, setTimeRange] = useState<string>('month');
   const [fromDate, setFromDate] = useState<Date>();
   const [toDate, setToDate] = useState<Date>();
   const [fromAccount, setFromAccount] = useState<string>('');
@@ -38,7 +36,6 @@ export const ComparisonDialog = ({ open, onOpenChange, accounts, onViewCompariso
     const comparisonData: ComparisonData = {
       compareAcross,
       ...(compareAcross === 'time' && { 
-        timeRange: timeRange as 'year' | 'month' | 'date',
         fromDate,
         toDate
       }),
@@ -50,75 +47,59 @@ export const ComparisonDialog = ({ open, onOpenChange, accounts, onViewCompariso
   };
 
   const renderTimeRangeSection = () => (
-    <div className="space-y-4">
+    <div className="grid grid-cols-2 gap-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium">Date & Time Range</label>
-        <Select value={timeRange} onValueChange={setTimeRange}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="year">Year Range</SelectItem>
-            <SelectItem value="month">Month Range</SelectItem>
-            <SelectItem value="date">Date Range</SelectItem>
-          </SelectContent>
-        </Select>
+        <label className="text-sm font-medium">From Date</label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !fromDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {fromDate ? format(fromDate, "PPP") : <span>Pick a date</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={fromDate}
+              onSelect={setFromDate}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">From Date</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !fromDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {fromDate ? format(fromDate, "PPP") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={fromDate}
-                onSelect={setFromDate}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-        
-        <div className="space-y-2">
-          <label className="text-sm font-medium">To Date</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !toDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {toDate ? format(toDate, "PPP") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={toDate}
-                onSelect={setToDate}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">To Date</label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !toDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {toDate ? format(toDate, "PPP") : <span>Pick a date</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={toDate}
+              onSelect={setToDate}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );
@@ -209,7 +190,7 @@ export const ComparisonDialog = ({ open, onOpenChange, accounts, onViewCompariso
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="time">Month Range</SelectItem>
+                <SelectItem value="time">Date Range</SelectItem>
                 <SelectItem value="accounts">Accounts</SelectItem>
                 <SelectItem value="strategies">Strategies</SelectItem>
               </SelectContent>
