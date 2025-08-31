@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subWeeks, subMonths, isWithinInterval, getWeek, getMonth, getYear, getDaysInMonth, getDay, addDays, differenceInDays } from 'date-fns';
 import { TrendingUp, TrendingDown, Calendar as CalendarIcon, Target, DollarSign, BarChart3, ChevronLeft, ChevronRight, FileText, Clock } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AccountFilter } from '@/components/AccountFilter';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -431,8 +432,31 @@ export default function CalendarPage() {
             <h1 className="text-3xl font-bold">P&L Calendar</h1>
             <p className="text-muted-foreground">Track your daily trading performance</p>
             
-            {/* Recap Options */}
+            {/* Generate Report Button */}
             <div className="flex gap-2 mt-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <FileText className="h-4 w-4" />
+                    Generate Report
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => navigate('/weekly-report')}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Weekly Report
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/monthly-report')}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Monthly Report
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/calendar')}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Yearly Report
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
               {isSaturday && <Button variant="outline" size="sm" onClick={() => navigate('/weekly-report')} className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
                   View Weekly Recap
