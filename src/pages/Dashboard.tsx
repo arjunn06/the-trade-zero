@@ -21,6 +21,7 @@ import { AccountFilter } from '@/components/AccountFilter';
 import { PropFirmDashboard } from '@/components/PropFirmDashboard';
 import PerformanceScore from '@/components/PerformanceScore';
 import { MetricHistoryDialog } from '@/components/MetricHistoryDialog';
+import { ComparisonDialog } from '@/components/ComparisonDialog';
 
 interface AccountGoalsSectionProps {
   accounts: any[];
@@ -185,6 +186,7 @@ const Dashboard = () => {
   const [riskMetrics, setRiskMetrics] = useState<any>({});
   const [metricDialogOpen, setMetricDialogOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<'winRate' | 'profitFactor' | 'maxDrawdown' | 'avgReturn' | null>(null);
+  const [comparisonDialogOpen, setComparisonDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -490,6 +492,12 @@ const Dashboard = () => {
     setMetricDialogOpen(true);
   };
 
+  const handleExportChart = (comparisonData: any) => {
+    console.log('Comparison data:', comparisonData);
+    // TODO: Implement comparison chart export functionality
+    // This would navigate to a comparison dashboard or generate charts
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -565,6 +573,10 @@ const Dashboard = () => {
                 placeholder="All Active Accounts"
               />
             </div>
+            <Button onClick={() => setComparisonDialogOpen(true)} variant="outline" className="hover-scale">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Compare
+            </Button>
             <Button onClick={() => navigate('/trades/new')} className="hover-scale">
               <Plus className="h-4 w-4 mr-2" />
               New Trade
@@ -986,6 +998,14 @@ const Dashboard = () => {
         metricType={selectedMetric}
         selectedAccountIds={selectedAccountIds}
         timeFilter={timeFilter}
+      />
+
+      {/* Comparison Dialog */}
+      <ComparisonDialog
+        open={comparisonDialogOpen}
+        onOpenChange={setComparisonDialogOpen}
+        accounts={accounts}
+        onExportChart={handleExportChart}
       />
     </DashboardLayout>
   );
