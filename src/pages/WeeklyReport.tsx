@@ -8,7 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MetricDisplay } from '@/components/ui/metric-display';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { TrendingUp, TrendingDown, Calendar, Download, Target, DollarSign, BarChart3, Award } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { TrendingUp, TrendingDown, Calendar, Download, Target, DollarSign, BarChart3, Award, GitCompare } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { format, startOfWeek, endOfWeek, subWeeks, isWithinInterval } from 'date-fns';
 
@@ -41,15 +43,17 @@ export default function WeeklyReport() {
   const [loading, setLoading] = useState(true);
   const [selectedWeek, setSelectedWeek] = useState(0); // 0 = current week, 1 = last week, etc.
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStats | null>(null);
+  const [previousWeekStats, setPreviousWeekStats] = useState<WeeklyStats | null>(null);
   const [dailyData, setDailyData] = useState<DailyPerformance[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('all');
+  const [compareMode, setCompareMode] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchWeeklyReport();
     }
-  }, [user, selectedWeek, selectedAccountId]);
+  }, [user, selectedWeek, selectedAccountId, compareMode]);
 
   const fetchWeeklyReport = async () => {
     if (!user) return;
@@ -70,62 +74,24 @@ export default function WeeklyReport() {
       const weekStart = startOfWeek(subWeeks(now, selectedWeek), { weekStartsOn: 1 });
       const weekEnd = endOfWeek(subWeeks(now, selectedWeek), { weekStartsOn: 1 });
 
-      // Fetch trades for the selected week
-      let tradesQuery = supabase
-        .from('trades')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('entry_date', weekStart.toISOString())
-        .lte('entry_date', weekEnd.toISOString())
-        .eq('status', 'closed');
+      // Fetch current week stats
+      const currentStats = await fetchWeekStats(weekStart, weekEnd, accountsData);
+      setWeeklyStats(currentStats);
 
-      if (selectedAccountId !== 'all') {
-        tradesQuery = tradesQuery.eq('trading_account_id', selectedAccountId);
-      } else if (accountsData && accountsData.length > 0) {
-        const activeAccountIds = accountsData.map(acc => acc.id);
-        tradesQuery = tradesQuery.in('trading_account_id', activeAccountIds);
+      // Fetch previous week stats if compare mode is enabled
+      if (compareMode) {
+        const prevWeekStart = startOfWeek(subWeeks(now, selectedWeek + 1), { weekStartsOn: 1 });
+        const prevWeekEnd = endOfWeek(subWeeks(now, selectedWeek + 1), { weekStartsOn: 1 });
+        const prevStats = await fetchWeekStats(prevWeekStart, prevWeekEnd, accountsData);
+        setPreviousWeekStats(prevStats);
+      } else {
+        setPreviousWeekStats(null);
       }
 
-      const { data: trades } = await tradesQuery;
-      const weekTrades = trades || [];
+      // Generate daily performance data for current week
+      const weekTrades = await fetchTradesForPeriod(weekStart, weekEnd, accountsData);
 
-      // Calculate weekly statistics
-      const totalPnl = weekTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
-      const winningTrades = weekTrades.filter(t => (t.pnl || 0) > 0);
-      const losingTrades = weekTrades.filter(t => (t.pnl || 0) < 0);
-      const totalWins = winningTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
-      const totalLosses = Math.abs(losingTrades.reduce((sum, t) => sum + (t.pnl || 0), 0));
-
-      // Calculate profitable days
-      const dailyPnLMap: Record<string, number> = {};
-      weekTrades.forEach(trade => {
-        const dateKey = format(new Date(trade.entry_date), 'yyyy-MM-dd');
-        dailyPnLMap[dateKey] = (dailyPnLMap[dateKey] || 0) + (trade.pnl || 0);
-      });
-      const profitableDays = Object.values(dailyPnLMap).filter(pnl => pnl > 0).length;
-      const totalTradingDays = Object.keys(dailyPnLMap).length;
-
-      const stats: WeeklyStats = {
-        totalPnl,
-        totalTrades: weekTrades.length,
-        winningTrades: winningTrades.length,
-        losingTrades: losingTrades.length,
-        winRate: weekTrades.length > 0 ? (winningTrades.length / weekTrades.length) * 100 : 0,
-        avgWin: winningTrades.length > 0 ? totalWins / winningTrades.length : 0,
-        avgLoss: losingTrades.length > 0 ? totalLosses / losingTrades.length : 0,
-        bestTrade: weekTrades.length > 0 ? Math.max(...weekTrades.map(t => t.pnl || 0)) : 0,
-        worstTrade: weekTrades.length > 0 ? Math.min(...weekTrades.map(t => t.pnl || 0)) : 0,
-        profitFactor: totalLosses > 0 ? totalWins / totalLosses : 0,
-        expectancy: weekTrades.length > 0 ? totalPnl / weekTrades.length : 0,
-        profitableDays,
-        totalTradingDays,
-        weekStart,
-        weekEnd
-      };
-
-      setWeeklyStats(stats);
-
-      // Generate daily performance data
+      // Generate daily performance data for current week
       const dailyMap: Record<string, { pnl: number; trades: number }> = {};
       
       // Initialize all days of the week with 0
@@ -156,6 +122,63 @@ export default function WeeklyReport() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchTradesForPeriod = async (start: Date, end: Date, accountsData: any[]) => {
+    let tradesQuery = supabase
+      .from('trades')
+      .select('*')
+      .eq('user_id', user!.id)
+      .gte('entry_date', start.toISOString())
+      .lte('entry_date', end.toISOString())
+      .eq('status', 'closed');
+
+    if (selectedAccountId !== 'all') {
+      tradesQuery = tradesQuery.eq('trading_account_id', selectedAccountId);
+    } else if (accountsData && accountsData.length > 0) {
+      const activeAccountIds = accountsData.map(acc => acc.id);
+      tradesQuery = tradesQuery.in('trading_account_id', activeAccountIds);
+    }
+
+    const { data: trades } = await tradesQuery;
+    return trades || [];
+  };
+
+  const fetchWeekStats = async (weekStart: Date, weekEnd: Date, accountsData: any[]): Promise<WeeklyStats> => {
+    const trades = await fetchTradesForPeriod(weekStart, weekEnd, accountsData);
+
+    const totalPnl = trades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+    const winningTrades = trades.filter(t => (t.pnl || 0) > 0);
+    const losingTrades = trades.filter(t => (t.pnl || 0) < 0);
+    const totalWins = winningTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+    const totalLosses = Math.abs(losingTrades.reduce((sum, t) => sum + (t.pnl || 0), 0));
+
+    // Calculate profitable days
+    const dailyPnLMap: Record<string, number> = {};
+    trades.forEach(trade => {
+      const dateKey = format(new Date(trade.entry_date), 'yyyy-MM-dd');
+      dailyPnLMap[dateKey] = (dailyPnLMap[dateKey] || 0) + (trade.pnl || 0);
+    });
+    const profitableDays = Object.values(dailyPnLMap).filter(pnl => pnl > 0).length;
+    const totalTradingDays = Object.keys(dailyPnLMap).length;
+
+    return {
+      totalPnl,
+      totalTrades: trades.length,
+      winningTrades: winningTrades.length,
+      losingTrades: losingTrades.length,
+      winRate: trades.length > 0 ? (winningTrades.length / trades.length) * 100 : 0,
+      avgWin: winningTrades.length > 0 ? totalWins / winningTrades.length : 0,
+      avgLoss: losingTrades.length > 0 ? totalLosses / losingTrades.length : 0,
+      bestTrade: trades.length > 0 ? Math.max(...trades.map(t => t.pnl || 0)) : 0,
+      worstTrade: trades.length > 0 ? Math.min(...trades.map(t => t.pnl || 0)) : 0,
+      profitFactor: totalLosses > 0 ? totalWins / totalLosses : 0,
+      expectancy: trades.length > 0 ? totalPnl / trades.length : 0,
+      profitableDays,
+      totalTradingDays,
+      weekStart,
+      weekEnd
+    };
   };
 
   const getWeekDisplayText = (weekOffset: number) => {
@@ -212,6 +235,18 @@ export default function WeeklyReport() {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="compare-mode"
+                checked={compareMode}
+                onCheckedChange={setCompareMode}
+              />
+              <Label htmlFor="compare-mode" className="text-sm flex items-center gap-1">
+                <GitCompare className="h-4 w-4" />
+                Compare
+              </Label>
+            </div>
+
             <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Select account" />
@@ -249,40 +284,95 @@ export default function WeeklyReport() {
         {weeklyStats ? (
           <>
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <MetricDisplay
-                label="Total P&L"
-                value={weeklyStats.totalPnl}
-                format="currency"
-                icon={DollarSign}
-                trend={weeklyStats.totalPnl > 0 ? 'up' : weeklyStats.totalPnl < 0 ? 'down' : 'neutral'}
-              />
-              
-              <MetricDisplay
-                label="Win Rate"
-                value={weeklyStats.winRate}
-                format="percentage"
-                icon={Target}
-                change={{
-                  value: weeklyStats.winRate - 50, // Compare to 50% baseline
-                  label: 'vs 50%'
-                }}
-              />
-              
-              <MetricDisplay
-                label="Total Trades"
-                value={weeklyStats.totalTrades}
-                icon={BarChart3}
-              />
-              
-              <MetricDisplay
-                label="Profit Factor"
-                value={weeklyStats.profitFactor}
-                format="number"
-                icon={Award}
-                trend={weeklyStats.profitFactor > 1 ? 'up' : 'down'}
-              />
-            </div>
+            {compareMode && previousWeekStats ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-lg font-semibold">
+                  <GitCompare className="h-5 w-5" />
+                  Performance Comparison
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <MetricDisplay
+                    label="Total P&L"
+                    value={weeklyStats.totalPnl}
+                    format="currency"
+                    icon={DollarSign}
+                    trend={weeklyStats.totalPnl > 0 ? 'up' : weeklyStats.totalPnl < 0 ? 'down' : 'neutral'}
+                    change={{
+                      value: weeklyStats.totalPnl - previousWeekStats.totalPnl,
+                      label: 'vs prev week'
+                    }}
+                  />
+                  
+                  <MetricDisplay
+                    label="Win Rate"
+                    value={weeklyStats.winRate}
+                    format="percentage"
+                    icon={Target}
+                    change={{
+                      value: weeklyStats.winRate - previousWeekStats.winRate,
+                      label: 'vs prev week'
+                    }}
+                  />
+                  
+                  <MetricDisplay
+                    label="Total Trades"
+                    value={weeklyStats.totalTrades}
+                    icon={BarChart3}
+                    change={{
+                      value: weeklyStats.totalTrades - previousWeekStats.totalTrades,
+                      label: 'vs prev week'
+                    }}
+                  />
+                  
+                  <MetricDisplay
+                    label="Profit Factor"
+                    value={weeklyStats.profitFactor}
+                    format="number"
+                    icon={Award}
+                    trend={weeklyStats.profitFactor > 1 ? 'up' : 'down'}
+                    change={{
+                      value: weeklyStats.profitFactor - previousWeekStats.profitFactor,
+                      label: 'vs prev week'
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <MetricDisplay
+                  label="Total P&L"
+                  value={weeklyStats.totalPnl}
+                  format="currency"
+                  icon={DollarSign}
+                  trend={weeklyStats.totalPnl > 0 ? 'up' : weeklyStats.totalPnl < 0 ? 'down' : 'neutral'}
+                />
+                
+                <MetricDisplay
+                  label="Win Rate"
+                  value={weeklyStats.winRate}
+                  format="percentage"
+                  icon={Target}
+                  change={{
+                    value: weeklyStats.winRate - 50, // Compare to 50% baseline
+                    label: 'vs 50%'
+                  }}
+                />
+                
+                <MetricDisplay
+                  label="Total Trades"
+                  value={weeklyStats.totalTrades}
+                  icon={BarChart3}
+                />
+                
+                <MetricDisplay
+                  label="Profit Factor"
+                  value={weeklyStats.profitFactor}
+                  format="number"
+                  icon={Award}
+                  trend={weeklyStats.profitFactor > 1 ? 'up' : 'down'}
+                />
+              </div>
+            )}
 
             {/* Performance Summary */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

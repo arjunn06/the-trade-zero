@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MetricDisplay } from "@/components/ui/metric-display";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Calendar as CalendarIcon, Download, DollarSign, Target, BarChart3, Award } from "lucide-react";
+import { Calendar as CalendarIcon, Download, DollarSign, Target, BarChart3, Award, GitCompare } from "lucide-react";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
@@ -40,15 +42,17 @@ export default function MonthlyReport() {
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(0); // 0=current, 1=last month, etc.
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStats | null>(null);
+  const [previousMonthStats, setPreviousMonthStats] = useState<MonthlyStats | null>(null);
   const [dailyData, setDailyData] = useState<DailyPerformance[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>("all");
+  const [compareMode, setCompareMode] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchMonthlyReport();
     }
-  }, [user, selectedMonth, selectedAccountId]);
+  }, [user, selectedMonth, selectedAccountId, compareMode]);
 
   const fetchMonthlyReport = async () => {
     if (!user) return;
@@ -68,60 +72,24 @@ export default function MonthlyReport() {
       const monthStart = startOfMonth(subMonths(now, selectedMonth));
       const monthEnd = endOfMonth(subMonths(now, selectedMonth));
 
-      // Trades for month — use exit_date to reflect realized P&L
-      let tradesQuery = supabase
-        .from("trades")
-        .select("*")
-        .eq("user_id", user.id)
-        .gte("exit_date", monthStart.toISOString())
-        .lte("exit_date", monthEnd.toISOString())
-        .eq("status", "closed");
+      // Fetch current month stats
+      const currentStats = await fetchMonthStats(monthStart, monthEnd, accountsData);
+      setMonthlyStats(currentStats);
 
-      if (selectedAccountId !== "all") {
-        tradesQuery = tradesQuery.eq("trading_account_id", selectedAccountId);
-      } else if (accountsData && accountsData.length > 0) {
-        const activeAccountIds = accountsData.map((a) => a.id);
-        tradesQuery = tradesQuery.in("trading_account_id", activeAccountIds);
+      // Fetch previous month stats if compare mode is enabled
+      if (compareMode) {
+        const prevMonthStart = startOfMonth(subMonths(now, selectedMonth + 1));
+        const prevMonthEnd = endOfMonth(subMonths(now, selectedMonth + 1));
+        const prevStats = await fetchMonthStats(prevMonthStart, prevMonthEnd, accountsData);
+        setPreviousMonthStats(prevStats);
+      } else {
+        setPreviousMonthStats(null);
       }
 
-      const { data: trades } = await tradesQuery;
-      const monthTrades = trades || [];
+      // Generate daily performance data for current month
+      const monthTrades = await fetchTradesForPeriod(monthStart, monthEnd, accountsData);
 
-      const totalPnl = monthTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
-      const winningTrades = monthTrades.filter((t) => (t.pnl || 0) > 0);
-      const losingTrades = monthTrades.filter((t) => (t.pnl || 0) < 0);
-      const totalWins = winningTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
-      const totalLosses = Math.abs(losingTrades.reduce((sum, t) => sum + (t.pnl || 0), 0));
-
-      // Calculate profitable days
-      const dailyPnLMap: Record<string, number> = {};
-      monthTrades.forEach(trade => {
-        const dateKey = format(new Date(trade.exit_date), 'yyyy-MM-dd');
-        dailyPnLMap[dateKey] = (dailyPnLMap[dateKey] || 0) + (trade.pnl || 0);
-      });
-      const profitableDays = Object.values(dailyPnLMap).filter(pnl => pnl > 0).length;
-      const totalTradingDays = Object.keys(dailyPnLMap).length;
-
-      const stats: MonthlyStats = {
-        totalPnl,
-        totalTrades: monthTrades.length,
-        winningTrades: winningTrades.length,
-        losingTrades: losingTrades.length,
-        winRate: monthTrades.length > 0 ? (winningTrades.length / monthTrades.length) * 100 : 0,
-        avgWin: winningTrades.length > 0 ? totalWins / winningTrades.length : 0,
-        avgLoss: losingTrades.length > 0 ? totalLosses / losingTrades.length : 0,
-        bestTrade: monthTrades.length > 0 ? Math.max(...monthTrades.map((t) => t.pnl || 0)) : 0,
-        worstTrade: monthTrades.length > 0 ? Math.min(...monthTrades.map((t) => t.pnl || 0)) : 0,
-        profitFactor: totalLosses > 0 ? totalWins / totalLosses : 0,
-        expectancy: monthTrades.length > 0 ? totalPnl / monthTrades.length : 0,
-        profitableDays,
-        totalTradingDays,
-        monthStart,
-        monthEnd,
-      };
-      setMonthlyStats(stats);
-
-      // Daily breakdown
+      // Daily breakdown for current month
       const days: Record<string, { pnl: number; trades: number }> = {};
       for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
         days[format(d, "yyyy-MM-dd")] = { pnl: 0, trades: 0 };
@@ -139,9 +107,68 @@ export default function MonthlyReport() {
         trades: data.trades,
       }));
       setDailyData(dailyPerformance);
+    } catch (error) {
+      console.error('Error fetching monthly report:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchTradesForPeriod = async (start: Date, end: Date, accountsData: any[]) => {
+    let tradesQuery = supabase
+      .from("trades")
+      .select("*")
+      .eq("user_id", user!.id)
+      .gte("exit_date", start.toISOString())
+      .lte("exit_date", end.toISOString())
+      .eq("status", "closed");
+
+    if (selectedAccountId !== "all") {
+      tradesQuery = tradesQuery.eq("trading_account_id", selectedAccountId);
+    } else if (accountsData && accountsData.length > 0) {
+      const activeAccountIds = accountsData.map((a) => a.id);
+      tradesQuery = tradesQuery.in("trading_account_id", activeAccountIds);
+    }
+
+    const { data: trades } = await tradesQuery;
+    return trades || [];
+  };
+
+  const fetchMonthStats = async (monthStart: Date, monthEnd: Date, accountsData: any[]): Promise<MonthlyStats> => {
+    const trades = await fetchTradesForPeriod(monthStart, monthEnd, accountsData);
+
+    const totalPnl = trades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+    const winningTrades = trades.filter((t) => (t.pnl || 0) > 0);
+    const losingTrades = trades.filter((t) => (t.pnl || 0) < 0);
+    const totalWins = winningTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+    const totalLosses = Math.abs(losingTrades.reduce((sum, t) => sum + (t.pnl || 0), 0));
+
+    // Calculate profitable days
+    const dailyPnLMap: Record<string, number> = {};
+    trades.forEach(trade => {
+      const dateKey = format(new Date(trade.exit_date), 'yyyy-MM-dd');
+      dailyPnLMap[dateKey] = (dailyPnLMap[dateKey] || 0) + (trade.pnl || 0);
+    });
+    const profitableDays = Object.values(dailyPnLMap).filter(pnl => pnl > 0).length;
+    const totalTradingDays = Object.keys(dailyPnLMap).length;
+
+    return {
+      totalPnl,
+      totalTrades: trades.length,
+      winningTrades: winningTrades.length,
+      losingTrades: losingTrades.length,
+      winRate: trades.length > 0 ? (winningTrades.length / trades.length) * 100 : 0,
+      avgWin: winningTrades.length > 0 ? totalWins / winningTrades.length : 0,
+      avgLoss: losingTrades.length > 0 ? totalLosses / losingTrades.length : 0,
+      bestTrade: trades.length > 0 ? Math.max(...trades.map((t) => t.pnl || 0)) : 0,
+      worstTrade: trades.length > 0 ? Math.min(...trades.map((t) => t.pnl || 0)) : 0,
+      profitFactor: totalLosses > 0 ? totalWins / totalLosses : 0,
+      expectancy: trades.length > 0 ? totalPnl / trades.length : 0,
+      profitableDays,
+      totalTradingDays,
+      monthStart,
+      monthEnd,
+    };
   };
 
   const getMonthDisplayText = (offset: number) => {
@@ -196,6 +223,18 @@ export default function MonthlyReport() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="compare-mode"
+                checked={compareMode}
+                onCheckedChange={setCompareMode}
+              />
+              <Label htmlFor="compare-mode" className="text-sm flex items-center gap-1">
+                <GitCompare className="h-4 w-4" />
+                Compare
+              </Label>
+            </div>
+
             <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Select account" />
@@ -233,33 +272,88 @@ export default function MonthlyReport() {
         {monthlyStats ? (
           <>
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <MetricDisplay
-                label="Total P&L"
-                value={monthlyStats.totalPnl}
-                format="currency"
-                icon={DollarSign}
-                trend={monthlyStats.totalPnl > 0 ? "up" : monthlyStats.totalPnl < 0 ? "down" : "neutral"}
-              />
+            {compareMode && previousMonthStats ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-lg font-semibold">
+                  <GitCompare className="h-5 w-5" />
+                  Performance Comparison
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <MetricDisplay
+                    label="Total P&L"
+                    value={monthlyStats.totalPnl}
+                    format="currency"
+                    icon={DollarSign}
+                    trend={monthlyStats.totalPnl > 0 ? "up" : monthlyStats.totalPnl < 0 ? "down" : "neutral"}
+                    change={{
+                      value: monthlyStats.totalPnl - previousMonthStats.totalPnl,
+                      label: 'vs prev month'
+                    }}
+                  />
 
-              <MetricDisplay
-                label="Win Rate"
-                value={monthlyStats.winRate}
-                format="percentage"
-                icon={Target}
-                change={{ value: monthlyStats.winRate - 50, label: "vs 50%" }}
-              />
+                  <MetricDisplay
+                    label="Win Rate"
+                    value={monthlyStats.winRate}
+                    format="percentage"
+                    icon={Target}
+                    change={{
+                      value: monthlyStats.winRate - previousMonthStats.winRate,
+                      label: 'vs prev month'
+                    }}
+                  />
 
-              <MetricDisplay label="Total Trades" value={monthlyStats.totalTrades} icon={BarChart3} />
+                  <MetricDisplay
+                    label="Total Trades"
+                    value={monthlyStats.totalTrades}
+                    icon={BarChart3}
+                    change={{
+                      value: monthlyStats.totalTrades - previousMonthStats.totalTrades,
+                      label: 'vs prev month'
+                    }}
+                  />
 
-              <MetricDisplay
-                label="Profit Factor"
-                value={monthlyStats.profitFactor}
-                format="number"
-                icon={Award}
-                trend={monthlyStats.profitFactor > 1 ? "up" : "down"}
-              />
-            </div>
+                  <MetricDisplay
+                    label="Profit Factor"
+                    value={monthlyStats.profitFactor}
+                    format="number"
+                    icon={Award}
+                    trend={monthlyStats.profitFactor > 1 ? "up" : "down"}
+                    change={{
+                      value: monthlyStats.profitFactor - previousMonthStats.profitFactor,
+                      label: 'vs prev month'
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <MetricDisplay
+                  label="Total P&L"
+                  value={monthlyStats.totalPnl}
+                  format="currency"
+                  icon={DollarSign}
+                  trend={monthlyStats.totalPnl > 0 ? "up" : monthlyStats.totalPnl < 0 ? "down" : "neutral"}
+                />
+
+                <MetricDisplay
+                  label="Win Rate"
+                  value={monthlyStats.winRate}
+                  format="percentage"
+                  icon={Target}
+                  change={{ value: monthlyStats.winRate - 50, label: "vs 50%" }}
+                />
+
+                <MetricDisplay label="Total Trades" value={monthlyStats.totalTrades} icon={BarChart3} />
+
+                <MetricDisplay
+                  label="Profit Factor"
+                  value={monthlyStats.profitFactor}
+                  format="number"
+                  icon={Award}
+                  trend={monthlyStats.profitFactor > 1 ? "up" : "down"}
+                />
+              </div>
+            )}
 
             {/* Charts */}
             <div className="grid grid-cols-1 gap-6">
