@@ -8,7 +8,7 @@ import { format, subDays, subMonths, parseISO } from 'date-fns';
 interface MetricHistoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  metricType: 'winRate' | 'profitFactor' | 'maxDrawdown' | 'avgReturn' | null;
+  metricType: 'winRate' | 'profitFactor' | 'maxDrawdown' | 'avgReturn' | 'expectancy' | null;
   selectedAccountIds: string[];
   timeFilter: string;
 }
@@ -34,14 +34,16 @@ export function MetricHistoryDialog({
     winRate: 'Win Rate (%)',
     profitFactor: 'Profit Factor',
     maxDrawdown: 'Max Drawdown (%)',
-    avgReturn: 'Average Return per Trade'
+    avgReturn: 'Average Return per Trade',
+    expectancy: 'Expectancy per Trade'
   };
 
   const metricColors = {
     winRate: '#10b981',
     profitFactor: '#3b82f6',
     maxDrawdown: '#ef4444',
-    avgReturn: '#8b5cf6'
+    avgReturn: '#8b5cf6',
+    expectancy: '#f59e0b'
   };
 
   useEffect(() => {
@@ -207,6 +209,15 @@ export function MetricHistoryDialog({
             const totalPnL = cumulativeTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
             value = totalTrades > 0 ? totalPnL / totalTrades : 0;
             break;
+            
+          case 'expectancy':
+            const wins = cumulativeTrades.filter(t => (t.pnl || 0) > 0);
+            const losses = cumulativeTrades.filter(t => (t.pnl || 0) < 0);
+            const winRate = totalTrades > 0 ? wins.length / totalTrades : 0;
+            const avgWin = wins.length > 0 ? wins.reduce((sum, t) => sum + (t.pnl || 0), 0) / wins.length : 0;
+            const avgLoss = losses.length > 0 ? losses.reduce((sum, t) => sum + (t.pnl || 0), 0) / losses.length : 0;
+            value = (winRate * avgWin) + ((1 - winRate) * avgLoss);
+            break;
         }
         
         return {
@@ -235,6 +246,7 @@ export function MetricHistoryDialog({
             {metricType === 'winRate' ? `${data.value.toFixed(1)}%` :
              metricType === 'profitFactor' ? data.value.toFixed(2) :
              metricType === 'maxDrawdown' ? `${data.value.toFixed(1)}%` :
+             metricType === 'expectancy' ? `$${data.value.toFixed(2)}` :
              `$${data.value.toFixed(2)}`}
           </p>
           <p className="text-muted-foreground text-sm">
@@ -284,7 +296,7 @@ export function MetricHistoryDialog({
                   tickFormatter={(value) => {
                     if (metricType === 'winRate' || metricType === 'maxDrawdown') {
                       return `${value}%`;
-                    } else if (metricType === 'avgReturn') {
+                    } else if (metricType === 'avgReturn' || metricType === 'expectancy') {
                       return `$${value}`;
                     }
                     return value.toString();

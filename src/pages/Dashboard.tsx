@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/lib/logger';
 import { userPreferences } from '@/utils/secureStorage';
 import { CurrencyFormatter, DateFormatter, TradeCalculations } from '@/utils/commonUtils';
-import { TrendingUp, TrendingDown, DollarSign, Target, Calendar, Plus, Activity, BarChart3, Star, PieChart, Clock, Shield } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Target, Calendar, Plus, Activity, BarChart3, Star, PieChart, Clock, Shield, Trophy, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart as RechartsPieChart, Cell, BarChart, Bar } from 'recharts';
@@ -58,6 +58,7 @@ const AccountGoalsSection = ({ accounts, user, formatCurrency }: AccountGoalsSec
   }, [accounts, user]);
 
   const accountsWithGoals = accounts.filter(acc => {
+    if (!acc.is_active) return false; // Only show active accounts
     if (!acc.equity_goal || acc.equity_goal <= 0) return false;
     const equity = accountEquities[acc.id] || acc.initial_balance;
     const profit = equity - acc.initial_balance;
@@ -109,6 +110,53 @@ const AccountGoalsSection = ({ accounts, user, formatCurrency }: AccountGoalsSec
                 value={progressClamped} 
                 className="h-2"
               />
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+};
+
+// Account Balances List Component
+interface AccountBalancesListProps {
+  accounts: any[];
+  accountEquities: Record<string, number>;
+  formatCurrency: (amount: number, currency?: string) => string;
+}
+
+const AccountBalancesList = ({ accounts, accountEquities, formatCurrency }: AccountBalancesListProps) => {
+  const activeAccounts = accounts.filter(acc => acc.is_active);
+  
+  if (activeAccounts.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <DollarSign className="h-5 w-5 mr-2" />
+          Account Balances
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {activeAccounts.map((account) => {
+          const currentEquity = accountEquities[account.id] || account.initial_balance;
+          const change = currentEquity - account.initial_balance;
+          const percentage = account.initial_balance > 0 ? (change / account.initial_balance) * 100 : 0;
+          const isPositive = change >= 0;
+          
+          return (
+            <div key={account.id} className="flex justify-between items-center py-2 border-b border-border/50 last:border-b-0">
+              <div>
+                <p className="font-medium">{account.name}</p>
+                <p className="text-sm text-muted-foreground">{account.broker || 'Trading Account'}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold">{formatCurrency(currentEquity, account.currency)}</p>
+                <p className={`text-sm font-medium ${isPositive ? 'text-profit' : 'text-loss'}`}>
+                  {isPositive ? '+' : ''}{formatCurrency(change, account.currency)} ({percentage.toFixed(1)}%)
+                </p>
+              </div>
             </div>
           );
         })}
@@ -185,7 +233,7 @@ const Dashboard = () => {
   const [monthlyPerformance, setMonthlyPerformance] = useState<any[]>([]);
   const [riskMetrics, setRiskMetrics] = useState<any>({});
   const [metricDialogOpen, setMetricDialogOpen] = useState(false);
-  const [selectedMetric, setSelectedMetric] = useState<'winRate' | 'profitFactor' | 'maxDrawdown' | 'avgReturn' | null>(null);
+  const [selectedMetric, setSelectedMetric] = useState<'winRate' | 'profitFactor' | 'maxDrawdown' | 'avgReturn' | 'expectancy' | null>(null);
   const [comparisonDialogOpen, setComparisonDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -486,7 +534,7 @@ const Dashboard = () => {
   const formatPercentage = (value: number) => 
     CurrencyFormatter.formatPercentage(value);
 
-  const handleMetricClick = (metricType: 'winRate' | 'profitFactor' | 'maxDrawdown' | 'avgReturn') => {
+  const handleMetricClick = (metricType: 'winRate' | 'profitFactor' | 'maxDrawdown' | 'avgReturn' | 'expectancy') => {
     setSelectedMetric(metricType);
     setMetricDialogOpen(true);
   };
@@ -584,18 +632,7 @@ const Dashboard = () => {
         {/* ANALYTICS SECTION - TOP PRIORITY */}
         <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
           {/* Primary KPI Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              title="Current Balance"
-              value={formatCurrency(stats.currentBalance)}
-              change={{
-                value: stats.currentBalance - stats.initialBalance,
-                percentage: stats.initialBalance > 0 ? `${(((stats.currentBalance - stats.initialBalance) / stats.initialBalance) * 100).toFixed(1)}%` : "0.0%",
-                isPositive: stats.currentBalance >= stats.initialBalance
-              }}
-              icon={<DollarSign className="h-5 w-5" />}
-              className="stagger-fade"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <MetricCard
               title="Total P&L"
               value={formatCurrency(stats.totalPnl)}
@@ -631,6 +668,18 @@ const Dashboard = () => {
               className="stagger-fade"
             />
           </div>
+          
+          {/* Account Balances List */}
+          <AccountBalancesList 
+            accounts={accounts} 
+            accountEquities={accounts.reduce((acc, account) => {
+              const accountTrades = allTrades.filter(trade => trade.trading_account_id === account.id);
+              const accountPnl = accountTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+              acc[account.id] = account.initial_balance + accountPnl;
+              return acc;
+            }, {} as Record<string, number>)} 
+            formatCurrency={formatCurrency} 
+          />
 
           {/* Advanced Analytics Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -648,11 +697,11 @@ const Dashboard = () => {
             />
             <MetricCard
               title="Max Drawdown"
-              value={`${stats.maxDrawdown.toFixed(1)}%`}
+              value={formatCurrency(Math.abs(stats.maxDrawdown))}
               change={{
                 value: stats.maxDrawdown,
-                percentage: stats.maxDrawdown <= 5 ? "Low Risk" : stats.maxDrawdown <= 15 ? "Moderate" : "High Risk",
-                isPositive: stats.maxDrawdown <= 15
+                percentage: stats.initialBalance > 0 ? `${((Math.abs(stats.maxDrawdown) / stats.initialBalance) * 100).toFixed(1)}%` : "0.0%",
+                isPositive: stats.maxDrawdown <= -100 // Consider small drawdowns as positive
               }}
               icon={<TrendingDown className="h-5 w-5" />}
               className="stagger-fade cursor-pointer hover:shadow-lg transition-shadow"
@@ -666,20 +715,20 @@ const Dashboard = () => {
                 percentage: "Single trade",
                 isPositive: stats.bestTrade > 0
               }}
-              icon={<Star className="h-5 w-5" />}
+              icon={<Trophy className="h-5 w-5" />}
               className="stagger-fade"
             />
             <MetricCard
-              title="Average Return"
+              title="Expectancy"
               value={formatCurrency(stats.expectancy)}
               change={{
                 value: stats.expectancy,
                 percentage: "Per trade",
-                isPositive: stats.expectancy >= 0
+                isPositive: stats.expectancy > 0
               }}
-              icon={<Clock className="h-5 w-5" />}
+              icon={<Calculator className="h-5 w-5" />}
               className="stagger-fade cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => handleMetricClick('avgReturn')}
+              onClick={() => handleMetricClick('expectancy')}
             />
           </div>
         </div>
