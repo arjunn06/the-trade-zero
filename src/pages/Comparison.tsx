@@ -312,7 +312,7 @@ const Comparison = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-3 bg-muted/50 rounded-lg">
                     <p className="text-sm text-muted-foreground">Total P&L</p>
-                    <p className={`text-2xl font-bold ${primaryMetrics.totalPnl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`text-2xl font-bold ${primaryMetrics.totalPnl >= 0 ? 'text-profit' : 'text-loss'}`}>
                       {formatCurrency(primaryMetrics.totalPnl)}
                     </p>
                   </div>
@@ -328,11 +328,11 @@ const Comparison = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Avg Win:</span>
-                    <span className="font-medium text-green-600">{formatCurrency(primaryMetrics.avgWin)}</span>
+                    <span className="font-medium text-profit">{formatCurrency(primaryMetrics.avgWin)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Avg Loss:</span>
-                    <span className="font-medium text-red-600">{formatCurrency(primaryMetrics.avgLoss)}</span>
+                    <span className="font-medium text-loss">{formatCurrency(primaryMetrics.avgLoss)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -352,7 +352,7 @@ const Comparison = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-3 bg-muted/50 rounded-lg">
                     <p className="text-sm text-muted-foreground">Total P&L</p>
-                    <p className={`text-2xl font-bold ${secondaryMetrics.totalPnl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`text-2xl font-bold ${secondaryMetrics.totalPnl >= 0 ? 'text-profit' : 'text-loss'}`}>
                       {formatCurrency(secondaryMetrics.totalPnl)}
                     </p>
                   </div>
@@ -368,11 +368,11 @@ const Comparison = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Avg Win:</span>
-                    <span className="font-medium text-green-600">{formatCurrency(secondaryMetrics.avgWin)}</span>
+                    <span className="font-medium text-profit">{formatCurrency(secondaryMetrics.avgWin)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Avg Loss:</span>
-                    <span className="font-medium text-red-600">{formatCurrency(secondaryMetrics.avgLoss)}</span>
+                    <span className="font-medium text-loss">{formatCurrency(secondaryMetrics.avgLoss)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -447,14 +447,14 @@ const Comparison = () => {
                     <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
                       <span className="text-sm">Max Drawdown</span>
                       <div className="text-right">
-                        <div className="text-sm text-red-600">{formatCurrency(primaryMetrics.maxDrawdown)}</div>
+                        <div className="text-sm text-loss">{formatCurrency(primaryMetrics.maxDrawdown)}</div>
                         <div className="text-xs text-muted-foreground">vs {formatCurrency(secondaryMetrics.maxDrawdown)}</div>
                       </div>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
                       <span className="text-sm">Worst Trade</span>
                       <div className="text-right">
-                        <div className="text-sm text-red-600">{formatCurrency(primaryMetrics.worstTrade)}</div>
+                        <div className="text-sm text-loss">{formatCurrency(primaryMetrics.worstTrade)}</div>
                         <div className="text-xs text-muted-foreground">vs {formatCurrency(secondaryMetrics.worstTrade)}</div>
                       </div>
                     </div>
@@ -467,7 +467,7 @@ const Comparison = () => {
                     <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
                       <span className="text-sm">Best Trade</span>
                       <div className="text-right">
-                        <div className="text-sm text-green-600">{formatCurrency(primaryMetrics.bestTrade)}</div>
+                        <div className="text-sm text-profit">{formatCurrency(primaryMetrics.bestTrade)}</div>
                         <div className="text-xs text-muted-foreground">vs {formatCurrency(secondaryMetrics.bestTrade)}</div>
                       </div>
                     </div>

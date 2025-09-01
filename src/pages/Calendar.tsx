@@ -508,7 +508,7 @@ export default function CalendarPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
                   <div className="text-sm text-muted-foreground mb-1">Total P&L</div>
-                  <div className={`text-2xl font-bold ${selectedDayData.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <div className={`text-2xl font-bold ${selectedDayData.pnl >= 0 ? 'text-profit' : 'text-loss'}`}>
                     {selectedDayData.pnl >= 0 ? '+' : ''}{formatCurrency(selectedDayData.pnl)}
                   </div>
                 </div>
@@ -522,7 +522,7 @@ export default function CalendarPage() {
                 </div>
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
                   <div className="text-sm text-muted-foreground mb-1">Best Trade</div>
-                  <div className="text-2xl font-bold text-green-400">
+                  <div className="text-2xl font-bold text-profit">
                     +{formatCurrency(selectedDayData.bestTrade)}
                   </div>
                 </div>
