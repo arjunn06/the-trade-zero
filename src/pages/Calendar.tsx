@@ -320,7 +320,7 @@ export default function CalendarPage() {
             const weekEnd = endOfWeek(day, {
               weekStartsOn: 0
             });
-            const weekNumber = Math.ceil(differenceInDays(day, startOfMonth(date)) / 7) + 1;
+            const weekNumber = Math.ceil((day.getDate() + startOfMonth(date).getDay()) / 7);
 
             // Get all trades for this week
             const weekTrades = dayPnLData.filter(trade => {
