@@ -47,7 +47,7 @@ export default function CalendarPage() {
   const [dayPnLData, setDayPnLData] = useState<DayPnL[]>([]);
   const [periodMetrics, setPeriodMetrics] = useState<PeriodMetrics | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month'>('week');
-  const [selectedAccount, setSelectedAccount] = useState<string>('');
+  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>(['all']);
   const [tradingAccounts, setTradingAccounts] = useState<{
     id: string;
     name: string;
@@ -68,14 +68,14 @@ export default function CalendarPage() {
     if (user) {
       fetchPnLData();
     }
-  }, [user, selectedAccount]);
+  }, [user, selectedAccountIds]);
   useEffect(() => {
     if (date && user) {
       fetchTradesForDate(date);
       calculatePeriodMetrics();
       calculateWeeklySummaries();
     }
-  }, [date, user, selectedPeriod, dayPnLData, selectedAccount]);
+  }, [date, user, selectedPeriod, dayPnLData, selectedAccountIds]);
   const fetchTradingAccounts = async () => {
     if (!user) return;
     try {
@@ -92,8 +92,10 @@ export default function CalendarPage() {
   const fetchPnLData = async () => {
     try {
       let query = supabase.from('trades').select('exit_date, entry_date, pnl, symbol, trade_type, trading_account_id').eq('user_id', user?.id).eq('status', 'closed').not('pnl', 'is', null);
-      if (selectedAccount) {
-        query = query.eq('trading_account_id', selectedAccount);
+      
+      // Filter by selected accounts
+      if (!selectedAccountIds.includes('all') && selectedAccountIds.length > 0) {
+        query = query.in('trading_account_id', selectedAccountIds);
       }
       const {
         data: trades,
@@ -195,8 +197,10 @@ export default function CalendarPage() {
           trading_accounts!inner(name, currency),
           strategies(name)
         `).eq('user_id', user?.id).gte('exit_date', startOfDay(selectedDate).toISOString()).lte('exit_date', endOfDay(selectedDate).toISOString()).eq('status', 'closed');
-      if (selectedAccount) {
-        query = query.eq('trading_account_id', selectedAccount);
+      
+      // Filter by selected accounts
+      if (!selectedAccountIds.includes('all') && selectedAccountIds.length > 0) {
+        query = query.in('trading_account_id', selectedAccountIds);
       }
       const {
         data: trades,
@@ -485,7 +489,13 @@ export default function CalendarPage() {
             </div>
           </div>
           <div className="min-w-[200px]">
-            <AccountFilter value={selectedAccount || 'all'} onValueChange={value => setSelectedAccount(value === 'all' ? '' : value)} placeholder="All accounts" />
+            <AccountFilter 
+              values={selectedAccountIds} 
+              onValuesChange={setSelectedAccountIds} 
+              className="min-w-[200px]"
+              multiSelect={true}
+              placeholder="All accounts" 
+            />
           </div>
         </div>
 
