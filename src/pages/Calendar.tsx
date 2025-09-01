@@ -287,19 +287,24 @@ export default function CalendarPage() {
     // Precompute week indices for Sundays with trades (only count weeks that have trades)
     const sundayWeekIndexMap = new Map<string, number>();
     let weekCounter = 1;
-    days.forEach((d) => {
-      if (getDay(d) === 0 && getMonth(d) === getMonth(date)) {
-        const weekStart = startOfWeek(d, { weekStartsOn: 0 });
-        const weekEnd = endOfWeek(d, { weekStartsOn: 0 });
-        const hasTrades = dayPnLData.some((trade) => {
-          const tradeDate = new Date(trade.date);
-          return tradeDate >= weekStart && tradeDate <= weekEnd && getMonth(tradeDate) === getMonth(date) && getYear(tradeDate) === getYear(date);
-        });
-        if (hasTrades) {
-          sundayWeekIndexMap.set(format(d, 'yyyy-MM-dd'), weekCounter++);
-        }
-      }
+days.forEach((d) => {
+  if (getDay(d) === 0) {
+    const weekStart = startOfWeek(d, { weekStartsOn: 0 });
+    const weekEnd = endOfWeek(d, { weekStartsOn: 0 });
+    const hasTradesInCurrentMonth = dayPnLData.some((trade) => {
+      const tradeDate = new Date(trade.date);
+      return (
+        tradeDate >= weekStart &&
+        tradeDate <= weekEnd &&
+        getMonth(tradeDate) === getMonth(date) &&
+        getYear(tradeDate) === getYear(date)
+      );
     });
+    if (hasTradesInCurrentMonth) {
+      sundayWeekIndexMap.set(format(d, 'yyyy-MM-dd'), weekCounter++);
+    }
+  }
+});
 
     const weekDays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
     return <div className="w-full">
@@ -334,30 +339,36 @@ export default function CalendarPage() {
 
           // Calculate weekly summary for Sunday cells
           let weeklyData = null;
-          if (isSunday && isCurrentMonth) {
-            const weekStart = startOfWeek(day, {
-              weekStartsOn: 0
-            }); // Week starts on Sunday
-            const weekEnd = endOfWeek(day, {
-              weekStartsOn: 0
-            });
-            const weekNumber = sundayWeekIndexMap.get(format(day, 'yyyy-MM-dd')) ?? 1;
+if (isSunday) {
+  const weekStart = startOfWeek(day, {
+    weekStartsOn: 0
+  }); // Week starts on Sunday
+  const weekEnd = endOfWeek(day, {
+    weekStartsOn: 0
+  });
+  const weekNumber = sundayWeekIndexMap.get(format(day, 'yyyy-MM-dd')) ?? 1;
 
-            // Get all trades for this week
-            const weekTrades = dayPnLData.filter(trade => {
-              const tradeDate = new Date(trade.date);
-              return tradeDate >= weekStart && tradeDate <= weekEnd && getMonth(tradeDate) === getMonth(date) && getYear(tradeDate) === getYear(date);
-            });
-            if (weekTrades.length > 0) {
-              const weekPnL = weekTrades.reduce((sum, trade) => sum + trade.pnl, 0);
-              const weekTradeCount = weekTrades.reduce((sum, trade) => sum + trade.trades, 0);
-              weeklyData = {
-                weekNumber,
-                pnl: weekPnL,
-                trades: weekTradeCount
-              };
-            }
-          }
+  // Get all trades for this week (limited to current month/year)
+  const weekTrades = dayPnLData.filter((trade) => {
+    const tradeDate = new Date(trade.date);
+    return (
+      tradeDate >= weekStart &&
+      tradeDate <= weekEnd &&
+      getMonth(tradeDate) === getMonth(date) &&
+      getYear(tradeDate) === getYear(date)
+    );
+  });
+
+  if (weekTrades.length > 0) {
+    const weekPnL = weekTrades.reduce((sum, trade) => sum + trade.pnl, 0);
+    const weekTradeCount = weekTrades.reduce((sum, trade) => sum + trade.trades, 0);
+    weeklyData = {
+      weekNumber,
+      pnl: weekPnL,
+      trades: weekTradeCount,
+    };
+  }
+}
           return <div key={index} onClick={() => setDate(day)} className={cn("min-h-[80px] bg-background cursor-pointer border transition-all hover:bg-muted/50 flex flex-col justify-between p-2 hover-scale animate-fade-in relative", isToday && "ring-2 ring-primary/50", isSelected && "ring-2 ring-primary", !isCurrentMonth && "opacity-40", isSunday && weeklyData && "lg:min-h-[100px]" // Extra height for weekly summary
           )}>
                 {/* Day number */}
@@ -368,7 +379,7 @@ export default function CalendarPage() {
                 </div>
                 
                 {/* Weekly Summary for Sundays */}
-                {isSunday && weeklyData && isCurrentMonth && <div className="absolute top-6 right-1 bg-card border border-border rounded-lg p-2 shadow-lg min-w-[80px] max-w-[90px] animate-fade-in">
+                {isSunday && weeklyData && <div className="absolute top-6 right-1 bg-card border border-border rounded-lg p-2 shadow-lg min-w-[80px] max-w-[90px] animate-fade-in">
                     <div className="text-xs font-medium text-muted-foreground mb-1">
                       Week {weeklyData.weekNumber}
                     </div>
