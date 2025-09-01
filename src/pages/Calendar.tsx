@@ -348,15 +348,10 @@ if (isSunday) {
   });
   const weekNumber = sundayWeekIndexMap.get(format(day, 'yyyy-MM-dd')) ?? 1;
 
-  // Get all trades for this week (limited to current month/year)
+  // Get all trades for this week (including trades from adjacent months)
   const weekTrades = dayPnLData.filter((trade) => {
     const tradeDate = new Date(trade.date);
-    return (
-      tradeDate >= weekStart &&
-      tradeDate <= weekEnd &&
-      getMonth(tradeDate) === getMonth(date) &&
-      getYear(tradeDate) === getYear(date)
-    );
+    return tradeDate >= weekStart && tradeDate <= weekEnd;
   });
 
   if (weekTrades.length > 0) {
