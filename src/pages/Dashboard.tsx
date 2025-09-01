@@ -176,7 +176,7 @@ const Dashboard = () => {
   const [equityData, setEquityData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<any[]>([]);
-  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>(['all']);
+  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>(['all-active']);
   const [primaryAccountId, setPrimaryAccountId] = useState<string | null>(null);
   const [allTrades, setAllTrades] = useState<any[]>([]);
   const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest');
@@ -226,7 +226,7 @@ const Dashboard = () => {
       setAccounts(allAccounts);
 
       // Set primary account on first login if not already set
-      if (allAccounts.length > 0 && selectedAccountIds.includes('all') && !primaryAccountId) {
+      if (allAccounts.length > 0 && selectedAccountIds.includes('all-active') && !primaryAccountId) {
         const savedPrimaryId = await userPreferences.getPrimaryAccount();
         if (savedPrimaryId && allAccounts.find(acc => acc.id === savedPrimaryId)) {
           setPrimaryAccountId(savedPrimaryId);
@@ -236,7 +236,7 @@ const Dashboard = () => {
 
       // Filter trades by selected accounts
       let filteredTrades;
-      if (selectedAccountIds.includes('all') || selectedAccountIds.length === 0) {
+      if (selectedAccountIds.includes('all-active') || selectedAccountIds.length === 0) {
         // Include trades from active accounts only when "All Active Accounts" is selected
         const activeAccountIds = allAccounts.filter(acc => acc.is_active).map(acc => acc.id);
         filteredTrades = allTrades.filter(trade => activeAccountIds.includes(trade.trading_account_id));
@@ -275,8 +275,8 @@ const Dashboard = () => {
       const trades = filteredTrades;
 
       // Filter accounts by selected accounts for balance calculations
-      const accounts = selectedAccountIds.includes('all')
-        ? allAccounts.filter(acc => acc.is_active) // Only active accounts when "all" is selected
+      const accounts = selectedAccountIds.includes('all-active')
+        ? allAccounts.filter(acc => acc.is_active) // Only active accounts when "all active" is selected
         : allAccounts.filter(account => selectedAccountIds.includes(account.id));
 
       // Calculate account totals from trades

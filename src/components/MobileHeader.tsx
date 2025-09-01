@@ -30,7 +30,26 @@ export function MobileHeader() {
         return 'The Trade Zero';
     }
   };
-  return <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:hidden">
-      
-    </header>;
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:hidden">
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-3">
+          <MobileSidebar open={sidebarOpen} onOpenChange={setSidebarOpen}>
+            <Button variant="ghost" size="sm">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </MobileSidebar>
+          
+          <div className="flex items-center gap-2">
+            <div className="bg-primary text-primary-foreground rounded-lg p-1.5">
+              <TrendingUp className="h-4 w-4" />
+            </div>
+            <h1 className="font-semibold text-lg">{getPageTitle(location.pathname)}</h1>
+          </div>
+        </div>
+        
+        <UserProfileManager collapsed={true} />
+      </div>
+    </header>
+  );
 }
