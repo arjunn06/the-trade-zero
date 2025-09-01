@@ -350,7 +350,7 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
                   <Download className="h-4 w-4 mr-2" />
                   {isExporting ? 'Exporting...' : 'Quick Export (All Fields)'}
                 </Button>
-                <CustomizableCsvExport accountId={accountId} accountName={accountName} />
+                <CustomizableCsvExport />
                 <p className="text-xs text-muted-foreground">
                   Quick export includes all fields, or use custom export to select specific fields
                 </p>

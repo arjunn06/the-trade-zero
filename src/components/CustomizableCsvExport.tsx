@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -8,10 +8,24 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 interface CustomizableCsvExportProps {
-  accountId: string;
-  accountName: string;
+  accountId?: string;
+  accountName?: string;
+}
+
+interface TradingAccount {
+  id: string;
+  name: string;
+  is_active: boolean;
+}
+
+interface TimeRange {
+  label: string;
+  value: string;
+  days?: number;
 }
 
 interface FieldOption {
@@ -46,6 +60,13 @@ const AVAILABLE_FIELDS: FieldOption[] = [
   { key: 'updated_at', label: 'Updated At' }
 ];
 
+const TIME_RANGES: TimeRange[] = [
+  { label: 'Last 7 days', value: '7days', days: 7 },
+  { label: 'Last 30 days', value: '30days', days: 30 },
+  { label: 'Last 90 days', value: '90days', days: 90 },
+  { label: 'All time', value: 'all' }
+];
+
 export function CustomizableCsvExport({ accountId, accountName }: CustomizableCsvExportProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -54,6 +75,56 @@ export function CustomizableCsvExport({ accountId, accountName }: CustomizableCs
   const [selectedFields, setSelectedFields] = useState<string[]>(
     AVAILABLE_FIELDS.filter(field => field.required).map(field => field.key)
   );
+  const [tradingAccounts, setTradingAccounts] = useState<TradingAccount[]>([]);
+  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
+  const [timeRange, setTimeRange] = useState<string>('all');
+
+  useEffect(() => {
+    if (user) {
+      fetchTradingAccounts();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // If single account prop is provided, pre-select it
+    if (accountId && tradingAccounts.length > 0) {
+      setSelectedAccounts([accountId]);
+    }
+  }, [accountId, tradingAccounts]);
+
+  const fetchTradingAccounts = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: accounts, error } = await supabase
+        .from('trading_accounts')
+        .select('id, name, is_active')
+        .eq('user_id', user.id)
+        .order('is_active', { ascending: false })
+        .order('name');
+
+      if (error) throw error;
+      setTradingAccounts(accounts || []);
+    } catch (error) {
+      console.error('Error fetching trading accounts:', error);
+    }
+  };
+
+  const handleAccountToggle = (accountId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedAccounts(prev => [...prev, accountId]);
+    } else {
+      setSelectedAccounts(prev => prev.filter(id => id !== accountId));
+    }
+  };
+
+  const selectAllAccounts = () => {
+    setSelectedAccounts(tradingAccounts.map(acc => acc.id));
+  };
+
+  const selectActiveAccounts = () => {
+    setSelectedAccounts(tradingAccounts.filter(acc => acc.is_active).map(acc => acc.id));
+  };
 
   const handleFieldToggle = (fieldKey: string, checked: boolean) => {
     if (checked) {
@@ -104,7 +175,7 @@ export function CustomizableCsvExport({ accountId, accountName }: CustomizableCs
   };
 
   const handleExportCsv = async () => {
-    if (!user || selectedFields.length === 0) return;
+    if (!user || selectedFields.length === 0 || selectedAccounts.length === 0) return;
     
     setIsExporting(true);
     try {
@@ -114,9 +185,17 @@ export function CustomizableCsvExport({ accountId, accountName }: CustomizableCs
         .select('*')
         .eq('user_id', user.id);
 
-      // Only filter by account if a specific account is selected
-      if (accountId !== 'all') {
-        query = query.eq('trading_account_id', accountId);
+      // Filter by selected accounts
+      query = query.in('trading_account_id', selectedAccounts);
+
+      // Apply time range filter
+      if (timeRange !== 'all') {
+        const timeRangeConfig = TIME_RANGES.find(tr => tr.value === timeRange);
+        if (timeRangeConfig?.days) {
+          const startDate = new Date();
+          startDate.setDate(startDate.getDate() - timeRangeConfig.days);
+          query = query.gte('entry_date', startDate.toISOString());
+        }
       }
 
       const { data: trades, error } = await query.order('entry_date', { ascending: false });
@@ -126,7 +205,7 @@ export function CustomizableCsvExport({ accountId, accountName }: CustomizableCs
       if (!trades || trades.length === 0) {
         toast({
           title: "No trades found",
-          description: "No trades available for export in this account.",
+          description: "No trades available for export with current filters.",
           variant: "destructive"
         });
         return;
@@ -157,7 +236,10 @@ export function CustomizableCsvExport({ accountId, accountName }: CustomizableCs
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', `${accountName.replace(/[^a-z0-9]/gi, '_')}_trades_custom_${new Date().toISOString().split('T')[0]}.csv`);
+      const fileName = selectedAccounts.length === 1 
+        ? `${tradingAccounts.find(acc => acc.id === selectedAccounts[0])?.name.replace(/[^a-z0-9]/gi, '_')}_trades_custom_${new Date().toISOString().split('T')[0]}.csv`
+        : `all_accounts_trades_custom_${new Date().toISOString().split('T')[0]}.csv`;
+      link.setAttribute('download', fileName);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -198,6 +280,82 @@ export function CustomizableCsvExport({ accountId, accountName }: CustomizableCs
         </DialogHeader>
         
         <div className="space-y-6">
+          {/* Account Selection */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Select Accounts</Label>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={selectActiveAccounts}
+                >
+                  Active Only
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={selectAllAccounts}
+                >
+                  All Accounts
+                </Button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+              {tradingAccounts.filter(acc => acc.is_active).map((account) => (
+                <div key={account.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`account-${account.id}`}
+                    checked={selectedAccounts.includes(account.id)}
+                    onCheckedChange={(checked) => handleAccountToggle(account.id, checked as boolean)}
+                  />
+                  <Label htmlFor={`account-${account.id}`} className="text-sm flex items-center gap-2">
+                    {account.name}
+                    <Badge variant="secondary" className="text-xs">Active</Badge>
+                  </Label>
+                </div>
+              ))}
+              
+              {tradingAccounts.filter(acc => !acc.is_active).length > 0 && (
+                <>
+                  <div className="text-xs text-muted-foreground mt-2 mb-1">Inactive Accounts</div>
+                  {tradingAccounts.filter(acc => !acc.is_active).map((account) => (
+                    <div key={account.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`account-${account.id}`}
+                        checked={selectedAccounts.includes(account.id)}
+                        onCheckedChange={(checked) => handleAccountToggle(account.id, checked as boolean)}
+                      />
+                      <Label htmlFor={`account-${account.id}`} className="text-sm flex items-center gap-2 text-muted-foreground">
+                        {account.name}
+                        <Badge variant="outline" className="text-xs">Inactive</Badge>
+                      </Label>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Time Range Selection */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Time Range</Label>
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select time range" />
+              </SelectTrigger>
+              <SelectContent>
+                {TIME_RANGES.map((range) => (
+                  <SelectItem key={range.value} value={range.value}>
+                    {range.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Field Selection */}
           <div className="flex gap-2">
             <Button 
               variant="outline" 
@@ -237,10 +395,12 @@ export function CustomizableCsvExport({ accountId, accountName }: CustomizableCs
 
           <div className="bg-muted/50 p-4 rounded-lg">
             <h4 className="text-sm font-medium mb-2">Export Summary:</h4>
-            <p className="text-sm text-muted-foreground">
-              {selectedFields.length} fields selected for export
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <div className="space-y-1 text-sm text-muted-foreground">
+              <p>{selectedAccounts.length} account(s) selected</p>
+              <p>{selectedFields.length} fields selected for export</p>
+              <p>Time range: {TIME_RANGES.find(tr => tr.value === timeRange)?.label}</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
               * Required fields cannot be deselected
             </p>
           </div>
@@ -254,7 +414,7 @@ export function CustomizableCsvExport({ accountId, accountName }: CustomizableCs
             </Button>
             <Button 
               onClick={handleExportCsv}
-              disabled={isExporting || selectedFields.length === 0}
+              disabled={isExporting || selectedFields.length === 0 || selectedAccounts.length === 0}
             >
               <Download className="h-4 w-4 mr-2" />
               {isExporting ? 'Exporting...' : 'Export CSV'}
