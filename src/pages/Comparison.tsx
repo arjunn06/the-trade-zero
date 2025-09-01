@@ -19,6 +19,7 @@ interface ComparisonData {
   toAccount?: string;
   fromStrategy?: string;
   toStrategy?: string;
+  granularity?: 'daily' | 'monthly' | 'yearly';
 }
 
 interface ComparisonMetrics {
@@ -79,7 +80,7 @@ const Comparison = () => {
       const allAccounts = accountsResult.data || [];
 
       if (data.compareAcross === 'time' && data.fromDate && data.toDate) {
-        await handleTimeComparison(allTrades, data.fromDate, data.toDate);
+        await handleTimeComparison(allTrades, data.fromDate, data.toDate, data.granularity || 'monthly');
       } else if (data.compareAcross === 'accounts' && data.fromAccount && data.toAccount) {
         await handleAccountComparison(allTrades, allAccounts, data.fromAccount, data.toAccount);
       }
@@ -91,28 +92,32 @@ const Comparison = () => {
     }
   };
 
-  const handleTimeComparison = async (allTrades: any[], fromDate: Date, toDate: Date) => {
-    // Split the date range in half for comparison
-    const totalDays = Math.abs(toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24);
-    const midDate = new Date(fromDate.getTime() + (totalDays / 2) * 24 * 60 * 60 * 1000);
-
-    const firstPeriodTrades = allTrades.filter(trade => {
+  const handleTimeComparison = async (allTrades: any[], fromDate: Date, toDate: Date, granularity: 'daily' | 'monthly' | 'yearly') => {
+    // Filter trades within the date range
+    const tradesInRange = allTrades.filter(trade => {
       const tradeDate = new Date(trade.exit_date || trade.entry_date);
-      return isWithinInterval(tradeDate, { start: fromDate, end: midDate });
+      return isWithinInterval(tradeDate, { start: fromDate, end: toDate });
     });
 
-    const secondPeriodTrades = allTrades.filter(trade => {
-      const tradeDate = new Date(trade.exit_date || trade.entry_date);
-      return isWithinInterval(tradeDate, { start: midDate, end: toDate });
-    });
+    // Group trades by granularity and split into periods for comparison
+    const groupedTrades = groupTradesByGranularity(tradesInRange, granularity);
+    const periods = Object.keys(groupedTrades).sort();
+    
+    // Split periods in half for comparison
+    const midIndex = Math.ceil(periods.length / 2);
+    const firstPeriods = periods.slice(0, midIndex);
+    const secondPeriods = periods.slice(midIndex);
+    
+    const firstPeriodTrades = firstPeriods.flatMap(period => groupedTrades[period] || []);
+    const secondPeriodTrades = secondPeriods.flatMap(period => groupedTrades[period] || []);
 
     setPrimaryMetrics(calculateMetrics(firstPeriodTrades));
     setSecondaryMetrics(calculateMetrics(secondPeriodTrades));
     setPrimaryData(firstPeriodTrades);
     setSecondaryData(secondPeriodTrades);
 
-    // Create chart data showing daily performance
-    const combinedData = createTimeComparisonChart(firstPeriodTrades, secondPeriodTrades, fromDate, midDate, toDate);
+    // Create chart data based on granularity
+    const combinedData = createTimeComparisonChart(groupedTrades, firstPeriods, secondPeriods, granularity);
     setChartData(combinedData);
   };
 
@@ -171,39 +176,84 @@ const Comparison = () => {
     };
   };
 
-  const createTimeComparisonChart = (firstPeriod: any[], secondPeriod: any[], fromDate: Date, midDate: Date, toDate: Date) => {
+  const groupTradesByGranularity = (trades: any[], granularity: 'daily' | 'monthly' | 'yearly') => {
+    const grouped: Record<string, any[]> = {};
+    
+    trades.forEach(trade => {
+      const tradeDate = new Date(trade.exit_date || trade.entry_date);
+      let key: string;
+      
+      switch (granularity) {
+        case 'daily':
+          key = format(tradeDate, 'yyyy-MM-dd');
+          break;
+        case 'monthly':
+          key = format(tradeDate, 'yyyy-MM');
+          break;
+        case 'yearly':
+          key = format(tradeDate, 'yyyy');
+          break;
+      }
+      
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(trade);
+    });
+    
+    return grouped;
+  };
+
+  const createTimeComparisonChart = (groupedTrades: Record<string, any[]>, firstPeriods: string[], secondPeriods: string[], granularity: 'daily' | 'monthly' | 'yearly') => {
     const chartData = [];
     
-    // First period data
+    // Calculate cumulative data for first periods
     let runningPnl1 = 0;
-    firstPeriod.forEach((trade, index) => {
-      runningPnl1 += (trade.pnl || 0);
+    firstPeriods.forEach((period, index) => {
+      const periodTrades = groupedTrades[period] || [];
+      const periodPnl = periodTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+      runningPnl1 += periodPnl;
+      
       chartData.push({
-        period: `Day ${index + 1}`,
+        period: formatPeriodLabel(period, granularity, index),
         firstPeriod: runningPnl1,
         secondPeriod: null,
-        date: format(new Date(trade.exit_date || trade.entry_date), 'MMM dd')
+        date: period
       });
     });
 
-    // Second period data
+    // Calculate cumulative data for second periods
     let runningPnl2 = 0;
-    secondPeriod.forEach((trade, index) => {
-      runningPnl2 += (trade.pnl || 0);
-      const existingEntry = chartData.find(d => d.period === `Day ${index + 1}`);
+    secondPeriods.forEach((period, index) => {
+      const periodTrades = groupedTrades[period] || [];
+      const periodPnl = periodTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+      runningPnl2 += periodPnl;
+      
+      const existingEntry = chartData.find(d => d.period === formatPeriodLabel(period, granularity, index));
       if (existingEntry) {
         existingEntry.secondPeriod = runningPnl2;
       } else {
         chartData.push({
-          period: `Day ${index + 1}`,
+          period: formatPeriodLabel(period, granularity, index),
           firstPeriod: null,
           secondPeriod: runningPnl2,
-          date: format(new Date(trade.exit_date || trade.entry_date), 'MMM dd')
+          date: period
         });
       }
     });
 
     return chartData;
+  };
+
+  const formatPeriodLabel = (period: string, granularity: 'daily' | 'monthly' | 'yearly', index: number) => {
+    switch (granularity) {
+      case 'daily':
+        return format(new Date(period), 'MMM dd');
+      case 'monthly':
+        return format(new Date(period + '-01'), 'MMM yyyy');
+      case 'yearly':
+        return period;
+      default:
+        return `Period ${index + 1}`;
+    }
   };
 
   const createAccountComparisonChart = (account1Trades: any[], account2Trades: any[]) => {
@@ -252,7 +302,11 @@ const Comparison = () => {
     if (!comparisonData) return { primary: 'Primary', secondary: 'Secondary' };
     
     if (comparisonData.compareAcross === 'time') {
-      return { primary: 'First Half', secondary: 'Second Half' };
+      const granularity = comparisonData.granularity || 'monthly';
+      return { 
+        primary: `First ${granularity === 'daily' ? 'Period' : granularity === 'monthly' ? 'Months' : 'Years'}`, 
+        secondary: `Second ${granularity === 'daily' ? 'Period' : granularity === 'monthly' ? 'Months' : 'Years'}` 
+      };
     } else if (comparisonData.compareAcross === 'accounts') {
       return { primary: 'Account 1', secondary: 'Account 2' };
     }
@@ -386,7 +440,9 @@ const Comparison = () => {
             <CardHeader>
               <CardTitle>Performance Comparison Chart</CardTitle>
               <CardDescription>
-                {comparisonData?.compareAcross === 'time' ? 'Cumulative P&L over time periods' : 'Monthly performance comparison'}
+                {comparisonData?.compareAcross === 'time' 
+                  ? `Cumulative P&L over ${comparisonData.granularity || 'monthly'} periods` 
+                  : 'Monthly performance comparison'}
               </CardDescription>
             </CardHeader>
             <CardContent>
