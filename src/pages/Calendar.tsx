@@ -289,8 +289,8 @@ export default function CalendarPage() {
     let weekCounter = 1;
 days.forEach((d) => {
   if (getDay(d) === 0) {
-    const weekStart = startOfWeek(d, { weekStartsOn: 0 });
-    const weekEnd = endOfWeek(d, { weekStartsOn: 0 });
+        const weekStart = startOfWeek(d, { weekStartsOn: 1 });
+        const weekEnd = endOfWeek(d, { weekStartsOn: 1 });
     const hasTradesInCurrentMonth = dayPnLData.some((trade) => {
       const tradeDate = new Date(trade.date);
       return (
@@ -341,10 +341,10 @@ days.forEach((d) => {
           let weeklyData = null;
 if (isSunday) {
   const weekStart = startOfWeek(day, {
-    weekStartsOn: 0
-  }); // Week starts on Sunday
+    weekStartsOn: 1
+  }); // Week starts on Monday
   const weekEnd = endOfWeek(day, {
-    weekStartsOn: 0
+    weekStartsOn: 1
   });
   const weekNumber = sundayWeekIndexMap.get(format(day, 'yyyy-MM-dd')) ?? 1;
 
