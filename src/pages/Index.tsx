@@ -6,10 +6,14 @@ import { RazorpayPayment } from '@/components/RazorpayPayment';
 import { TrendingUp, BarChart3, Shield, Calendar, Check, Star, Brain, ArrowRight, Zap } from 'lucide-react';
 import { useEffect } from 'react';
 import { GeometricElements } from '@/components/GeometricElements.tsx';
-
 const Index = () => {
-  const { user, loading } = useAuth();
-  const { toast } = useToast();
+  const {
+    user,
+    loading
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
 
   // Load Zoho chatbot script
   useEffect(() => {
@@ -19,7 +23,6 @@ const Index = () => {
     script.defer = true;
     script.setAttribute('nonce', '{place_your_nonce_value_here}');
     document.head.appendChild(script);
-
     return () => {
       // Cleanup script on unmount
       if (document.head.contains(script)) {
@@ -37,17 +40,21 @@ const Index = () => {
       window.location.href = `/auth?plan=${plan}&amount=${amount}`;
       return;
     }
-    
+
     // TODO: Integrate with Zoho payments API
     // This is where Zoho payment integration will be implemented
     toast({
       title: "Payment Integration Coming Soon",
-      description: `${plan} plan ($${amount}/month) will be integrated with Zoho payments.`,
+      description: `${plan} plan ($${amount}/month) will be integrated with Zoho payments.`
     });
-    
+
     // Log payment integration info only in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('Zoho Payment Integration:', { plan, amount, user: user.id });
+      console.log('Zoho Payment Integration:', {
+        plan,
+        amount,
+        user: user.id
+      });
     }
   };
 
@@ -55,9 +62,7 @@ const Index = () => {
   if (!loading && user) {
     return <Navigate to="/dashboard" replace />;
   }
-
-  return (
-    <div className="min-h-screen bg-background text-foreground dark">
+  return <div className="min-h-screen bg-background text-foreground dark">
       {/* Header */}
       <header className="relative z-50 border-b border-border/50">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
@@ -137,25 +142,30 @@ const Index = () => {
                 {/* Mock Chart */}
                 <div className="bg-muted/30 rounded-lg p-4 mb-4">
                   <div className="flex items-end justify-between h-20 gap-1">
-                    {Array.from({ length: 12 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="bg-brand-blue/60 rounded-sm flex-1"
-                        style={{ height: `${Math.random() * 60 + 20}%` }}
-                      ></div>
-                    ))}
+                    {Array.from({
+                    length: 12
+                  }).map((_, i) => <div key={i} className="bg-brand-blue/60 rounded-sm flex-1" style={{
+                    height: `${Math.random() * 60 + 20}%`
+                  }}></div>)}
                   </div>
                 </div>
 
                 {/* Mock Recent Trades */}
                 <div className="space-y-2">
                   <div className="text-sm font-medium mb-3">Recent Trades</div>
-                  {[
-                    { symbol: 'EURUSD', pnl: '+$234', time: '2h ago' },
-                    { symbol: 'GBPJPY', pnl: '-$89', time: '4h ago' },
-                    { symbol: 'USDJPY', pnl: '+$156', time: '6h ago' }
-                  ].map((trade, i) => (
-                    <div key={i} className="flex items-center justify-between bg-muted/30 rounded px-3 py-2">
+                  {[{
+                  symbol: 'EURUSD',
+                  pnl: '+$234',
+                  time: '2h ago'
+                }, {
+                  symbol: 'GBPJPY',
+                  pnl: '-$89',
+                  time: '4h ago'
+                }, {
+                  symbol: 'USDJPY',
+                  pnl: '+$156',
+                  time: '6h ago'
+                }].map((trade, i) => <div key={i} className="flex items-center justify-between bg-muted/30 rounded px-3 py-2">
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 bg-brand-blue rounded-full"></div>
                         <span className="text-sm font-medium">{trade.symbol}</span>
@@ -166,8 +176,7 @@ const Index = () => {
                         </span>
                         <span className="text-xs text-muted-foreground">{trade.time}</span>
                       </div>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
 
@@ -346,22 +355,17 @@ const Index = () => {
                 </li>
               </ul>
               
-              <RazorpayPayment 
-                plan="professional" 
-                amount={10}
-                onSuccess={() => {
-                  toast({
-                    title: "Payment Successful!",
-                    description: "Welcome to Professional plan! Redirecting to dashboard...",
-                  });
-                  setTimeout(() => {
-                    window.location.href = '/dashboard';
-                  }, 2000);
-                }}
-                onError={(error) => {
-                  console.error('Payment error:', error);
-                }}
-              >
+              <RazorpayPayment plan="professional" amount={10} onSuccess={() => {
+              toast({
+                title: "Payment Successful!",
+                description: "Welcome to Professional plan! Redirecting to dashboard..."
+              });
+              setTimeout(() => {
+                window.location.href = '/dashboard';
+              }, 2000);
+            }} onError={error => {
+              console.error('Payment error:', error);
+            }}>
                 <div className="w-full h-12 flex items-center justify-center text-base font-medium">
                   Start Professional Plan
                 </div>
@@ -374,9 +378,7 @@ const Index = () => {
         <section className="container mx-auto px-6 py-24">
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="text-3xl lg:text-4xl font-bold mb-6">Ready to scale your trading?</h2>
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-              Join professional traders who trust TradeZero to track, analyze, and improve their performance.
-            </p>
+            <p className="text-xl text-muted-foreground mb-8 leading-relaxed">Join professional traders who trust TheTradeZero to track, analyze, and improve their performance.</p>
             <Button size="lg" className="h-12 px-8 text-base font-medium" asChild>
               <a href="/auth">
                 Create Free Account
@@ -403,8 +405,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
