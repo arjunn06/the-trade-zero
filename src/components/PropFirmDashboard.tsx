@@ -73,7 +73,7 @@ const PropFirmDashboard = ({ accounts, user, formatCurrency }: PropFirmDashboard
   }, [accounts, user]);
 
   const propFirmAccounts = accounts.filter(acc => 
-    acc.is_prop_firm || acc.account_type === 'prop firm'
+    (acc.is_prop_firm || acc.account_type === 'prop firm') && acc.is_active
   );
 
   if (propFirmAccounts.length === 0) return null;
