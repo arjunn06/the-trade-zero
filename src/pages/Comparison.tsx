@@ -32,6 +32,22 @@ interface ComparisonMetrics {
   maxDrawdown: number;
   bestTrade: number;
   worstTrade: number;
+  // Advanced metrics
+  sharpeRatio: number;
+  recoveryFactor: number;
+  consecutiveWins: number;
+  consecutiveLosses: number;
+  maxConsecutiveWins: number;
+  maxConsecutiveLosses: number;
+  expectancy: number;
+  winningDays: number;
+  losingDays: number;
+  breakEvenDays: number;
+  avgTimeInTrade: number;
+  totalCommissions: number;
+  returnOnMaxDrawdown: number;
+  calmarRatio: number;
+  riskAdjustedReturn: number;
 }
 
 const Comparison = () => {
@@ -138,6 +154,7 @@ const Comparison = () => {
   const calculateMetrics = (trades: any[]): ComparisonMetrics => {
     const winningTrades = trades.filter(t => (t.pnl || 0) > 0);
     const losingTrades = trades.filter(t => (t.pnl || 0) < 0);
+    const breakEvenTrades = trades.filter(t => (t.pnl || 0) === 0);
     
     const totalPnl = trades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
     const winRate = trades.length > 0 ? (winningTrades.length / trades.length) * 100 : 0;
@@ -151,7 +168,9 @@ const Comparison = () => {
     const bestTrade = trades.length > 0 ? Math.max(...trades.map(t => t.pnl || 0)) : 0;
     const worstTrade = trades.length > 0 ? Math.min(...trades.map(t => t.pnl || 0)) : 0;
     
-    // Calculate max drawdown
+    const totalCommissions = trades.reduce((sum, trade) => sum + (trade.commission || 0), 0);
+    
+    // Calculate max drawdown and recovery factor
     let peak = 0;
     let maxDrawdown = 0;
     let runningPnl = 0;
@@ -162,6 +181,71 @@ const Comparison = () => {
       const drawdown = peak - runningPnl;
       if (drawdown > maxDrawdown) maxDrawdown = drawdown;
     });
+    
+    const recoveryFactor = maxDrawdown > 0 ? totalPnl / maxDrawdown : 0;
+    const returnOnMaxDrawdown = maxDrawdown > 0 ? (totalPnl / maxDrawdown) * 100 : 0;
+    
+    // Calculate consecutive wins/losses
+    let currentWinStreak = 0;
+    let currentLossStreak = 0;
+    let maxConsecutiveWins = 0;
+    let maxConsecutiveLosses = 0;
+    
+    trades.forEach(trade => {
+      if ((trade.pnl || 0) > 0) {
+        currentWinStreak++;
+        currentLossStreak = 0;
+        maxConsecutiveWins = Math.max(maxConsecutiveWins, currentWinStreak);
+      } else if ((trade.pnl || 0) < 0) {
+        currentLossStreak++;
+        currentWinStreak = 0;
+        maxConsecutiveLosses = Math.max(maxConsecutiveLosses, currentLossStreak);
+      } else {
+        currentWinStreak = 0;
+        currentLossStreak = 0;
+      }
+    });
+    
+    const consecutiveWins = currentWinStreak;
+    const consecutiveLosses = currentLossStreak;
+    
+    // Calculate expectancy
+    const expectancy = (winRate / 100) * avgWin + ((100 - winRate) / 100) * avgLoss;
+    
+    // Calculate daily performance metrics
+    const dailyPnl: Record<string, number> = {};
+    trades.forEach(trade => {
+      const date = format(new Date(trade.exit_date || trade.entry_date), 'yyyy-MM-dd');
+      dailyPnl[date] = (dailyPnl[date] || 0) + (trade.pnl || 0);
+    });
+    
+    const winningDays = Object.values(dailyPnl).filter(pnl => pnl > 0).length;
+    const losingDays = Object.values(dailyPnl).filter(pnl => pnl < 0).length;
+    const breakEvenDays = Object.values(dailyPnl).filter(pnl => pnl === 0).length;
+    
+    // Calculate average time in trade (hours)
+    const tradesWithDuration = trades.filter(t => t.entry_date && t.exit_date);
+    const avgTimeInTrade = tradesWithDuration.length > 0 
+      ? tradesWithDuration.reduce((sum, trade) => {
+          const duration = new Date(trade.exit_date).getTime() - new Date(trade.entry_date).getTime();
+          return sum + (duration / (1000 * 60 * 60)); // Convert to hours
+        }, 0) / tradesWithDuration.length
+      : 0;
+    
+    // Calculate Sharpe ratio (simplified - assuming risk-free rate of 0)
+    const dailyReturns = Object.values(dailyPnl);
+    const avgDailyReturn = dailyReturns.length > 0 ? dailyReturns.reduce((sum, ret) => sum + ret, 0) / dailyReturns.length : 0;
+    const dailyReturnStdDev = dailyReturns.length > 1 
+      ? Math.sqrt(dailyReturns.reduce((sum, ret) => sum + Math.pow(ret - avgDailyReturn, 2), 0) / (dailyReturns.length - 1))
+      : 0;
+    const sharpeRatio = dailyReturnStdDev > 0 ? (avgDailyReturn / dailyReturnStdDev) * Math.sqrt(252) : 0; // Annualized
+    
+    // Calculate Calmar ratio (annual return / max drawdown)
+    const annualReturn = totalPnl; // Simplified - would need time period adjustment
+    const calmarRatio = maxDrawdown > 0 ? annualReturn / maxDrawdown : 0;
+    
+    // Risk-adjusted return
+    const riskAdjustedReturn = dailyReturnStdDev > 0 ? totalPnl / dailyReturnStdDev : 0;
 
     return {
       totalPnl,
@@ -172,7 +256,22 @@ const Comparison = () => {
       profitFactor,
       maxDrawdown,
       bestTrade,
-      worstTrade
+      worstTrade,
+      sharpeRatio,
+      recoveryFactor,
+      consecutiveWins,
+      consecutiveLosses,
+      maxConsecutiveWins,
+      maxConsecutiveLosses,
+      expectancy,
+      winningDays,
+      losingDays,
+      breakEvenDays,
+      avgTimeInTrade,
+      totalCommissions,
+      returnOnMaxDrawdown,
+      calmarRatio,
+      riskAdjustedReturn
     };
   };
 
@@ -488,77 +587,325 @@ const Comparison = () => {
           </Card>
         )}
 
-        {/* Detailed Metrics Comparison */}
+        {/* Advanced Analytics Cards */}
         {primaryMetrics && secondaryMetrics && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Detailed Metrics Comparison</CardTitle>
-              <CardDescription>Side-by-side comparison of key performance indicators</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="space-y-4">
-                  <h4 className="font-medium">Risk Metrics</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                      <span className="text-sm">Max Drawdown</span>
-                      <div className="text-right">
-                        <div className="text-sm text-loss">{formatCurrency(primaryMetrics.maxDrawdown)}</div>
-                        <div className="text-xs text-muted-foreground">vs {formatCurrency(secondaryMetrics.maxDrawdown)}</div>
+          <>
+            {/* Risk Analysis */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingDown className="h-5 w-5 text-loss" />
+                  Risk Analysis
+                </CardTitle>
+                <CardDescription>Comprehensive risk metrics and drawdown analysis</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-muted-foreground">{labels.primary}</h4>
+                    <div className="grid gap-3">
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Max Drawdown</span>
+                        <span className="font-medium text-loss">{formatCurrency(primaryMetrics.maxDrawdown)}</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Recovery Factor</span>
+                        <span className="font-medium">{primaryMetrics.recoveryFactor.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Sharpe Ratio</span>
+                        <span className="font-medium">{primaryMetrics.sharpeRatio.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Calmar Ratio</span>
+                        <span className="font-medium">{primaryMetrics.calmarRatio.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Return on Max DD</span>
+                        <span className="font-medium">{primaryMetrics.returnOnMaxDrawdown.toFixed(1)}%</span>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                      <span className="text-sm">Worst Trade</span>
-                      <div className="text-right">
-                        <div className="text-sm text-loss">{formatCurrency(primaryMetrics.worstTrade)}</div>
-                        <div className="text-xs text-muted-foreground">vs {formatCurrency(secondaryMetrics.worstTrade)}</div>
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-muted-foreground">{labels.secondary}</h4>
+                    <div className="grid gap-3">
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Max Drawdown</span>
+                        <span className="font-medium text-loss">{formatCurrency(secondaryMetrics.maxDrawdown)}</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Recovery Factor</span>
+                        <span className="font-medium">{secondaryMetrics.recoveryFactor.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Sharpe Ratio</span>
+                        <span className="font-medium">{secondaryMetrics.sharpeRatio.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Calmar Ratio</span>
+                        <span className="font-medium">{secondaryMetrics.calmarRatio.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Return on Max DD</span>
+                        <span className="font-medium">{secondaryMetrics.returnOnMaxDrawdown.toFixed(1)}%</span>
                       </div>
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="space-y-4">
-                  <h4 className="font-medium">Performance Metrics</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                      <span className="text-sm">Best Trade</span>
-                      <div className="text-right">
-                        <div className="text-sm text-profit">{formatCurrency(primaryMetrics.bestTrade)}</div>
-                        <div className="text-xs text-muted-foreground">vs {formatCurrency(secondaryMetrics.bestTrade)}</div>
+            {/* Trading Behavior Analysis */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Trading Behavior Analysis
+                </CardTitle>
+                <CardDescription>Consistency, streaks, and behavioral insights</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-muted-foreground">{labels.primary}</h4>
+                    <div className="grid gap-3">
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Current Win Streak</span>
+                        <Badge variant={primaryMetrics.consecutiveWins > 0 ? "default" : "secondary"}>
+                          {primaryMetrics.consecutiveWins}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Current Loss Streak</span>
+                        <Badge variant={primaryMetrics.consecutiveLosses > 0 ? "destructive" : "secondary"}>
+                          {primaryMetrics.consecutiveLosses}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Max Win Streak</span>
+                        <span className="font-medium text-profit">{primaryMetrics.maxConsecutiveWins}</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Max Loss Streak</span>
+                        <span className="font-medium text-loss">{primaryMetrics.maxConsecutiveLosses}</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Expectancy</span>
+                        <span className={`font-medium ${primaryMetrics.expectancy >= 0 ? 'text-profit' : 'text-loss'}`}>
+                          {formatCurrency(primaryMetrics.expectancy)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Avg Trade Duration</span>
+                        <span className="font-medium">{primaryMetrics.avgTimeInTrade.toFixed(1)}h</span>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                      <span className="text-sm">Total Trades</span>
-                      <div className="text-right">
-                        <div className="text-sm">{primaryMetrics.totalTrades}</div>
-                        <div className="text-xs text-muted-foreground">vs {secondaryMetrics.totalTrades}</div>
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-muted-foreground">{labels.secondary}</h4>
+                    <div className="grid gap-3">
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Current Win Streak</span>
+                        <Badge variant={secondaryMetrics.consecutiveWins > 0 ? "default" : "secondary"}>
+                          {secondaryMetrics.consecutiveWins}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Current Loss Streak</span>
+                        <Badge variant={secondaryMetrics.consecutiveLosses > 0 ? "destructive" : "secondary"}>
+                          {secondaryMetrics.consecutiveLosses}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Max Win Streak</span>
+                        <span className="font-medium text-profit">{secondaryMetrics.maxConsecutiveWins}</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Max Loss Streak</span>
+                        <span className="font-medium text-loss">{secondaryMetrics.maxConsecutiveLosses}</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Expectancy</span>
+                        <span className={`font-medium ${secondaryMetrics.expectancy >= 0 ? 'text-profit' : 'text-loss'}`}>
+                          {formatCurrency(secondaryMetrics.expectancy)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Avg Trade Duration</span>
+                        <span className="font-medium">{secondaryMetrics.avgTimeInTrade.toFixed(1)}h</span>
                       </div>
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="space-y-4">
-                  <h4 className="font-medium">Win/Loss Analysis</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                      <span className="text-sm">Win Rate</span>
-                      <div className="text-right">
-                        <div className="text-sm">{primaryMetrics.winRate.toFixed(1)}%</div>
-                        <div className="text-xs text-muted-foreground">vs {secondaryMetrics.winRate.toFixed(1)}%</div>
+            {/* Daily Performance Analysis */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  Daily Performance Breakdown
+                </CardTitle>
+                <CardDescription>Day-by-day performance consistency analysis</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-muted-foreground">{labels.primary}</h4>
+                    <div className="grid gap-3">
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Winning Days</span>
+                        <div className="text-right">
+                          <span className="font-medium text-profit">{primaryMetrics.winningDays}</span>
+                          <div className="text-xs text-muted-foreground">
+                            {((primaryMetrics.winningDays / (primaryMetrics.winningDays + primaryMetrics.losingDays + primaryMetrics.breakEvenDays)) * 100).toFixed(1)}%
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Losing Days</span>
+                        <div className="text-right">
+                          <span className="font-medium text-loss">{primaryMetrics.losingDays}</span>
+                          <div className="text-xs text-muted-foreground">
+                            {((primaryMetrics.losingDays / (primaryMetrics.winningDays + primaryMetrics.losingDays + primaryMetrics.breakEvenDays)) * 100).toFixed(1)}%
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Break-even Days</span>
+                        <span className="font-medium">{primaryMetrics.breakEvenDays}</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Total Commissions</span>
+                        <span className="font-medium text-loss">{formatCurrency(primaryMetrics.totalCommissions)}</span>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                      <span className="text-sm">Profit Factor</span>
-                      <div className="text-right">
-                        <div className="text-sm">{primaryMetrics.profitFactor.toFixed(2)}</div>
-                        <div className="text-xs text-muted-foreground">vs {secondaryMetrics.profitFactor.toFixed(2)}</div>
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-muted-foreground">{labels.secondary}</h4>
+                    <div className="grid gap-3">
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Winning Days</span>
+                        <div className="text-right">
+                          <span className="font-medium text-profit">{secondaryMetrics.winningDays}</span>
+                          <div className="text-xs text-muted-foreground">
+                            {((secondaryMetrics.winningDays / (secondaryMetrics.winningDays + secondaryMetrics.losingDays + secondaryMetrics.breakEvenDays)) * 100).toFixed(1)}%
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Losing Days</span>
+                        <div className="text-right">
+                          <span className="font-medium text-loss">{secondaryMetrics.losingDays}</span>
+                          <div className="text-xs text-muted-foreground">
+                            {((secondaryMetrics.losingDays / (secondaryMetrics.winningDays + secondaryMetrics.losingDays + secondaryMetrics.breakEvenDays)) * 100).toFixed(1)}%
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Break-even Days</span>
+                        <span className="font-medium">{secondaryMetrics.breakEvenDays}</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm">Total Commissions</span>
+                        <span className="font-medium text-loss">{formatCurrency(secondaryMetrics.totalCommissions)}</span>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* Performance Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-primary" />
+                  Performance Summary
+                </CardTitle>
+                <CardDescription>Key insights and recommendations based on the comparison</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Key Insights</h4>
+                    <div className="space-y-3">
+                      <div className="p-4 bg-muted/30 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          {primaryMetrics.totalPnl > secondaryMetrics.totalPnl ? (
+                            <TrendingUp className="h-4 w-4 text-profit" />
+                          ) : (
+                            <TrendingDown className="h-4 w-4 text-loss" />
+                          )}
+                          <span className="font-medium">Total P&L</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {primaryMetrics.totalPnl > secondaryMetrics.totalPnl 
+                            ? `${labels.primary} outperformed by ${formatCurrency(primaryMetrics.totalPnl - secondaryMetrics.totalPnl)}`
+                            : `${labels.secondary} outperformed by ${formatCurrency(secondaryMetrics.totalPnl - primaryMetrics.totalPnl)}`
+                          }
+                        </p>
+                      </div>
+                      <div className="p-4 bg-muted/30 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          {primaryMetrics.winRate > secondaryMetrics.winRate ? (
+                            <TrendingUp className="h-4 w-4 text-profit" />
+                          ) : (
+                            <TrendingDown className="h-4 w-4 text-loss" />
+                          )}
+                          <span className="font-medium">Consistency</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {primaryMetrics.winRate > secondaryMetrics.winRate 
+                            ? `${labels.primary} had higher win rate (+${(primaryMetrics.winRate - secondaryMetrics.winRate).toFixed(1)}%)`
+                            : `${labels.secondary} had higher win rate (+${(secondaryMetrics.winRate - primaryMetrics.winRate).toFixed(1)}%)`
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Risk Assessment</h4>
+                    <div className="space-y-3">
+                      <div className="p-4 bg-muted/30 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          {primaryMetrics.maxDrawdown < secondaryMetrics.maxDrawdown ? (
+                            <TrendingUp className="h-4 w-4 text-profit" />
+                          ) : (
+                            <TrendingDown className="h-4 w-4 text-loss" />
+                          )}
+                          <span className="font-medium">Risk Control</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {primaryMetrics.maxDrawdown < secondaryMetrics.maxDrawdown 
+                            ? `${labels.primary} had better risk control`
+                            : `${labels.secondary} had better risk control`
+                          }
+                        </p>
+                      </div>
+                      <div className="p-4 bg-muted/30 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          {primaryMetrics.sharpeRatio > secondaryMetrics.sharpeRatio ? (
+                            <TrendingUp className="h-4 w-4 text-profit" />
+                          ) : (
+                            <TrendingDown className="h-4 w-4 text-loss" />
+                          )}
+                          <span className="font-medium">Risk-Adjusted Return</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {primaryMetrics.sharpeRatio > secondaryMetrics.sharpeRatio 
+                            ? `${labels.primary} had better risk-adjusted returns`
+                            : `${labels.secondary} had better risk-adjusted returns`
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
     </DashboardLayout>
