@@ -280,6 +280,23 @@ export default function CalendarPage() {
       days.push(new Date(currentDate));
       currentDate = addDays(currentDate, 1);
     }
+    // Precompute week indices for Sundays with trades (only count weeks that have trades)
+    const sundayWeekIndexMap = new Map<string, number>();
+    let weekCounter = 1;
+    days.forEach((d) => {
+      if (getDay(d) === 0 && getMonth(d) === getMonth(date)) {
+        const weekStart = startOfWeek(d, { weekStartsOn: 0 });
+        const weekEnd = endOfWeek(d, { weekStartsOn: 0 });
+        const hasTrades = dayPnLData.some((trade) => {
+          const tradeDate = new Date(trade.date);
+          return tradeDate >= weekStart && tradeDate <= weekEnd && getMonth(tradeDate) === getMonth(date) && getYear(tradeDate) === getYear(date);
+        });
+        if (hasTrades) {
+          sundayWeekIndexMap.set(format(d, 'yyyy-MM-dd'), weekCounter++);
+        }
+      }
+    });
+
     const weekDays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
     return <div className="w-full">
         {/* Calendar Header */}
@@ -320,7 +337,7 @@ export default function CalendarPage() {
             const weekEnd = endOfWeek(day, {
               weekStartsOn: 0
             });
-            const weekNumber = Math.ceil((day.getDate() + startOfMonth(date).getDay()) / 7);
+            const weekNumber = sundayWeekIndexMap.get(format(day, 'yyyy-MM-dd')) ?? 1;
 
             // Get all trades for this week
             const weekTrades = dayPnLData.filter(trade => {
