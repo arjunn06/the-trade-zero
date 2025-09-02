@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { RazorpayPayment } from '@/components/RazorpayPayment';
 import { TrendingUp, BarChart3, Shield, Calendar, Check, Star, Brain, ArrowRight, Zap } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { GeometricElements } from '@/components/GeometricElements.tsx';
 const Index = () => {
   const {
@@ -14,6 +14,14 @@ const Index = () => {
   const {
     toast
   } = useToast();
+
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Load Zoho chatbot script
   useEffect(() => {
@@ -81,14 +89,113 @@ const Index = () => {
         </div>
       </header>
 
+      {/* Dashboard Preview - Top Section */}
+      <section className="relative overflow-hidden py-16 lg:py-24">
+        <div 
+          className="absolute inset-0 bg-gradient-to-b from-transparent via-brand-blue/5 to-transparent"
+          style={{ transform: `translateY(${scrollY * 0.1}px)` }}
+        />
+        <div className="container mx-auto px-6">
+          <div className="relative max-w-3xl mx-auto">
+            <div 
+              className="relative z-10 bg-card border border-border rounded-2xl p-8 shadow-2xl"
+              style={{ transform: `translateY(${scrollY * -0.05}px)` }}
+            >
+              {/* Mock Dashboard Header */}
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xl font-semibold">Dashboard Overview</h3>
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                </div>
+              </div>
+
+              {/* Mock Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-muted/50 rounded-xl p-6">
+                  <div className="text-sm text-muted-foreground mb-2">Total P&L</div>
+                  <div className="text-2xl font-bold text-success">+$12,345</div>
+                  <div className="text-sm text-success">+23.4%</div>
+                </div>
+                <div className="bg-muted/50 rounded-xl p-6">
+                  <div className="text-sm text-muted-foreground mb-2">Win Rate</div>
+                  <div className="text-2xl font-bold">68.5%</div>
+                  <div className="text-sm text-muted-foreground">142/207 trades</div>
+                </div>
+                <div className="bg-muted/50 rounded-xl p-6">
+                  <div className="text-sm text-muted-foreground mb-2">Avg. Win</div>
+                  <div className="text-2xl font-bold">$289</div>
+                  <div className="text-sm text-muted-foreground">vs -$156 avg loss</div>
+                </div>
+              </div>
+
+              {/* Mock Chart */}
+              <div className="bg-muted/30 rounded-xl p-6 mb-6">
+                <div className="flex items-end justify-between h-32 gap-2">
+                  {Array.from({
+                  length: 16
+                }).map((_, i) => <div key={i} className="bg-brand-blue/60 rounded-sm flex-1" style={{
+                  height: `${Math.random() * 80 + 20}%`
+                }}></div>)}
+                </div>
+              </div>
+
+              {/* Mock Recent Trades */}
+              <div className="space-y-3">
+                <div className="text-base font-medium mb-4">Recent Trades</div>
+                {[{
+                symbol: 'EURUSD',
+                pnl: '+$234',
+                time: '2h ago',
+                type: 'Long'
+              }, {
+                symbol: 'GBPJPY', 
+                pnl: '-$89',
+                time: '4h ago',
+                type: 'Short'
+              }, {
+                symbol: 'USDJPY',
+                pnl: '+$156',
+                time: '6h ago',
+                type: 'Long'
+              }].map((trade, i) => <div key={i} className="flex items-center justify-between bg-muted/30 rounded-lg px-4 py-3">
+                    <div className="flex items-center gap-4">
+                      <div className="w-3 h-3 bg-brand-blue rounded-full"></div>
+                      <div>
+                        <span className="font-medium">{trade.symbol}</span>
+                        <span className="text-sm text-muted-foreground ml-2">{trade.type}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`font-medium ${trade.pnl.startsWith('+') ? 'text-success' : 'text-destructive'}`}>
+                        {trade.pnl}
+                      </span>
+                      <span className="text-sm text-muted-foreground">{trade.time}</span>
+                    </div>
+                  </div>)}
+              </div>
+            </div>
+
+            {/* Background Glow with parallax */}
+            <div 
+              className="absolute inset-0 bg-brand-blue/20 rounded-2xl blur-3xl transform scale-110 -z-10"
+              style={{ transform: `translateY(${scrollY * -0.03}px) scale(1.1)` }}
+            ></div>
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section */}
       <main className="relative">
         <GeometricElements />
         
         <section className="container mx-auto px-6 py-24 lg:py-32">
           <div className="text-center max-w-4xl mx-auto">
-            {/* Hero Content */}
-            <div className="mb-16">
+            <div 
+              className="space-y-8"
+              style={{ transform: `translateY(${scrollY * 0.02}px)` }}
+            >
               <h1 className="text-5xl lg:text-7xl font-cirka mb-8 leading-[0.9] font-light tracking-tight">
                 Trading journal
                 <br />
@@ -108,78 +215,6 @@ const Index = () => {
                   <a href="/auth">Login</a>
                 </Button>
               </div>
-            </div>
-
-            {/* Dashboard Preview */}
-            <div className="relative max-w-2xl mx-auto">
-              <div className="relative z-10 bg-card border border-border rounded-2xl p-6 shadow-2xl">
-                {/* Mock Dashboard Header */}
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold">Dashboard Overview</h3>
-                  <div className="flex gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  </div>
-                </div>
-
-                {/* Mock Stats Cards */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <div className="text-xs text-muted-foreground mb-1">Total P&L</div>
-                    <div className="text-xl font-bold text-success">+$12,345</div>
-                    <div className="text-xs text-success">+23.4%</div>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <div className="text-xs text-muted-foreground mb-1">Win Rate</div>
-                    <div className="text-xl font-bold">68.5%</div>
-                    <div className="text-xs text-muted-foreground">142/207 trades</div>
-                  </div>
-                </div>
-
-                {/* Mock Chart */}
-                <div className="bg-muted/30 rounded-lg p-4 mb-4">
-                  <div className="flex items-end justify-between h-20 gap-1">
-                    {Array.from({
-                    length: 12
-                  }).map((_, i) => <div key={i} className="bg-brand-blue/60 rounded-sm flex-1" style={{
-                    height: `${Math.random() * 60 + 20}%`
-                  }}></div>)}
-                  </div>
-                </div>
-
-                {/* Mock Recent Trades */}
-                <div className="space-y-2">
-                  <div className="text-sm font-medium mb-3">Recent Trades</div>
-                  {[{
-                  symbol: 'EURUSD',
-                  pnl: '+$234',
-                  time: '2h ago'
-                }, {
-                  symbol: 'GBPJPY',
-                  pnl: '-$89',
-                  time: '4h ago'
-                }, {
-                  symbol: 'USDJPY',
-                  pnl: '+$156',
-                  time: '6h ago'
-                }].map((trade, i) => <div key={i} className="flex items-center justify-between bg-muted/30 rounded px-3 py-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-brand-blue rounded-full"></div>
-                        <span className="text-sm font-medium">{trade.symbol}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-medium ${trade.pnl.startsWith('+') ? 'text-success' : 'text-destructive'}`}>
-                          {trade.pnl}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{trade.time}</span>
-                      </div>
-                    </div>)}
-                </div>
-              </div>
-
-              {/* Background Glow */}
-              <div className="absolute inset-0 bg-brand-blue/20 rounded-2xl blur-3xl transform scale-110 -z-10"></div>
             </div>
           </div>
         </section>
