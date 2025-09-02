@@ -86,19 +86,19 @@ const Index = () => {
         <GeometricElements />
         
         <section className="container mx-auto px-6 py-24 lg:py-32">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            {/* Left Content */}
-            <div>
+          <div className="text-center max-w-4xl mx-auto">
+            {/* Hero Content */}
+            <div className="mb-16">
               <h1 className="text-5xl lg:text-7xl font-cirka mb-8 leading-[0.9] font-light tracking-tight">
                 Trading journal
                 <br />
                 <span className="text-muted-foreground">for professionals</span>
               </h1>
-              <p className="text-lg lg:text-xl text-muted-foreground mb-12 leading-relaxed font-normal max-w-lg">
+              <p className="text-lg lg:text-xl text-muted-foreground mb-12 leading-relaxed font-normal max-w-2xl mx-auto">
                 The best way to track your trades instead of spreadsheets.
                 Deliver professional analytics and insights at scale.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button size="lg" className="bg-white text-black hover:bg-white/90 h-12 px-6 text-sm font-medium rounded-lg border-0" asChild>
                   <a href="/auth">
                     Get Started
@@ -110,8 +110,8 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Right Content - Dashboard Preview */}
-            <div className="relative">
+            {/* Dashboard Preview */}
+            <div className="relative max-w-2xl mx-auto">
               <div className="relative z-10 bg-card border border-border rounded-2xl p-6 shadow-2xl">
                 {/* Mock Dashboard Header */}
                 <div className="flex items-center justify-between mb-6">
