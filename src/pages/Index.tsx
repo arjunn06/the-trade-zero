@@ -71,10 +71,10 @@ const Index = () => {
             <span className="font-bold text-xl">TheTradeZero</span>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground rounded-lg">
               <a href="/auth">Sign In</a>
             </Button>
-            <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button asChild className="bg-white text-black hover:bg-white/90 rounded-lg text-sm font-medium">
               <a href="/auth">Get Started</a>
             </Button>
           </div>
@@ -89,25 +89,23 @@ const Index = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left Content */}
             <div>
-              <h1 className="text-5xl lg:text-7xl font-bold mb-8 leading-tight">
+              <h1 className="text-5xl lg:text-7xl font-cirka mb-8 leading-[0.9] font-light tracking-tight">
                 Trading journal
                 <br />
                 <span className="text-muted-foreground">for professionals</span>
               </h1>
-              <p className="text-xl lg:text-2xl text-muted-foreground mb-12 leading-relaxed">
+              <p className="text-lg lg:text-xl text-muted-foreground mb-12 leading-relaxed font-normal max-w-lg">
                 The best way to track your trades instead of spreadsheets.
-                <br />
-                Analyze performance and improve your strategy at scale.
+                Deliver professional analytics and insights at scale.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8 text-base font-medium" asChild>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button size="lg" className="bg-white text-black hover:bg-white/90 h-12 px-6 text-sm font-medium rounded-lg border-0" asChild>
                   <a href="/auth">
                     Get Started
-                    <ArrowRight className="ml-2 h-4 w-4" />
                   </a>
                 </Button>
-                <Button size="lg" variant="outline" className="h-12 px-8 text-base font-medium border-border hover:bg-accent hover:text-accent-foreground" asChild>
-                  <a href="/auth">Sign In</a>
+                <Button size="lg" variant="ghost" className="h-12 px-6 text-sm font-medium rounded-lg text-white hover:bg-white/10" asChild>
+                  <a href="/auth">Documentation</a>
                 </Button>
               </div>
             </div>
@@ -189,8 +187,8 @@ const Index = () => {
         {/* Features Section */}
         <section className="container mx-auto px-6 py-24">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Everything you need to scale</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <h2 className="text-4xl lg:text-5xl font-cirka font-light mb-6 leading-tight">Everything you need to scale</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Professional tools for serious traders who want to understand and improve their performance.
             </p>
           </div>
@@ -264,8 +262,8 @@ const Index = () => {
         {/* Pricing Section */}
         <section className="container mx-auto px-6 py-24">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Simple, transparent pricing</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <h2 className="text-4xl lg:text-5xl font-cirka font-light mb-6 leading-tight">Simple, transparent pricing</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Start free and scale as you grow. No hidden fees, cancel anytime.
             </p>
           </div>
@@ -273,8 +271,8 @@ const Index = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Free Plan */}
             <div className="p-8 rounded-2xl border border-border bg-card">
-              <h3 className="text-2xl font-bold mb-2">Starter</h3>
-              <p className="text-muted-foreground mb-6">Perfect for getting started with trading journaling</p>
+              <h3 className="text-2xl font-cirka font-light mb-2">Starter</h3>
+              <p className="text-muted-foreground mb-6 leading-relaxed">Perfect for getting started with trading journaling</p>
               <div className="mb-8">
                 <span className="text-4xl font-bold">$0</span>
                 <span className="text-muted-foreground">/month</span>
@@ -303,8 +301,8 @@ const Index = () => {
                 </li>
               </ul>
               
-              <Button className="w-full h-12 text-base font-medium" asChild>
-                <a href="/auth">Get Started Free</a>
+              <Button className="w-full h-12 text-sm font-medium bg-white text-black hover:bg-white/90 rounded-lg" asChild>
+                <a href="/auth">Get Started</a>
               </Button>
             </div>
 
@@ -317,8 +315,8 @@ const Index = () => {
                 </div>
               </div>
               
-              <h3 className="text-2xl font-bold mb-2">Professional</h3>
-              <p className="text-muted-foreground mb-6">Advanced features for serious traders</p>
+              <h3 className="text-2xl font-cirka font-light mb-2">Professional</h3>
+              <p className="text-muted-foreground mb-6 leading-relaxed">Advanced features for serious traders</p>
               <div className="mb-8">
                 <span className="text-4xl font-bold">$10</span>
                 <span className="text-muted-foreground">/month</span>
