@@ -67,13 +67,13 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md border-border/50 shadow-xl">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <TrendingUp className="h-6 w-6 text-brand-blue" />
-            <CardTitle className="text-2xl font-bold">The Trade Zero</CardTitle>
+            <CardTitle className="text-2xl font-cirka font-light">TheTradeZero</CardTitle>
           </div>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground">
             Sign in to your trading journal or create a new account
           </CardDescription>
         </CardHeader>
@@ -110,7 +110,7 @@ const Auth = () => {
                     disabled={loading}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full bg-white text-black hover:bg-white/90 rounded-lg h-11" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Sign In
                 </Button>
@@ -160,7 +160,7 @@ const Auth = () => {
                     disabled={loading}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full bg-white text-black hover:bg-white/90 rounded-lg h-11" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Create Account
                 </Button>
