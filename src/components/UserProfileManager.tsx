@@ -7,37 +7,29 @@ import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { secureLocalStorage } from '@/utils/secureStorage';
-
 interface UserProfileManagerProps {
   collapsed?: boolean;
 }
-
-export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
-  const { user, signOut } = useAuth();
-  const { isPremium } = useSubscription();
-  const { toast } = useToast();
+export function UserProfileManager({
+  collapsed
+}: UserProfileManagerProps) {
+  const {
+    user,
+    signOut
+  } = useAuth();
+  const {
+    isPremium
+  } = useSubscription();
+  const {
+    toast
+  } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [displayName, setDisplayName] = useState(user?.user_metadata?.display_name || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -45,7 +37,7 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [uploading, setUploading] = useState(false);
   const [updating, setUpdating] = useState(false);
-  
+
   // OpenAI API key management
   const [openAIKey, setOpenAIKey] = useState('');
   const [showOpenAIKey, setShowOpenAIKey] = useState(false);
@@ -57,7 +49,9 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
       // Migrate legacy key from localStorage to encrypted secure storage
       const legacy = localStorage.getItem('openai_api_key');
       if (legacy) {
-        await secureLocalStorage.setItem('openai_api_key', legacy, { encrypt: true });
+        await secureLocalStorage.setItem('openai_api_key', legacy, {
+          encrypt: true
+        });
         localStorage.removeItem('openai_api_key');
       }
       const existing = await secureLocalStorage.getItem('openai_api_key');
@@ -67,7 +61,6 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
       }
     })();
   }, []);
-
   const handleSaveOpenAIKey = async () => {
     if (!openAIKey.trim()) {
       toast({
@@ -77,37 +70,33 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
       });
       return;
     }
-
-    await secureLocalStorage.setItem('openai_api_key', openAIKey, { encrypt: true });
+    await secureLocalStorage.setItem('openai_api_key', openAIKey, {
+      encrypt: true
+    });
     setOpenAIKeyExists(true);
     const maskedKey = openAIKey.substring(0, 8) + '...' + openAIKey.substring(openAIKey.length - 4);
     setOpenAIKey(maskedKey);
     setShowOpenAIKey(false);
-    
     toast({
       title: "API Key saved",
       description: "Your OpenAI API key has been stored securely (encrypted)."
     });
   };
-
   const handleDeleteOpenAIKey = async () => {
     secureLocalStorage.removeItem('openai_api_key');
     setOpenAIKey('');
     setOpenAIKeyExists(false);
     setShowOpenAIKey(false);
-    
     toast({
       title: "API Key removed",
       description: "Your OpenAI API key has been removed."
     });
   };
-
   const handleEditOpenAIKey = async () => {
     const existingKey = await secureLocalStorage.getItem('openai_api_key');
     setOpenAIKey(existingKey || '');
     setShowOpenAIKey(true);
   };
-
   const handleSignOut = async () => {
     await signOut();
     toast({
@@ -115,7 +104,6 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
       description: "You have been successfully signed out."
     });
   };
-
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
@@ -139,42 +127,38 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
       });
       return;
     }
-
     setUploading(true);
     try {
       // Upload file to storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
+      const {
+        error: uploadError
+      } = await supabase.storage.from('avatars').upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const {
+        data
+      } = supabase.storage.from('avatars').getPublicUrl(filePath);
 
       // Update user metadata
-      const { error: updateError } = await supabase.auth.updateUser({
+      const {
+        error: updateError
+      } = await supabase.auth.updateUser({
         data: {
           avatar_url: data.publicUrl
         }
       });
-
       if (updateError) throw updateError;
-
       toast({
         title: "Photo updated",
         description: "Your profile photo has been updated successfully."
       });
-
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -188,35 +172,33 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
       }
     }
   };
-
   const handleUpdateProfile = async () => {
     if (!user) return;
-
     setUpdating(true);
     try {
       // Update user metadata
       const updates: any = {};
-      
       if (displayName !== user.user_metadata?.display_name) {
         updates.display_name = displayName;
       }
-
       if (email !== user.email) {
         updates.email = email;
       }
-
       if (Object.keys(updates).length > 0) {
         if (updates.email) {
           // Email update requires separate call
-          const { error: emailError } = await supabase.auth.updateUser({
+          const {
+            error: emailError
+          } = await supabase.auth.updateUser({
             email: updates.email
           });
           if (emailError) throw emailError;
           delete updates.email;
         }
-
         if (Object.keys(updates).length > 0) {
-          const { error: metadataError } = await supabase.auth.updateUser({
+          const {
+            error: metadataError
+          } = await supabase.auth.updateUser({
             data: updates
           });
           if (metadataError) throw metadataError;
@@ -225,24 +207,20 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
 
       // Update profiles table if it exists
       try {
-        await supabase
-          .from('profiles')
-          .upsert({
-            user_id: user.id,
-            display_name: displayName,
-            email: email
-          });
+        await supabase.from('profiles').upsert({
+          user_id: user.id,
+          display_name: displayName,
+          email: email
+        });
       } catch (error) {
         // Profiles table might not exist, that's okay
         // Profile update is optional, don't log errors in production
       }
-
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully."
       });
       setProfileDialogOpen(false);
-
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -253,7 +231,6 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
       setUpdating(false);
     }
   };
-
   const handlePasswordChange = async () => {
     if (newPassword !== confirmPassword) {
       toast({
@@ -263,7 +240,6 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
       });
       return;
     }
-    
     if (newPassword.length < 6) {
       toast({
         variant: "destructive",
@@ -272,21 +248,19 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
       });
       return;
     }
-
     try {
-      const { error } = await supabase.auth.updateUser({
+      const {
+        error
+      } = await supabase.auth.updateUser({
         password: newPassword
       });
-
       if (error) throw error;
-
       toast({
         title: "Password changed",
         description: "Your password has been changed successfully."
       });
       setNewPassword('');
       setConfirmPassword('');
-
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -295,22 +269,15 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
       });
     }
   };
-
   const getInitials = (name?: string) => {
     if (!name) return user?.email?.charAt(0).toUpperCase() || 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
-
   const getDisplayName = () => {
-    return user?.user_metadata?.display_name || 
-           user?.user_metadata?.full_name || 
-           user?.email?.split('@')[0] || 
-           'User';
+    return user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
   };
-
   if (collapsed) {
-    return (
-      <DropdownMenu>
+    return <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full relative">
             <Avatar className="h-8 w-8">
@@ -319,27 +286,23 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
                 {getInitials(user?.user_metadata?.display_name)}
               </AvatarFallback>
             </Avatar>
-            {isPremium && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center">
+            {isPremium && <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center">
                 <Crown className="h-2.5 w-2.5 text-white" />
-              </div>
-            )}
+              </div>}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel className="flex items-center gap-2">
             <span>My Account</span>
-            {isPremium && (
-              <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
+            {isPremium && <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
                 <Crown className="h-3 w-3 mr-1" />
                 Premium
-              </Badge>
-            )}
+              </Badge>}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
             <DialogTrigger asChild>
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+              <DropdownMenuItem onSelect={e => e.preventDefault()}>
                 <Settings className="h-4 w-4 mr-2" />
                 Profile Settings
               </DropdownMenuItem>
@@ -352,12 +315,9 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
             Sign Out
           </DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>
-    );
+      </DropdownMenu>;
   }
-
-  return (
-    <div className="space-y-2">
+  return <div className="space-y-2">
       <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent/50">
         <div className="relative">
           <Avatar className="h-10 w-10">
@@ -366,11 +326,9 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
               {getInitials(user?.user_metadata?.display_name)}
             </AvatarFallback>
           </Avatar>
-          {isPremium && (
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+          {isPremium && <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
               <Crown className="h-3 w-3 text-white" />
-            </div>
-          )}
+            </div>}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-sidebar-foreground truncate">
@@ -407,25 +365,12 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
                       {getInitials(user?.user_metadata?.display_name)}
                     </AvatarFallback>
                   </Avatar>
-                  {isPremium && (
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                  {isPremium && <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
                       <Crown className="h-3.5 w-3.5 text-white" />
-                    </div>
-                  )}
+                    </div>}
                 </div>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handlePhotoUpload}
-                  accept="image/*"
-                  className="hidden"
-                />
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                >
+                <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
+                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                   <Camera className="h-4 w-4 mr-2" />
                   {uploading ? 'Uploading...' : 'Change Photo'}
                 </Button>
@@ -434,25 +379,14 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
               {/* Display Name */}
               <div className="space-y-2">
                 <Label htmlFor="displayName">Display Name</Label>
-                <Input
-                  id="displayName"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Enter your display name"
-                />
+                <Input id="displayName" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Enter your display name" />
               </div>
 
               {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <div className="flex gap-2">
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                  />
+                  <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter your email" />
                   <Button variant="outline" size="sm">
                     <Mail className="h-4 w-4" />
                   </Button>
@@ -466,118 +400,19 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
                   <Label className="text-sm font-medium">Change Password</Label>
                 </div>
                 <div className="space-y-2">
-                  <Input
-                    type="password"
-                    placeholder="New password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
-                  <Input
-                    type="password"
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
-                  {newPassword && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handlePasswordChange}
-                      disabled={!newPassword || !confirmPassword}
-                    >
+                  <Input type="password" placeholder="New password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+                  <Input type="password" placeholder="Confirm new password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                  {newPassword && <Button variant="outline" size="sm" onClick={handlePasswordChange} disabled={!newPassword || !confirmPassword}>
                       Update Password
-                    </Button>
-                  )}
+                    </Button>}
                 </div>
               </div>
 
               {/* OpenAI API Key Management */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Key className="h-4 w-4" />
-                  <Label className="text-sm font-medium">OpenAI API Key</Label>
-                  <Badge variant="secondary" className="text-xs">
-                    For Screenshot Analysis
-                  </Badge>
-                </div>
-                
-                {openAIKeyExists && !showOpenAIKey ? (
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 px-3 py-2 bg-muted rounded-md text-sm font-mono">
-                      {openAIKey}
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleEditOpenAIKey}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleDeleteOpenAIKey}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <Input
-                        type={showOpenAIKey ? "text" : "password"}
-                        placeholder="sk-..."
-                        value={openAIKey}
-                        onChange={(e) => setOpenAIKey(e.target.value)}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                        onClick={() => setShowOpenAIKey(!showOpenAIKey)}
-                      >
-                        {showOpenAIKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={handleSaveOpenAIKey}
-                        disabled={!openAIKey.trim()}
-                      >
-                        {openAIKeyExists ? 'Update Key' : 'Save Key'}
-                      </Button>
-                      {openAIKeyExists && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => {
-                            setShowOpenAIKey(false);
-                            const existingKey = localStorage.getItem('openai_api_key');
-                            if (existingKey) {
-                              setOpenAIKey(existingKey.substring(0, 8) + '...' + existingKey.substring(existingKey.length - 4));
-                            }
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Your API key is stored locally on your device and used for screenshot analysis features.
-                    </p>
-                  </div>
-                )}
-              </div>
+              
 
               <div className="flex gap-3 pt-4 border-t">
-                <Button 
-                  onClick={handleUpdateProfile} 
-                  className="flex-1"
-                  disabled={updating}
-                >
+                <Button onClick={handleUpdateProfile} className="flex-1" disabled={updating}>
                   {updating ? 'Saving...' : 'Save Changes'}
                 </Button>
                 <Button variant="outline" onClick={() => setProfileDialogOpen(false)}>
@@ -593,6 +428,5 @@ export function UserProfileManager({ collapsed }: UserProfileManagerProps) {
         <ThemeToggle collapsed={false} />
       </div>
 
-    </div>
-  );
+    </div>;
 }
