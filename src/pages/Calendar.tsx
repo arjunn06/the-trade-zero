@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AccountFilter } from '@/components/AccountFilter';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { TradeCard } from '@/components/TradeCard';
 interface DayPnL {
   date: string;
   pnl: number;
@@ -667,34 +668,9 @@ if (isSunday) {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {selectedDateTrades.map(trade => <div key={trade.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <Badge variant="outline" className="font-mono">
-                        {trade.symbol}
-                      </Badge>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={trade.trade_type === 'long' ? 'default' : 'secondary'}>
-                            {trade.trade_type.toUpperCase()}
-                          </Badge>
-                          <span className="text-sm text-muted-foreground">
-                            Qty: {Number(trade.quantity)}
-                          </span>
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          {trade.trading_accounts?.name} • {trade.strategies?.name || 'No Strategy'}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className={`text-lg font-bold ${Number(trade.pnl) > 0 ? 'text-profit' : Number(trade.pnl) < 0 ? 'text-loss' : 'text-muted-foreground'}`}>
-                        {formatCurrency(Number(trade.pnl))}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Entry: {Number(trade.entry_price).toFixed(5)}
-                      </div>
-                    </div>
-                  </div>)}
+                {selectedDateTrades.map(trade => (
+                  <TradeCard key={trade.id} trade={trade} />
+                ))}
               </div>
             </CardContent>
           </Card>}
