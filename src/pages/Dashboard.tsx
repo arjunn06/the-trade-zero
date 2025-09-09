@@ -241,6 +241,7 @@ const Dashboard = () => {
   const { accountEquities, loading: equitiesLoading } = useAccountEquities(user, accounts);
 
   useEffect(() => {
+    console.log('Dashboard useEffect triggered:', { user: !!user, selectedAccountIds, sortOrder, timeFilter });
     if (user) {
       fetchDashboardData();
     }
@@ -287,16 +288,31 @@ const Dashboard = () => {
       }
 
       // Filter trades by selected accounts
+      console.log('Filter Debug - Account filtering:', { 
+        selectedAccountIds, 
+        allTradesCount: allTrades.length,
+        allAccountsCount: allAccounts.length
+      });
+      
       let filteredTrades;
       if (selectedAccountIds.includes('all-active') || selectedAccountIds.length === 0) {
         // Include trades from active accounts only when "All Active Accounts" is selected
         const activeAccountIds = allAccounts.filter(acc => acc.is_active).map(acc => acc.id);
+        console.log('Filter Debug - Active account IDs:', activeAccountIds);
         filteredTrades = allTrades.filter(trade => activeAccountIds.includes(trade.trading_account_id));
       } else {
         filteredTrades = allTrades.filter(trade => selectedAccountIds.includes(trade.trading_account_id));
       }
+      
+      console.log('Filter Debug - After account filter:', { tradesCount: filteredTrades.length });
 
       // Apply time filter to the filtered trades
+      console.log('Filter Debug - Before time filter:', { 
+        timeFilter, 
+        tradesCount: filteredTrades.length, 
+        firstTradeDate: filteredTrades[0]?.entry_date 
+      });
+      
       if (timeFilter !== 'all') {
         const now = new Date();
         const filterDate = new Date();
@@ -319,9 +335,13 @@ const Dashboard = () => {
             break;
         }
         
+        console.log('Filter Debug - Date range:', { filterDate, now });
+        
         filteredTrades = filteredTrades.filter(trade => 
           new Date(trade.entry_date) >= filterDate
         );
+        
+        console.log('Filter Debug - After time filter:', { tradesCount: filteredTrades.length });
       }
 
       const trades = filteredTrades;
