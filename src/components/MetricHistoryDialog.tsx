@@ -91,6 +91,14 @@ export function MetricHistoryDialog({
     
     setLoading(true);
     try {
+      // First, fetch accounts to understand the filtering
+      const { data: userAccounts, error: accountsError } = await supabase
+        .from('trading_accounts')
+        .select('id, is_active')
+        .eq('user_id', user.id);
+
+      if (accountsError) throw accountsError;
+
       // Fetch all trades for the user
       let query = supabase
         .from('trades')
@@ -102,9 +110,16 @@ export function MetricHistoryDialog({
       const { data: allTrades, error } = await query;
       if (error) throw error;
 
-      // Filter trades by selected accounts if not "all"
+      // Filter trades by selected accounts
       let trades = allTrades || [];
-      if (!selectedAccountIds.includes('all')) {
+      if (selectedAccountIds.includes('all-active')) {
+        // Filter to only active accounts when "all-active" is selected
+        const activeAccountIds = (userAccounts || [])
+          .filter(acc => acc.is_active)
+          .map(acc => acc.id);
+        trades = trades.filter(trade => activeAccountIds.includes(trade.trading_account_id));
+      } else if (!selectedAccountIds.includes('all')) {
+        // Filter to specific selected accounts
         trades = trades.filter(trade => selectedAccountIds.includes(trade.trading_account_id));
       }
 

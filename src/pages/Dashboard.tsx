@@ -22,6 +22,7 @@ import { PropFirmDashboard } from '@/components/PropFirmDashboard';
 import PerformanceScore from '@/components/PerformanceScore';
 import { MetricHistoryDialog } from '@/components/MetricHistoryDialog';
 import { ComparisonDialog } from '@/components/ComparisonDialog';
+import { useAccountEquities } from '@/hooks/useAccountEquities';
 
 interface AccountGoalsSectionProps {
   accounts: any[];
@@ -236,6 +237,9 @@ const Dashboard = () => {
   const [selectedMetric, setSelectedMetric] = useState<'winRate' | 'profitFactor' | 'maxDrawdown' | 'avgReturn' | 'expectancy' | null>(null);
   const [comparisonDialogOpen, setComparisonDialogOpen] = useState(false);
 
+  // Use the custom hook for consistent account equity calculations
+  const { accountEquities, loading: equitiesLoading } = useAccountEquities(user, accounts);
+
   useEffect(() => {
     if (user) {
       fetchDashboardData();
@@ -330,28 +334,10 @@ const Dashboard = () => {
       // Calculate account totals from trades
       const totalInitialBalance = accounts.reduce((sum, account) => sum + (account.initial_balance || 0), 0);
       
-      // Calculate equity from trades
-      const accountEquities: Record<string, number> = {};
-      let totalCurrentEquity = 0;
-      
-      accounts.forEach(account => {
-        const accountTrades = filteredTrades.filter(trade => trade.trading_account_id === account.id);
-        const accountPnl = accountTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
-        
-        const accountTransactions = allTransactions.filter(tx => tx.trading_account_id === account.id);
-        const totalTransactions = accountTransactions.reduce((sum, tx) => {
-          // Equity adjustments:
-          // + deposit, + payout, - withdrawal, exclude evaluation_fee/commission/other
-          if (tx.transaction_type === 'deposit' || tx.transaction_type === 'payout') return sum + tx.amount;
-          if (tx.transaction_type === 'withdrawal') return sum - tx.amount;
-          return sum;
-        }, 0);
-        
-        // Equity = initial balance + PnL + net transactions (deposits - withdrawals)
-        const equity = account.initial_balance + accountPnl + totalTransactions;
-        accountEquities[account.id] = equity;
-        totalCurrentEquity += equity;
-      });
+      // Calculate total current equity from the hook's accountEquities
+      const totalCurrentEquity = accounts.reduce((sum, account) => {
+        return sum + (accountEquities[account.id] || account.initial_balance);
+      }, 0);
 
       // Calculate statistics
       const closedTrades = trades.filter(t => t.status === 'closed');
@@ -669,15 +655,10 @@ const Dashboard = () => {
             />
           </div>
           
-          {/* Account Balances List */}
+          {/* Account Balances List - Pass calculated accountEquities */}
           <AccountBalancesList 
             accounts={accounts} 
-            accountEquities={accounts.reduce((acc, account) => {
-              const accountTrades = allTrades.filter(trade => trade.trading_account_id === account.id);
-              const accountPnl = accountTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
-              acc[account.id] = account.initial_balance + accountPnl;
-              return acc;
-            }, {} as Record<string, number>)} 
+            accountEquities={accountEquities} 
             formatCurrency={formatCurrency} 
           />
 
