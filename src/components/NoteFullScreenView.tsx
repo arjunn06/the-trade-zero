@@ -1,7 +1,7 @@
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Star, StarOff, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Star, StarOff, Edit, Trash2, ChevronLeft, ChevronRight, FileText, Eye } from 'lucide-react';
 
 interface Note {
   id: string;
@@ -10,6 +10,7 @@ interface Note {
   category: string;
   tags: string[];
   images: string[];
+  attachments?: string[];
   is_favorite: boolean;
   created_at: string;
   updated_at: string;
@@ -44,6 +45,10 @@ export function NoteFullScreenView({
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const openPdf = (pdfUrl: string) => {
+    window.open(pdfUrl, '_blank');
   };
 
   return (
@@ -125,6 +130,40 @@ export function NoteFullScreenView({
                     />
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* PDF Attachments */}
+          {note.attachments && note.attachments.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-lg font-medium mb-3">Attachments</h3>
+              <div className="space-y-3">
+                {note.attachments.map((pdf, index) => {
+                  const fileName = pdf.split('/').pop() || `document-${index + 1}.pdf`;
+                  return (
+                    <div key={index} className="flex items-center justify-between p-4 border border-border rounded-lg hover:border-primary transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-red-100 rounded-md">
+                          <FileText className="h-5 w-5 text-red-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{fileName}</p>
+                          <p className="text-xs text-muted-foreground">PDF Document</p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openPdf(pdf)}
+                        className="flex items-center gap-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        Open
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

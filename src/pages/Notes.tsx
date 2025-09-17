@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, StickyNote, Edit, Trash2, Star, StarOff, Search, Upload, X, Eye, Maximize2 } from 'lucide-react';
+import { Plus, StickyNote, Edit, Trash2, Star, StarOff, Search, Upload, X, Eye, Maximize2, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -575,9 +575,7 @@ const Notes = () => {
                           <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                             <div className="flex items-center gap-2">
                               <div className="p-2 bg-red-100 rounded-md">
-                                <svg className="h-4 w-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                                </svg>
+                                <FileText className="h-4 w-4 text-red-600" />
                               </div>
                               <span className="text-sm text-muted-foreground truncate">{fileName}</span>
                             </div>
@@ -614,9 +612,7 @@ const Notes = () => {
                         <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
                           <div className="flex items-center gap-2">
                             <div className="p-2 bg-blue-100 rounded-md">
-                              <svg className="h-4 w-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                              </svg>
+                              <FileText className="h-4 w-4 text-blue-600" />
                             </div>
                             <span className="text-sm truncate">{file.name}</span>
                           </div>
@@ -774,6 +770,40 @@ const Notes = () => {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+                
+                {/* Display note PDFs */}
+                {note.attachments && note.attachments.length > 0 && (
+                  <div className="space-y-2 mb-3">
+                    <p className="text-xs text-muted-foreground font-medium">Attachments:</p>
+                    {note.attachments.slice(0, 3).map((pdf, index) => {
+                      const fileName = pdf.split('/').pop() || `document-${index + 1}.pdf`;
+                      return (
+                        <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-muted/30">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <div className="p-1 bg-red-100 rounded">
+                              <FileText className="h-3 w-3 text-red-600" />
+                            </div>
+                            <span className="text-xs text-muted-foreground truncate">{fileName}</span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openPdf(pdf);
+                            }}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                    {note.attachments.length > 3 && (
+                      <p className="text-xs text-muted-foreground">+{note.attachments.length - 3} more PDF(s)</p>
+                    )}
                   </div>
                 )}
                 

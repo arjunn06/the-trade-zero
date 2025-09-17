@@ -237,6 +237,7 @@ export type Database = {
       }
       notes: {
         Row: {
+          attachments: string[] | null
           category: string | null
           content: string | null
           created_at: string
@@ -249,6 +250,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attachments?: string[] | null
           category?: string | null
           content?: string | null
           created_at?: string
@@ -261,6 +263,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attachments?: string[] | null
           category?: string | null
           content?: string | null
           created_at?: string
