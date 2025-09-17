@@ -29,6 +29,7 @@ interface Note {
   category: string;
   tags: string[];
   images: string[];
+  attachments?: string[];
   is_favorite: boolean;
   created_at: string;
   updated_at: string;
@@ -45,7 +46,9 @@ const Notes = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [selectedPdfs, setSelectedPdfs] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [attachmentUrls, setAttachmentUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [viewImageDialog, setViewImageDialog] = useState(false);
   const [selectedViewImage, setSelectedViewImage] = useState('');
@@ -81,7 +84,11 @@ const Notes = () => {
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
-      setNotes(data || []);
+      const notesWithAttachments = (data || []).map(note => ({
+        ...note,
+        attachments: (note as any).attachments || []
+      }));
+      setNotes(notesWithAttachments);
     } catch (error) {
       console.error('Error fetching notes:', error);
       toast({
@@ -153,13 +160,49 @@ const Notes = () => {
     return uploadedUrls;
   };
 
+  const uploadPdfs = async () => {
+    if (selectedPdfs.length === 0) return [];
+    
+    const uploadedUrls: string[] = [];
+
+    try {
+      for (const pdf of selectedPdfs) {
+        const fileExt = pdf.name.split('.').pop();
+        const fileName = `${user?.id}/documents/${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('trade-screenshots')
+          .upload(fileName, pdf);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('trade-screenshots')
+          .getPublicUrl(fileName);
+
+        uploadedUrls.push(publicUrl);
+      }
+    } catch (error) {
+      console.error('Error uploading PDFs:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload some PDFs",
+        variant: "destructive"
+      });
+    }
+
+    return uploadedUrls;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
     try {
       const uploadedImageUrls = await uploadImages();
+      const uploadedPdfUrls = await uploadPdfs();
       const finalImageUrls = [...imageUrls, ...uploadedImageUrls];
+      const finalAttachmentUrls = [...attachmentUrls, ...uploadedPdfUrls];
 
       const noteData = {
         title: formData.title,
@@ -167,6 +210,7 @@ const Notes = () => {
         category: formData.category,
         tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
         images: finalImageUrls,
+        attachments: finalAttachmentUrls,
         user_id: user.id
       };
 
@@ -210,7 +254,9 @@ const Notes = () => {
       tags: note.tags?.join(', ') || ''
     });
     setImageUrls(note.images || []);
+    setAttachmentUrls(note.attachments || []);
     setSelectedImages([]);
+    setSelectedPdfs([]);
     setDialogOpen(true);
   };
 
@@ -261,7 +307,9 @@ const Notes = () => {
       tags: ''
     });
     setSelectedImages([]);
+    setSelectedPdfs([]);
     setImageUrls([]);
+    setAttachmentUrls([]);
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -275,6 +323,31 @@ const Notes = () => {
 
   const removeExistingImage = (index: number) => {
     setImageUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handlePdfSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const pdfFiles = files.filter(file => file.type === 'application/pdf');
+    if (pdfFiles.length !== files.length) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select only PDF files",
+        variant: "destructive"
+      });
+    }
+    setSelectedPdfs(prev => [...prev, ...pdfFiles]);
+  };
+
+  const removeSelectedPdf = (index: number) => {
+    setSelectedPdfs(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingAttachment = (index: number) => {
+    setAttachmentUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const openPdf = (pdfUrl: string) => {
+    window.open(pdfUrl, '_blank');
   };
 
   const viewImage = (imageUrl: string) => {
@@ -459,6 +532,103 @@ const Notes = () => {
                           >
                             <X className="h-3 w-3" />
                           </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* PDF Upload Section */}
+              <div>
+                <Label htmlFor="pdfs">PDF Documents</Label>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      id="pdfs"
+                      accept=".pdf"
+                      multiple
+                      onChange={handlePdfSelect}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('pdfs')?.click()}
+                      className="flex items-center gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Add PDFs
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      {selectedPdfs.length + attachmentUrls.length} PDF(s)
+                    </span>
+                  </div>
+                  
+                  {/* Display existing PDFs */}
+                  {attachmentUrls.length > 0 && (
+                    <div className="space-y-2">
+                      {attachmentUrls.map((url, index) => {
+                        const fileName = url.split('/').pop() || `document-${index + 1}.pdf`;
+                        return (
+                          <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <div className="p-2 bg-red-100 rounded-md">
+                                <svg className="h-4 w-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                              <span className="text-sm text-muted-foreground truncate">{fileName}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openPdf(url)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeExistingAttachment(index)}
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-800"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  
+                  {/* Display selected new PDFs */}
+                  {selectedPdfs.length > 0 && (
+                    <div className="space-y-2">
+                      {selectedPdfs.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 bg-blue-100 rounded-md">
+                              <svg className="h-4 w-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <span className="text-sm truncate">{file.name}</span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSelectedPdf(index)}
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-800"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
                       ))}
                     </div>
