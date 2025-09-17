@@ -2,6 +2,8 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, Star, StarOff, Edit, Trash2, ChevronLeft, ChevronRight, FileText, Eye } from 'lucide-react';
+import { PdfViewer } from './PdfViewer';
+import { useState } from 'react';
 
 interface Note {
   id: string;
@@ -35,6 +37,8 @@ export function NoteFullScreenView({
   onToggleFavorite,
   onImageClick
 }: NoteFullScreenViewProps) {
+  const [selectedPdf, setSelectedPdf] = useState<{ url: string; fileName: string } | null>(null);
+  
   if (!note) return null;
 
   const formatDate = (dateString: string) => {
@@ -48,7 +52,8 @@ export function NoteFullScreenView({
   };
 
   const openPdf = (pdfUrl: string) => {
-    window.open(pdfUrl, '_blank');
+    const fileName = pdfUrl.split('/').pop() || 'document.pdf';
+    setSelectedPdf({ url: pdfUrl, fileName });
   };
 
   return (
@@ -183,6 +188,13 @@ export function NoteFullScreenView({
           )}
         </div>
       </DialogContent>
+      
+      <PdfViewer
+        pdfUrl={selectedPdf?.url || ''}
+        fileName={selectedPdf?.fileName}
+        open={!!selectedPdf}
+        onOpenChange={(open) => !open && setSelectedPdf(null)}
+      />
     </Dialog>
   );
 }
