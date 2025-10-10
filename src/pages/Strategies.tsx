@@ -109,17 +109,17 @@ const Strategies = () => {
       const strategyData = {
         name: formData.name,
         description: formData.description,
-        rules: formData.rules.join('\n'),
-        entry_criteria: formData.entry_criteria.join('\n'),
-        exit_criteria: formData.exit_criteria.join('\n'),
-        partial_criteria: formData.partial_criteria.join('\n'),
-        be_criteria: formData.be_criteria.join('\n'),
+        rules: formData.rules.length > 0 ? formData.rules.join('\n') : null,
+        entry_criteria: formData.entry_criteria.length > 0 ? formData.entry_criteria.join('\n') : null,
+        exit_criteria: formData.exit_criteria.length > 0 ? formData.exit_criteria.join('\n') : null,
+        partial_criteria: formData.partial_criteria.length > 0 ? formData.partial_criteria.join('\n') : null,
+        be_criteria: formData.be_criteria.length > 0 ? formData.be_criteria.join('\n') : null,
         risk_per_trade: formData.risk_per_trade ? parseFloat(formData.risk_per_trade) : null,
         max_daily_risk: formData.max_daily_risk ? parseFloat(formData.max_daily_risk) : null,
         min_risk_reward: formData.min_risk_reward ? parseFloat(formData.min_risk_reward) : null,
         max_risk_reward: formData.max_risk_reward ? parseFloat(formData.max_risk_reward) : null,
-        timeframe: formData.timeframe,
-        market_conditions: formData.market_conditions,
+        timeframe: formData.timeframe || null,
+        market_conditions: formData.market_conditions || null,
         user_id: user.id
       };
 
@@ -129,14 +129,20 @@ const Strategies = () => {
           .update(strategyData)
           .eq('id', editingStrategy.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Update error details:', error);
+          throw error;
+        }
         toast({ title: "Success", description: "Strategy updated successfully" });
       } else {
         const { error } = await supabase
           .from('strategies')
           .insert([strategyData]);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error details:', error);
+          throw error;
+        }
         toast({ title: "Success", description: "Strategy created successfully" });
       }
 
@@ -144,11 +150,12 @@ const Strategies = () => {
       setEditingStrategy(null);
       resetForm();
       fetchStrategies();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving strategy:', error);
+      const errorMessage = error?.message || 'Failed to save strategy';
       toast({
         title: "Error",
-        description: "Failed to save strategy",
+        description: errorMessage,
         variant: "destructive"
       });
     }
