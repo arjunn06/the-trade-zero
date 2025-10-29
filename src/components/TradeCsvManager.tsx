@@ -461,36 +461,106 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
 
           <div className="bg-muted/50 p-4 rounded-lg space-y-3">
             <div>
-              <h4 className="text-sm font-semibold mb-2">Required Columns:</h4>
-              <ul className="text-xs text-muted-foreground space-y-1 ml-2">
-                <li><strong>Symbol:</strong> Trading pair or instrument (e.g., EURUSD, BTCUSD)</li>
-                <li><strong>Trade Type:</strong> 'buy', 'sell', 'long', or 'short'</li>
-                <li><strong>Entry Price:</strong> Price at which position was opened (numeric)</li>
-                <li><strong>Quantity:</strong> Position size or lot size (numeric)</li>
-                <li><strong>Entry Date:</strong> Date when trade was opened (YYYY-MM-DD format)</li>
-              </ul>
+              <h4 className="text-sm font-semibold mb-2 flex items-center justify-between">
+                <span>CSV Column Format</span>
+                <a 
+                  href="https://docs.google.com/spreadsheets/d/1example/edit" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline text-xs font-normal"
+                >
+                  View Example Template →
+                </a>
+              </h4>
+              <p className="text-xs text-muted-foreground mb-3">
+                Your CSV file must have column headers in the first row. Column names are case-insensitive.
+              </p>
             </div>
             
-            <div>
-              <h4 className="text-sm font-semibold mb-2">Optional Columns:</h4>
-              <ul className="text-xs text-muted-foreground space-y-1 ml-2">
-                <li><strong>Exit Price:</strong> Price at which position was closed (numeric)</li>
-                <li><strong>Exit Date:</strong> Date when trade was closed (YYYY-MM-DD)</li>
-                <li><strong>Stop Loss:</strong> Stop loss price level (numeric)</li>
-                <li><strong>Take Profit:</strong> Take profit price level (numeric)</li>
-                <li><strong>PnL:</strong> Profit and Loss amount (numeric, positive or negative)</li>
-                <li><strong>Status:</strong> 'open' or 'closed' (auto-detected if omitted)</li>
-                <li><strong>Commission:</strong> Trading commission/fees (numeric)</li>
-                <li><strong>Swap:</strong> Overnight swap charges (numeric)</li>
-                <li><strong>Risk Amount:</strong> Amount risked on the trade (numeric)</li>
-                <li><strong>Risk Reward Ratio:</strong> R:R ratio of the trade (numeric)</li>
-                <li><strong>Notes:</strong> Any additional notes or comments (text)</li>
-              </ul>
+            <div className="grid gap-3">
+              <div className="p-3 bg-background rounded border">
+                <h5 className="text-xs font-semibold text-foreground mb-2">✓ Required Columns (must be present):</h5>
+                <div className="space-y-1.5 text-xs text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <code className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Symbol</code>
+                    <span>- Trading pair/instrument (e.g., EURUSD, AAPL)</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <code className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Trade Type</code>
+                    <span>- Must be: buy, sell, long, or short</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <code className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Entry Price</code>
+                    <span>- Opening price (number, e.g., 1.2550)</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <code className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Quantity</code>
+                    <span>- Position size/lots (number, e.g., 0.5)</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <code className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Entry Date</code>
+                    <span>- Format: YYYY-MM-DD (e.g., 2024-03-15)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-background rounded border">
+                <h5 className="text-xs font-semibold text-foreground mb-2">Optional Columns (will be imported if present):</h5>
+                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <code className="px-1 py-0.5 bg-muted rounded text-[10px] font-mono">Exit Price</code>
+                    <span className="text-[10px]">- Closing price</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <code className="px-1 py-0.5 bg-muted rounded text-[10px] font-mono">Exit Date</code>
+                    <span className="text-[10px]">- YYYY-MM-DD</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <code className="px-1 py-0.5 bg-muted rounded text-[10px] font-mono">Stop Loss</code>
+                    <span className="text-[10px]">- SL price level</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <code className="px-1 py-0.5 bg-muted rounded text-[10px] font-mono">Take Profit</code>
+                    <span className="text-[10px]">- TP price level</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <code className="px-1 py-0.5 bg-muted rounded text-[10px] font-mono">PnL</code>
+                    <span className="text-[10px]">- Profit/Loss ($)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <code className="px-1 py-0.5 bg-muted rounded text-[10px] font-mono">Status</code>
+                    <span className="text-[10px]">- open/closed</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <code className="px-1 py-0.5 bg-muted rounded text-[10px] font-mono">Commission</code>
+                    <span className="text-[10px]">- Trading fees</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <code className="px-1 py-0.5 bg-muted rounded text-[10px] font-mono">Swap</code>
+                    <span className="text-[10px]">- Overnight fees</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <code className="px-1 py-0.5 bg-muted rounded text-[10px] font-mono">Risk Amount</code>
+                    <span className="text-[10px]">- $ at risk</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <code className="px-1 py-0.5 bg-muted rounded text-[10px] font-mono">Risk Reward Ratio</code>
+                    <span className="text-[10px]">- R:R (e.g., 2.5)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 col-span-2">
+                    <code className="px-1 py-0.5 bg-muted rounded text-[10px] font-mono">Notes</code>
+                    <span className="text-[10px]">- Text comments/observations</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="pt-2 border-t border-border/50">
+            <div className="pt-2 border-t border-border/50 space-y-1">
               <p className="text-xs text-muted-foreground">
-                <strong>Tip:</strong> If Exit Price, Exit Date, or PnL is provided, the trade will automatically be marked as 'closed'
+                <strong>💡 Auto-Detection:</strong> Trades with Exit Price, Exit Date, or PnL will be marked as 'closed' automatically.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                <strong>📋 Example Header Row:</strong> <code className="text-[10px] bg-muted px-1 py-0.5 rounded">Symbol,Trade Type,Entry Price,Quantity,Entry Date,Exit Price,PnL</code>
               </p>
             </div>
           </div>
