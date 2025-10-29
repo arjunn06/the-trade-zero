@@ -3,12 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Download, Upload, FileSpreadsheet } from 'lucide-react';
+import { Download, Upload, FileSpreadsheet, X, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { PremiumFeature } from '@/components/PremiumFeature';
 import { CustomizableCsvExport } from '@/components/CustomizableCsvExport';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface TradeCsvManagerProps {
   accountId: string;
@@ -41,6 +43,7 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewTrades, setPreviewTrades] = useState<any[]>([]);
 
   const handleExportCsv = async () => {
     if (!user) return;
@@ -144,10 +147,16 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
+      setPreviewTrades([]); // Clear preview when new file is selected
     }
   };
 
-  const handleImportCsv = async () => {
+  const handleCancelPreview = () => {
+    setPreviewTrades([]);
+    setSelectedFile(null);
+  };
+
+  const handleParseAndPreview = async () => {
     if (!selectedFile || !user) return;
 
     setIsImporting(true);
@@ -189,14 +198,13 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
               trade.symbol = value;
               break;
             case 'trade type':
-              // Map trade type values to database constraints
               const lowerValue = value.toLowerCase();
               if (lowerValue === 'buy' || lowerValue === 'long') {
                 trade.trade_type = 'long';
               } else if (lowerValue === 'sell' || lowerValue === 'short') {
                 trade.trade_type = 'short';
               } else {
-                trade.trade_type = lowerValue; // Let database validation handle invalid values
+                trade.trade_type = lowerValue;
               }
               break;
             case 'entry price':
@@ -246,7 +254,6 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
 
         // Auto-determine status based on exit data
         if (!trade.status || trade.status === 'open') {
-          // If trade has exit price, exit date, or PnL, it should be closed
           if (trade.exit_price || trade.exit_date || trade.pnl !== undefined) {
             trade.status = 'closed';
           } else {
@@ -262,25 +269,47 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
         trades.push(trade);
       }
 
-      // Import trades to database
+      setPreviewTrades(trades);
+      toast({
+        title: "Preview ready",
+        description: `${trades.length} trades parsed successfully. Review and confirm to import.`
+      });
+    } catch (error) {
+      console.error('Error parsing CSV:', error);
+      toast({
+        title: "Parse failed",
+        description: error instanceof Error ? error.message : "Failed to parse CSV file.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleConfirmImport = async () => {
+    if (previewTrades.length === 0) return;
+
+    setIsImporting(true);
+    try {
       const { error } = await supabase
         .from('trades')
-        .insert(trades);
+        .insert(previewTrades);
 
       if (error) throw error;
 
       toast({
         title: "Import successful",
-        description: `Successfully imported ${trades.length} trades.`
+        description: `Successfully imported ${previewTrades.length} trades.`
       });
 
-      // Reset file selection
+      // Reset state
       setSelectedFile(null);
+      setPreviewTrades([]);
     } catch (error) {
-      console.error('Error importing CSV:', error);
+      console.error('Error importing trades:', error);
       toast({
         title: "Import failed",
-        description: error instanceof Error ? error.message : "Failed to import CSV file.",
+        description: error instanceof Error ? error.message : "Failed to import trades.",
         variant: "destructive"
       });
     } finally {
@@ -301,38 +330,72 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <Label htmlFor="csv-import" className="text-sm font-medium">
-                Import Trades
-              </Label>
-              <div className="mt-2 space-y-2">
-                <Input
-                  id="csv-import"
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileSelect}
-                  disabled={isImporting}
-                  className="cursor-pointer"
-                />
-                {selectedFile && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      Selected: {selectedFile.name}
-                    </span>
-                    <Button
-                      onClick={handleImportCsv}
-                      disabled={isImporting}
-                      size="sm"
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      {isImporting ? 'Importing...' : 'Upload'}
-                    </Button>
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Select a CSV file with your trade data, then click Upload
-                </p>
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="flex-1 space-y-4">
+              <div>
+                <Label htmlFor="csv-import" className="text-sm font-medium">
+                  Import Trades
+                </Label>
+                <div className="mt-2 space-y-2">
+                  {previewTrades.length === 0 ? (
+                    <>
+                      <Input
+                        id="csv-import"
+                        type="file"
+                        accept=".csv"
+                        onChange={handleFileSelect}
+                        disabled={isImporting}
+                        className="cursor-pointer"
+                      />
+                      {selectedFile && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground truncate">
+                            Selected: {selectedFile.name}
+                          </span>
+                          <Button
+                            onClick={handleParseAndPreview}
+                            disabled={isImporting}
+                            size="sm"
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            {isImporting ? 'Processing...' : 'Preview'}
+                          </Button>
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Select a CSV file with your trade data, then click Preview
+                      </p>
+                    </>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium">{previewTrades.length} trades ready</p>
+                          <p className="text-xs text-muted-foreground">Review and confirm below</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleCancelPreview}
+                            disabled={isImporting}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={handleConfirmImport}
+                            disabled={isImporting}
+                            size="sm"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            {isImporting ? 'Importing...' : 'Confirm'}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             
@@ -357,6 +420,44 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
               </div>
             </div>
           </div>
+
+          {previewTrades.length > 0 && (
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-semibold mb-3">Trade Preview</h4>
+              <ScrollArea className="h-80 border rounded-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Symbol</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Entry</TableHead>
+                      <TableHead>Exit</TableHead>
+                      <TableHead>Qty</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>PnL</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {previewTrades.map((trade, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{trade.symbol}</TableCell>
+                        <TableCell className="capitalize">{trade.trade_type}</TableCell>
+                        <TableCell>{trade.entry_price}</TableCell>
+                        <TableCell>{trade.exit_price || '-'}</TableCell>
+                        <TableCell>{trade.quantity}</TableCell>
+                        <TableCell>{new Date(trade.entry_date).toLocaleDateString()}</TableCell>
+                        <TableCell className={trade.pnl ? (trade.pnl > 0 ? 'text-green-600' : 'text-red-600') : ''}>
+                          {trade.pnl ? `$${trade.pnl.toFixed(2)}` : '-'}
+                        </TableCell>
+                        <TableCell className="capitalize">{trade.status}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </div>
+          )}
 
           <div className="bg-muted/50 p-4 rounded-lg space-y-3">
             <div>
