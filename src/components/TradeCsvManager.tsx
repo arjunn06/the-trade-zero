@@ -358,14 +358,40 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
             </div>
           </div>
 
-          <div className="bg-muted/50 p-4 rounded-lg">
-            <h4 className="text-sm font-medium mb-2">CSV Format Requirements:</h4>
-            <ul className="text-xs text-muted-foreground space-y-1">
-              <li>• Required columns: Symbol, Trade Type, Entry Price, Quantity, Entry Date</li>
-              <li>• Optional columns: Exit Price, Exit Date, Stop Loss, Take Profit, PnL, Notes</li>
-              <li>• Date format: YYYY-MM-DD</li>
-              <li>• Trade Type: 'buy' or 'sell'</li>
-            </ul>
+          <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+            <div>
+              <h4 className="text-sm font-semibold mb-2">Required Columns:</h4>
+              <ul className="text-xs text-muted-foreground space-y-1 ml-2">
+                <li><strong>Symbol:</strong> Trading pair or instrument (e.g., EURUSD, BTCUSD)</li>
+                <li><strong>Trade Type:</strong> 'buy', 'sell', 'long', or 'short'</li>
+                <li><strong>Entry Price:</strong> Price at which position was opened (numeric)</li>
+                <li><strong>Quantity:</strong> Position size or lot size (numeric)</li>
+                <li><strong>Entry Date:</strong> Date when trade was opened (YYYY-MM-DD format)</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-semibold mb-2">Optional Columns:</h4>
+              <ul className="text-xs text-muted-foreground space-y-1 ml-2">
+                <li><strong>Exit Price:</strong> Price at which position was closed (numeric)</li>
+                <li><strong>Exit Date:</strong> Date when trade was closed (YYYY-MM-DD)</li>
+                <li><strong>Stop Loss:</strong> Stop loss price level (numeric)</li>
+                <li><strong>Take Profit:</strong> Take profit price level (numeric)</li>
+                <li><strong>PnL:</strong> Profit and Loss amount (numeric, positive or negative)</li>
+                <li><strong>Status:</strong> 'open' or 'closed' (auto-detected if omitted)</li>
+                <li><strong>Commission:</strong> Trading commission/fees (numeric)</li>
+                <li><strong>Swap:</strong> Overnight swap charges (numeric)</li>
+                <li><strong>Risk Amount:</strong> Amount risked on the trade (numeric)</li>
+                <li><strong>Risk Reward Ratio:</strong> R:R ratio of the trade (numeric)</li>
+                <li><strong>Notes:</strong> Any additional notes or comments (text)</li>
+              </ul>
+            </div>
+
+            <div className="pt-2 border-t border-border/50">
+              <p className="text-xs text-muted-foreground">
+                <strong>Tip:</strong> If Exit Price, Exit Date, or PnL is provided, the trade will automatically be marked as 'closed'
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
