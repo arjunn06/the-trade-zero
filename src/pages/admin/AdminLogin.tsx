@@ -49,11 +49,24 @@ export function AdminLogin() {
         return;
       }
 
+      // Get the newly signed-in user's session
+      const { data: sessionData } = await supabase.auth.getUser();
+      const newUserId = sessionData?.user?.id;
+
+      if (!newUserId) {
+        toast({
+          title: 'Login Failed',
+          description: 'Could not retrieve user session',
+          variant: 'destructive'
+        });
+        return;
+      }
+
       // Check if user is admin after login
       const { data } = await supabase
         .from('profiles')
         .select('role')
-        .eq('user_id', user?.id)
+        .eq('user_id', newUserId)
         .single();
 
       if (data?.role !== 'admin') {
