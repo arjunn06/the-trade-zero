@@ -62,11 +62,6 @@ const App = () => (
                 <Dashboard />
               </ProtectedRoute>
             } />
-            <Route path="/welcome" element={
-              <ProtectedRoute>
-                <Welcome />
-              </ProtectedRoute>
-            } />
             <Route path="/trades" element={<ProtectedRoute><Trades /></ProtectedRoute>} />
             <Route path="/trades/:id" element={<ProtectedRoute><TradeDetail /></ProtectedRoute>} />
             <Route path="/trades/new" element={<ProtectedRoute><NewTrade /></ProtectedRoute>} />
