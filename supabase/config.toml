@@ -37,8 +37,8 @@ file_size_limit = "50MiB"
 [auth]
 enabled = true
 port = 54328
-site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["https://dynibyqrcbxneiwjyahn.supabase.co"]
+site_url = "https://the-trade-zero.pages.dev"
+additional_redirect_urls = ["https://dynibyqrcbxneiwjyahn.supabase.co", "https://the-trade-zero.pages.dev"]
 jwt_expiry = 3600
 refresh_token_rotation_enabled = true
 security_update_password_require_reauthentication = true
