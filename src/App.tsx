@@ -27,7 +27,7 @@ import PaymentCancel from "./pages/PaymentCancel";
 import Upgrade from "./pages/Upgrade";
 import Terms from "./pages/Terms";
 import Refund from "./pages/Refund";
-import Welcome from "./pages/Welcome";
+
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import WeeklyReport from "./pages/WeeklyReport";
@@ -60,11 +60,6 @@ const App = () => (
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/welcome" element={
-              <ProtectedRoute>
-                <Welcome />
               </ProtectedRoute>
             } />
             <Route path="/trades" element={<ProtectedRoute><Trades /></ProtectedRoute>} />
