@@ -820,34 +820,13 @@ export type Database = {
         Args: { admin_user_id: string }
         Returns: boolean
       }
-      cleanup_expired_auth_states: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_invitations: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_rate_limits: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      get_ctrader_tokens: {
-        Args: { connection_id: string }
-        Returns: Json
-      }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_encrypted_token: {
-        Args: { secret_id: string }
-        Returns: string
-      }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      cleanup_expired_auth_states: { Args: never; Returns: undefined }
+      cleanup_expired_invitations: { Args: never; Returns: undefined }
+      cleanup_expired_rate_limits: { Args: never; Returns: undefined }
+      get_ctrader_tokens: { Args: { connection_id: string }; Returns: Json }
+      get_current_user_role: { Args: never; Returns: string }
+      get_encrypted_token: { Args: { secret_id: string }; Returns: string }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
       log_security_event: {
         Args: {
           action_name: string
@@ -856,10 +835,7 @@ export type Database = {
         }
         Returns: undefined
       }
-      migrate_tokens_to_vault: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      migrate_tokens_to_vault: { Args: never; Returns: number }
       sanitize_text_input: {
         Args: { input_text: string; max_length?: number }
         Returns: string
