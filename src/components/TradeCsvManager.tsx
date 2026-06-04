@@ -11,6 +11,8 @@ import { PremiumFeature } from '@/components/PremiumFeature';
 import { CustomizableCsvExport } from '@/components/CustomizableCsvExport';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RithmicImportSection } from '@/components/RithmicImportSection';
 
 interface TradeCsvManagerProps {
   accountId: string;
