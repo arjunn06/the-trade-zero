@@ -335,10 +335,13 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="flex-1 space-y-4">
               <div>
-                <Label htmlFor="csv-import" className="text-sm font-medium">
-                  Import Trades
-                </Label>
-                <div className="mt-2 space-y-2">
+                <Label className="text-sm font-medium">Import Trades</Label>
+                <Tabs defaultValue="generic" className="mt-2">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="generic">Generic CSV</TabsTrigger>
+                    <TabsTrigger value="rithmic">Rithmic / Prop Firm</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="generic" className="mt-3 space-y-2">
                   {previewTrades.length === 0 ? (
                     <>
                       <Input
@@ -397,7 +400,11 @@ export function TradeCsvManager({ accountId, accountName }: TradeCsvManagerProps
                       </div>
                     </div>
                   )}
-                </div>
+                  </TabsContent>
+                  <TabsContent value="rithmic" className="mt-3">
+                    <RithmicImportSection accountId={accountId} />
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
             
