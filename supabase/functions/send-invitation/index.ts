@@ -112,7 +112,7 @@ const InvitationEmail = ({ email, token, inviterName, inviteUrl }: {
 // Styles matching the landing page
 const main = {
   backgroundColor: '#0a0a0a',
-  fontFamily: 'Proxima Nova, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   color: '#ffffff',
 };
 
@@ -147,7 +147,7 @@ const logoText = {
   fontWeight: '700',
   color: '#ffffff',
   margin: '0',
-  fontFamily: 'Proxima Nova, sans-serif',
+  fontFamily: 'Inter, sans-serif',
 };
 
 const tagline = {
@@ -169,7 +169,7 @@ const h1 = {
   fontWeight: '700',
   margin: '0 0 24px',
   textAlign: 'center',
-  fontFamily: 'Proxima Nova, sans-serif',
+  fontFamily: 'Inter, sans-serif',
 };
 
 const greeting = {
@@ -226,7 +226,7 @@ const ctaButton = {
   display: 'inline-block',
   padding: '16px 32px',
   border: 'none',
-  fontFamily: 'Proxima Nova, sans-serif',
+  fontFamily: 'Inter, sans-serif',
 };
 
 const urgencyBox = {
