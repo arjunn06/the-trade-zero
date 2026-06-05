@@ -49,9 +49,9 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const emailResponse = await resend.emails.send({
-      from: "TradeZero Security <security@thetradezero.com>",
+      from: "IFVG Journal Security <security@ifvg.in>",
       to: [userEmail],
-      subject: "Reset your TradeZero password",
+      subject: "Reset your IFVG Journal password",
       html: emailHtml,
     });
 

@@ -44,7 +44,7 @@ export const GeneralNotificationEmail = ({
         <Section style={header}>
           <div style={logoContainer}>
             <div style={logoIcon}>📧</div>
-            <Text style={logoText}>TradeZero</Text>
+            <Text style={logoText}>IFVG Journal</Text>
           </div>
           <Text style={tagline}>Professional Trading Analytics</Text>
         </Section>
@@ -81,14 +81,14 @@ export const GeneralNotificationEmail = ({
 
           <Text style={paragraph}>
             If you have any questions, feel free to contact our support team at{' '}
-            <Link href="mailto:support@thetradezero.com" style={inlineLink}>
-              support@thetradezero.com
+            <Link href="mailto:support@ifvg.in" style={inlineLink}>
+              support@ifvg.in
             </Link>
           </Text>
 
           <Text style={paragraph}>
             Best regards,<br />
-            <strong>The TradeZero Team</strong>
+            <strong>The IFVG Journal Team</strong>
           </Text>
         </Section>
 
@@ -98,10 +98,10 @@ export const GeneralNotificationEmail = ({
             This email was sent to {userEmail}
           </Text>
           <Text style={footerLink}>
-            <Link href="https://thetradezero.com" style={link}>thetradezero.com</Link>
+            <Link href="https://journal.ifvg.in" style={link}>ifvg.in</Link>
           </Text>
           <Text style={footerSmall}>
-            © 2024 TradeZero. All rights reserved.
+            © 2024 IFVG Journal. All rights reserved.
           </Text>
         </Section>
       </Container>

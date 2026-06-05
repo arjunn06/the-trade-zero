@@ -71,7 +71,7 @@ const Auth = () => {
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <TrendingUp className="h-6 w-6 text-brand-blue" />
-            <CardTitle className="text-2xl font-cirka font-light">TheTradeZero</CardTitle>
+            <CardTitle className="text-2xl font-cirka font-light">IFVG Journal</CardTitle>
           </div>
           <CardDescription className="text-muted-foreground">
             Sign in to your trading journal or create a new account

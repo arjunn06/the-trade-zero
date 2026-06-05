@@ -45,9 +45,9 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const emailResponse = await resend.emails.send({
-      from: "TradeZero <welcome@thetradezero.com>",
+      from: "IFVG Journal <welcome@ifvg.in>",
       to: [userEmail],
-      subject: "🎉 Welcome to TradeZero - Your Trading Journey Begins!",
+      subject: "🎉 Welcome to IFVG Journal - Your Trading Journey Begins!",
       html: emailHtml,
     });
 

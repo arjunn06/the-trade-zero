@@ -74,7 +74,7 @@ export function MobileSidebar({ children, open, onOpenChange }: MobileSidebarPro
                   <TrendingUp className="h-5 w-5" />
                 </div>
                 <div>
-                  <SheetTitle className="text-left">The Trade Zero</SheetTitle>
+                  <SheetTitle className="text-left">IFVG Journal</SheetTitle>
                   <p className="text-xs text-muted-foreground">Trading Journal</p>
                 </div>
               </div>

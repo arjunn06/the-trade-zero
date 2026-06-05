@@ -74,7 +74,7 @@ const VerifyEmail = () => {
               <span>Account created successfully!</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Click the verification link in your email to activate your account and start using The Trade Zero.
+              Click the verification link in your email to activate your account and start using IFVG Journal.
             </p>
           </div>
 

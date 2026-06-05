@@ -24,28 +24,28 @@ export const WelcomeEmail = ({
 }: WelcomeEmailProps) => (
   <Html>
     <Head />
-    <Preview>Welcome to TradeZero - Your professional trading journey starts now!</Preview>
+    <Preview>Welcome to IFVG Journal - Your professional trading journey starts now!</Preview>
     <Body style={main}>
       <Container style={container}>
         {/* Header with branding */}
         <Section style={header}>
           <div style={logoContainer}>
             <div style={logoIcon}>🎉</div>
-            <Text style={logoText}>TradeZero</Text>
+            <Text style={logoText}>IFVG Journal</Text>
           </div>
           <Text style={tagline}>Welcome to Professional Trading</Text>
         </Section>
         
         {/* Main content */}
         <Section style={content}>
-          <Heading style={h1}>Welcome to TradeZero!</Heading>
+          <Heading style={h1}>Welcome to IFVG Journal!</Heading>
           
           <Text style={greeting}>
             Hello {userDisplayName || 'Trader'},
           </Text>
           
           <Text style={paragraph}>
-            🎉 Congratulations! Your TradeZero account has been successfully activated. 
+            🎉 Congratulations! Your IFVG Journal account has been successfully activated. 
             You're now part of an exclusive community of professional traders who are serious 
             about tracking, analyzing, and optimizing their trading performance.
           </Text>
@@ -81,7 +81,7 @@ export const WelcomeEmail = ({
           </Section>
           
           <Section style={ctaSection}>
-            <Button href="https://thetradezero.com/dashboard" style={ctaButton}>
+            <Button href="https://journal.ifvg.in/dashboard" style={ctaButton}>
               Start Your Trading Journey
             </Button>
           </Section>
@@ -98,8 +98,8 @@ export const WelcomeEmail = ({
           
           <Text style={supportText}>
             <strong>Need help getting started?</strong><br/>
-            Check out our <Link href="https://thetradezero.com/docs" style={inlineLink}>documentation</Link> or 
-            reach out to our support team at <Link href="mailto:support@thetradezero.com" style={inlineLink}>support@thetradezero.com</Link>
+            Check out our <Link href="https://journal.ifvg.in/docs" style={inlineLink}>documentation</Link> or 
+            reach out to our support team at <Link href="mailto:support@ifvg.in" style={inlineLink}>support@ifvg.in</Link>
           </Text>
           
           <Section style={statsSection}>
@@ -119,14 +119,14 @@ export const WelcomeEmail = ({
         <Section style={footer}>
           <Text style={footerText}>
             Happy Trading!<br />
-            <strong>The TradeZero Team</strong>
+            <strong>The IFVG Journal Team</strong>
           </Text>
           <Text style={footerLink}>
-            <Link href="https://thetradezero.com" style={link}>thetradezero.com</Link>
+            <Link href="https://journal.ifvg.in" style={link}>ifvg.in</Link>
           </Text>
           <Text style={footerSmall}>
             This email was sent to {userEmail}<br/>
-            You're receiving this because you just created a TradeZero account.
+            You're receiving this because you just created a IFVG Journal account.
           </Text>
         </Section>
       </Container>

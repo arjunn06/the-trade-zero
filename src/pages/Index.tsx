@@ -76,7 +76,7 @@ const Index = () => {
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-6 w-6 text-brand-blue" />
-            <span className="font-bold text-xl">TheTradeZero</span>
+            <span className="font-bold text-xl">IFVG Journal</span>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground rounded-lg">
@@ -411,7 +411,7 @@ const Index = () => {
         <section className="container mx-auto px-6 py-24">
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="text-3xl lg:text-4xl font-bold mb-6">Ready to scale your trading?</h2>
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed">Join professional traders who trust TheTradeZero to track, analyze, and improve their performance.</p>
+            <p className="text-xl text-muted-foreground mb-8 leading-relaxed">Join professional traders who trust IFVG Journal to track, analyze, and improve their performance.</p>
             <Button size="lg" className="h-12 px-8 text-base font-medium" asChild>
               <a href="/auth">
                 Create Free Account
@@ -427,7 +427,7 @@ const Index = () => {
         <div className="container mx-auto px-6 py-12">
           <div className="flex items-center justify-center gap-2 mb-4">
             <TrendingUp className="h-5 w-5 text-brand-blue" />
-            <span className="font-semibold text-lg">TheTradeZero</span>
+            <span className="font-semibold text-lg">IFVG Journal</span>
           </div>
           <p className="text-center text-muted-foreground mb-6">
             Professional trading journal platform for serious traders.

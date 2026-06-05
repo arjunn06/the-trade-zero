@@ -272,7 +272,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                           lineHeight: '14px'
                         }}
                       >
-                        TheTradeZero
+                        IFVG Journal
                       </span>
                     </div>
                   </div>

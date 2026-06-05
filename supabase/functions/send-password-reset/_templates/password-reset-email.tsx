@@ -28,14 +28,14 @@ export const PasswordResetEmail = ({
 }: PasswordResetEmailProps) => (
   <Html>
     <Head />
-    <Preview>Reset your TradeZero password - Secure access to your trading analytics</Preview>
+    <Preview>Reset your IFVG Journal password - Secure access to your trading analytics</Preview>
     <Body style={main}>
       <Container style={container}>
         {/* Header with branding */}
         <Section style={header}>
           <div style={logoContainer}>
             <div style={logoIcon}>🔒</div>
-            <Text style={logoText}>TradeZero</Text>
+            <Text style={logoText}>IFVG Journal</Text>
           </div>
           <Text style={tagline}>Account Security</Text>
         </Section>
@@ -49,7 +49,7 @@ export const PasswordResetEmail = ({
           </Text>
           
           <Text style={paragraph}>
-            We received a request to reset the password for your TradeZero account associated with <strong>{userEmail}</strong>.
+            We received a request to reset the password for your IFVG Journal account associated with <strong>{userEmail}</strong>.
           </Text>
           
           <Text style={paragraph}>
@@ -95,10 +95,10 @@ export const PasswordResetEmail = ({
         <Section style={footer}>
           <Text style={footerText}>
             Stay Secure,<br />
-            <strong>The TradeZero Security Team</strong>
+            <strong>The IFVG Journal Security Team</strong>
           </Text>
           <Text style={footerLink}>
-            <Link href="https://thetradezero.com" style={link}>thetradezero.com</Link>
+            <Link href="https://journal.ifvg.in" style={link}>ifvg.in</Link>
           </Text>
           <Text style={footerSmall}>
             This email was sent to {userEmail}

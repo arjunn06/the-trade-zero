@@ -39,7 +39,7 @@ export const UpgradeSuccessEmail = ({
         <Section style={header}>
           <div style={logoContainer}>
             <div style={logoIcon}>👑</div>
-            <Text style={logoText}>The Trade Zero</Text>
+            <Text style={logoText}>IFVG Journal</Text>
           </div>
         </Section>
 
@@ -89,18 +89,18 @@ export const UpgradeSuccessEmail = ({
           {/* Support Section */}
           <Text style={paragraph}>
             Need help getting the most out of your premium features? Our support team is here to help! Reach out to us at{' '}
-            <Link href="mailto:support@thetradezero.com" style={link}>
-              support@thetradezero.com
+            <Link href="mailto:support@ifvg.in" style={link}>
+              support@ifvg.in
             </Link>
           </Text>
 
           <Text style={paragraph}>
-            Thank you for choosing The Trade Zero Premium. We're excited to see your trading performance soar!
+            Thank you for choosing IFVG Journal Premium. We're excited to see your trading performance soar!
           </Text>
 
           <Text style={paragraph}>
             Happy trading,<br />
-            <strong>The Trade Zero Team</strong>
+            <strong>IFVG Journal Team</strong>
           </Text>
         </Section>
 
@@ -110,7 +110,7 @@ export const UpgradeSuccessEmail = ({
             This email was sent to {userEmail}. You can manage your subscription in your account settings.
           </Text>
           <Text style={footerText}>
-            © 2024 The Trade Zero. All rights reserved.
+            © 2024 IFVG Journal. All rights reserved.
           </Text>
         </Section>
       </Container>

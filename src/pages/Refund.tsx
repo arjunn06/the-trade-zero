@@ -10,7 +10,7 @@ const Refund = () => {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-6 w-6 text-brand-blue" />
-            <span className="font-bold text-xl">Trade Zero</span>
+            <span className="font-bold text-xl">IFVG Journal</span>
           </div>
           <Button variant="outline" asChild>
             <a href="/" className="flex items-center gap-2">
@@ -51,7 +51,7 @@ const Refund = () => {
             </div>
             <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-2">30-Day Money-Back Guarantee</h3>
             <p className="text-green-700 dark:text-green-300">
-              Try Trade Zero risk-free. If you're not completely satisfied within 30 days, we'll refund your payment.
+              Try IFVG Journal risk-free. If you're not completely satisfied within 30 days, we'll refund your payment.
             </p>
           </CardContent>
         </Card>
@@ -136,7 +136,7 @@ const Refund = () => {
               <ol className="space-y-3 text-muted-foreground">
                 <li className="flex items-start gap-3">
                   <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium flex-shrink-0 mt-0.5">1</span>
-                  Contact our support team at <span className="font-medium text-foreground">support@thetradezero.com</span>
+                  Contact our support team at <span className="font-medium text-foreground">support@ifvg.in</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium flex-shrink-0 mt-0.5">2</span>
@@ -199,7 +199,7 @@ const Refund = () => {
               <div className="bg-background rounded-lg p-4 border space-y-2">
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-primary" />
-                  <span className="font-medium">support@thetradezero.com</span>
+                  <span className="font-medium">support@ifvg.in</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-primary" />

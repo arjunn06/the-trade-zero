@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.tradezero.app',
-  appName: 'Trade Zero',
+  appName: 'IFVG Journal',
   webDir: 'dist',
   server: {
     url: 'https://3c42aa13-8f9e-4847-87f6-4e4378ffe56d.lovableproject.com?forceHideBadge=true',
