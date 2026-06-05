@@ -66,15 +66,23 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md border-border/50 shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ background: 'radial-gradient(ellipse 50% 50% at 50% 0%, hsl(var(--brand-red) / 0.2), transparent 70%)' }}
+      />
+      <Card className="w-full max-w-md border-border/60 bg-card/80 backdrop-blur-xl shadow-2xl relative">
         <CardHeader className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <TrendingUp className="h-6 w-6 text-brand-blue" />
-            <CardTitle className="text-2xl font-cirka font-light">IFVG Journal</CardTitle>
+          <div className="flex items-center justify-center gap-2.5 mb-4">
+            <div className="h-9 w-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-[0_0_24px_hsl(var(--brand-red)/0.5)]">
+              <span className="font-display text-base leading-none">i</span>
+            </div>
+            <CardTitle className="text-2xl font-display tracking-tight">
+              IFVG<span className="text-primary">Journal</span>
+            </CardTitle>
           </div>
           <CardDescription className="text-muted-foreground">
-            Sign in to your trading journal or create a new account
+            Sign in to your journal or create a new account.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -110,7 +118,7 @@ const Auth = () => {
                     disabled={loading}
                   />
                 </div>
-                <Button type="submit" className="w-full bg-white text-black hover:bg-white/90 rounded-lg h-11" disabled={loading}>
+                <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-full h-11 shadow-[0_8px_24px_-8px_hsl(var(--brand-red)/0.6)]" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Sign In
                 </Button>
@@ -160,7 +168,7 @@ const Auth = () => {
                     disabled={loading}
                   />
                 </div>
-                <Button type="submit" className="w-full bg-white text-black hover:bg-white/90 rounded-lg h-11" disabled={loading}>
+                <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-full h-11 shadow-[0_8px_24px_-8px_hsl(var(--brand-red)/0.6)]" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Create Account
                 </Button>
