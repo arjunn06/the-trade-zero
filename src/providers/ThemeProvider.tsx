@@ -15,7 +15,7 @@ type ThemeProviderState = {
 }
 
 const initialState: ThemeProviderState = {
-  theme: 'system',
+  theme: 'dark',
   setTheme: () => null,
 }
 
@@ -23,41 +23,22 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'system',
-  storageKey = 'trade-zero-theme',
+  defaultTheme = 'dark',
+  storageKey = 'ifvg-journal-theme',
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(defaultTheme)
+  // IFVG Journal is dark-first like ifvg.in — lock to dark.
+  const [theme, setTheme] = useState<Theme>('dark')
   const [isLoaded, setIsLoaded] = useState(false)
 
-  // Load theme from secure storage on mount
   useEffect(() => {
-    const loadTheme = async () => {
-      const savedTheme = await userPreferences.getTheme();
-      if (savedTheme) {
-        setTheme(savedTheme as Theme);
-      }
-      setIsLoaded(true);
-    };
-    loadTheme();
+    setIsLoaded(true);
   }, []);
 
   useEffect(() => {
     const root = window.document.documentElement
-
     root.classList.remove('light', 'dark')
-
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
-        .matches
-        ? 'dark'
-        : 'light'
-
-      root.classList.add(systemTheme)
-      return
-    }
-
-    root.classList.add(theme)
+    root.classList.add('dark')
   }, [theme])
 
   const value = {
