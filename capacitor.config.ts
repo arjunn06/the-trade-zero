@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.tradezero.app',
+  appId: 'in.ifvg.journal',
   appName: 'IFVG Journal',
   webDir: 'dist',
   server: {
