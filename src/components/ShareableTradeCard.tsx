@@ -136,7 +136,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
               backgroundImage: `url('/lovable-uploads/d2ebd9e4-65b8-4650-9df3-b2d4d5ace41a.png')`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              fontFamily: '"Proxima Nova", system-ui, -apple-system, sans-serif'
+              fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
             }}
           >
             {/* Content */}
