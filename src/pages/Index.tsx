@@ -3,18 +3,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { RazorpayPayment } from '@/components/RazorpayPayment';
-import { TrendingUp, BarChart3, Shield, Calendar, Check, Star, Brain, ArrowRight, Zap } from 'lucide-react';
+import { TrendingUp, BarChart3, Shield, Calendar, Check, Brain, ArrowRight, Zap, Target, BookOpen, Sparkles, LineChart } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { GeometricElements } from '@/components/GeometricElements.tsx';
-const Index = () => {
-  const {
-    user,
-    loading
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
 
+const Index = () => {
+  const { user, loading } = useAuth();
+  const { toast } = useToast();
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -23,421 +17,312 @@ const Index = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Load Zoho chatbot script
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = 'https://gc.zohopublic.in/org/60021522321/flows/581000000900001/embed/script';
-    script.defer = true;
-    script.setAttribute('nonce', '{place_your_nonce_value_here}');
-    document.head.appendChild(script);
-    return () => {
-      // Cleanup script on unmount
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
-    };
-  }, []);
-
-  // Handle payment integration with Zoho payments
-  const handlePayment = (plan: string, amount: number) => {
-    // For now, redirect to auth for registration
-    // This will be replaced with Zoho payments integration
-    if (!user) {
-      // Redirect to auth with plan information
-      window.location.href = `/auth?plan=${plan}&amount=${amount}`;
-      return;
-    }
-
-    // TODO: Integrate with Zoho payments API
-    // This is where Zoho payment integration will be implemented
-    toast({
-      title: "Payment Integration Coming Soon",
-      description: `${plan} plan ($${amount}/month) will be integrated with Zoho payments.`
-    });
-
-    // Log payment integration info only in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Zoho Payment Integration:', {
-        plan,
-        amount,
-        user: user.id
-      });
-    }
-  };
-
-  // Redirect authenticated users to dashboard
   if (!loading && user) {
     return <Navigate to="/dashboard" replace />;
   }
-  return <div className="min-h-screen bg-background text-foreground dark">
+
+  return (
+    <div className="min-h-screen bg-background text-foreground dark overflow-x-hidden">
       {/* Header */}
-      <header className="relative z-50 border-b border-border/50">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/70 border-b border-border/40">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+          <a href="/" className="flex items-center gap-2.5 group">
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_24px_hsl(var(--brand-red)/0.5)] group-hover:shadow-[0_0_36px_hsl(var(--brand-red)/0.7)] transition-shadow">
+              <span className="font-display text-primary-foreground text-sm leading-none">i</span>
+            </div>
+            <span className="font-display text-lg tracking-tight">
+              IFVG<span className="text-primary">Journal</span>
+            </span>
+          </a>
+          <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
+            <a href="#features" className="hover:text-foreground transition">Features</a>
+            <a href="#pricing" className="hover:text-foreground transition">Pricing</a>
+            <a href="https://ifvg.in" target="_blank" rel="noreferrer" className="hover:text-foreground transition">Community</a>
+          </nav>
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-6 w-6 text-brand-blue" />
-            <span className="font-bold text-xl">IFVG Journal</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground rounded-lg">
+            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground rounded-full">
               <a href="/auth">Sign In</a>
             </Button>
-            <Button asChild className="bg-white text-black hover:bg-white/90 rounded-lg text-sm font-medium">
-              <a href="/auth">Get Started</a>
+            <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full text-sm font-semibold px-5 shadow-[0_8px_24px_-8px_hsl(var(--brand-red)/0.6)]">
+              <a href="/auth">Start Journaling</a>
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Dashboard Preview - Top Section */}
-      <section className="relative overflow-hidden py-16 lg:py-24">
-        <div 
-          className="absolute inset-0 bg-gradient-to-b from-transparent via-brand-blue/5 to-transparent"
-          style={{ transform: `translateY(${scrollY * 0.1}px)` }}
+      {/* Hero */}
+      <section className="relative pt-24 pb-32 lg:pt-32 lg:pb-40">
+        {/* Red radial glow */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-[700px] -z-10"
+          style={{
+            background: 'radial-gradient(ellipse 60% 50% at 50% 0%, hsl(var(--brand-red) / 0.25), transparent 70%)',
+            transform: `translateY(${scrollY * 0.15}px)`,
+          }}
         />
-        <div className="container mx-auto px-6">
-          <div className="relative max-w-3xl mx-auto">
-            <div 
-              className="relative z-10 bg-card border border-border rounded-2xl p-8 shadow-2xl"
-              style={{ transform: `translateY(${scrollY * -0.05}px)` }}
-            >
-              {/* Mock Dashboard Header */}
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xl font-semibold">Dashboard Overview</h3>
-                <div className="flex gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                </div>
-              </div>
+        <div
+          className="pointer-events-none absolute inset-0 -z-10 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              'linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)',
+            backgroundSize: '60px 60px',
+            maskImage: 'radial-gradient(ellipse 60% 50% at 50% 30%, black, transparent 80%)',
+          }}
+        />
 
-              {/* Mock Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-muted/50 rounded-xl p-6">
-                  <div className="text-sm text-muted-foreground mb-2">Total P&L</div>
-                  <div className="text-2xl font-bold text-success">+$12,345</div>
-                  <div className="text-sm text-success">+23.4%</div>
-                </div>
-                <div className="bg-muted/50 rounded-xl p-6">
-                  <div className="text-sm text-muted-foreground mb-2">Win Rate</div>
-                  <div className="text-2xl font-bold">68.5%</div>
-                  <div className="text-sm text-muted-foreground">142/207 trades</div>
-                </div>
-                <div className="bg-muted/50 rounded-xl p-6">
-                  <div className="text-sm text-muted-foreground mb-2">Avg. Win</div>
-                  <div className="text-2xl font-bold">$289</div>
-                  <div className="text-sm text-muted-foreground">vs -$156 avg loss</div>
-                </div>
-              </div>
+        <div className="container mx-auto px-6 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-xs uppercase tracking-[0.2em] text-primary mb-8">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            For the Arjun IFVG community
+          </div>
 
-              {/* Mock Chart */}
-              <div className="bg-muted/30 rounded-xl p-6 mb-6">
-                <div className="flex items-end justify-between h-32 gap-2">
-                  {Array.from({
-                  length: 16
-                }).map((_, i) => <div key={i} className="bg-brand-blue/60 rounded-sm flex-1" style={{
-                  height: `${Math.random() * 80 + 20}%`
-                }}></div>)}
-                </div>
-              </div>
+          <h1 className="font-display text-5xl sm:text-7xl lg:text-[120px] leading-[0.85] tracking-tight mb-8">
+            Trade with
+            <br />
+            <span className="text-primary drop-shadow-[0_0_40px_hsl(var(--brand-red)/0.5)]">patience</span>
+            <span className="text-muted-foreground">, not dopamine.</span>
+          </h1>
 
-              {/* Mock Recent Trades */}
-              <div className="space-y-3">
-                <div className="text-base font-medium mb-4">Recent Trades</div>
-                {[{
-                symbol: 'EURUSD',
-                pnl: '+$234',
-                time: '2h ago',
-                type: 'Long'
-              }, {
-                symbol: 'GBPJPY', 
-                pnl: '-$89',
-                time: '4h ago',
-                type: 'Short'
-              }, {
-                symbol: 'USDJPY',
-                pnl: '+$156',
-                time: '6h ago',
-                type: 'Long'
-              }].map((trade, i) => <div key={i} className="flex items-center justify-between bg-muted/30 rounded-lg px-4 py-3">
-                    <div className="flex items-center gap-4">
-                      <div className="w-3 h-3 bg-brand-blue rounded-full"></div>
-                      <div>
-                        <span className="font-medium">{trade.symbol}</span>
-                        <span className="text-sm text-muted-foreground ml-2">{trade.type}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`font-medium ${trade.pnl.startsWith('+') ? 'text-success' : 'text-destructive'}`}>
-                        {trade.pnl}
-                      </span>
-                      <span className="text-sm text-muted-foreground">{trade.time}</span>
-                    </div>
-                  </div>)}
-              </div>
-            </div>
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+            IFVG Journal is the trading journal built for ICT &amp; iFVG traders.
+            Log every fill, replay every session, and let the data tell you what your discipline already knows.
+          </p>
 
-            {/* Background Glow with parallax */}
-            <div 
-              className="absolute inset-0 bg-brand-blue/20 rounded-2xl blur-3xl transform scale-110 -z-10"
-              style={{ transform: `translateY(${scrollY * -0.03}px) scale(1.1)` }}
-            ></div>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <Button size="lg" asChild className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full h-12 px-7 text-sm font-semibold shadow-[0_12px_40px_-10px_hsl(var(--brand-red)/0.7)]">
+              <a href="/auth">
+                Create your journal
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </a>
+            </Button>
+            <Button size="lg" variant="outline" asChild className="rounded-full h-12 px-7 text-sm font-semibold border-border/60 bg-background/40 backdrop-blur hover:bg-secondary">
+              <a href="https://ifvg.in" target="_blank" rel="noreferrer">Visit ifvg.in</a>
+            </Button>
+          </div>
+
+          <div className="mt-14 flex items-center justify-center gap-8 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            <span>ICT Concepts</span>
+            <span className="h-1 w-1 rounded-full bg-border" />
+            <span>Prop firm ready</span>
+            <span className="h-1 w-1 rounded-full bg-border" />
+            <span>CSV import</span>
           </div>
         </div>
       </section>
 
-      {/* Hero Section */}
-      <main className="relative">
-        <GeometricElements />
-        
-        <section className="container mx-auto px-6 py-24 lg:py-32">
-          <div className="text-center max-w-4xl mx-auto">
-            <div 
-              className="space-y-8"
-              style={{ transform: `translateY(${scrollY * 0.02}px)` }}
-            >
-              <h1 className="text-5xl lg:text-7xl font-cirka mb-8 leading-[0.9] font-light tracking-tight">
-                Trading journal
-                <br />
-                <span className="text-muted-foreground">for professionals</span>
-              </h1>
-              <p className="text-lg lg:text-xl text-muted-foreground mb-12 leading-relaxed font-normal max-w-2xl mx-auto">
-                The best way to track your trades instead of spreadsheets.
-                Deliver professional analytics and insights at scale.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button size="lg" className="bg-white text-black hover:bg-white/90 h-12 px-6 text-sm font-medium rounded-lg border-0" asChild>
-                  <a href="/auth">
-                    Get Started
-                  </a>
-                </Button>
-                <Button size="lg" variant="ghost" className="h-12 px-6 text-sm font-medium rounded-lg text-white hover:bg-white/10" asChild>
-                  <a href="/auth">Login</a>
-                </Button>
+      {/* Dashboard preview */}
+      <section className="relative pb-32">
+        <div className="container mx-auto px-6">
+          <div className="relative max-w-5xl mx-auto">
+            <div
+              className="absolute -inset-x-10 -inset-y-10 bg-primary/20 blur-3xl rounded-[3rem] -z-10"
+              style={{ transform: `translateY(${scrollY * -0.04}px)` }}
+            />
+            <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 bg-background/60">
+                <div className="flex items-center gap-2">
+                  <span className="h-3 w-3 rounded-full bg-primary/70" />
+                  <span className="h-3 w-3 rounded-full bg-muted" />
+                  <span className="h-3 w-3 rounded-full bg-muted" />
+                </div>
+                <span className="text-xs text-muted-foreground tracking-wide">journal.ifvg.in / dashboard</span>
+              </div>
+
+              <div className="p-6 lg:p-8 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Net P&L', value: '+$12,340', accent: 'text-profit' },
+                    { label: 'Win rate', value: '68.5%' },
+                    { label: 'Avg R:R', value: '2.4R' },
+                    { label: 'Max DD', value: '-3.1%', accent: 'text-loss' },
+                  ].map((m) => (
+                    <div key={m.label} className="rounded-xl bg-secondary/50 border border-border/40 p-4">
+                      <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{m.label}</div>
+                      <div className={`mt-2 font-display text-2xl ${m.accent ?? ''}`}>{m.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-xl bg-secondary/40 border border-border/40 p-5">
+                  <div className="flex items-end justify-between h-36 gap-1.5">
+                    {Array.from({ length: 28 }).map((_, i) => {
+                      const h = 18 + ((i * 37) % 80);
+                      const isWin = (i * 7) % 3 !== 0;
+                      return (
+                        <div
+                          key={i}
+                          className={`flex-1 rounded-sm ${isWin ? 'bg-profit/70' : 'bg-loss/70'}`}
+                          style={{ height: `${h}%` }}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {[
+                    { sym: 'NQ', side: 'Long', pnl: '+$420', tag: 'iFVG' },
+                    { sym: 'ES', side: 'Short', pnl: '-$95', tag: 'OB' },
+                    { sym: 'GC', side: 'Long', pnl: '+$210', tag: 'BPR' },
+                  ].map((t, i) => (
+                    <div key={i} className="flex items-center justify-between rounded-lg bg-secondary/40 border border-border/40 px-4 py-3 text-sm">
+                      <div className="flex items-center gap-3">
+                        <span className="font-display text-base">{t.sym}</span>
+                        <span className="text-xs text-muted-foreground">{t.side}</span>
+                        <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">{t.tag}</span>
+                      </div>
+                      <span className={`font-semibold ${t.pnl.startsWith('+') ? 'text-profit' : 'text-loss'}`}>{t.pnl}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Features Section */}
-        <section className="container mx-auto px-6 py-24">
+      {/* Features */}
+      <section id="features" className="relative py-24 border-t border-border/40">
+        <div className="container mx-auto px-6">
+          <div className="max-w-2xl mb-16">
+            <span className="text-xs uppercase tracking-[0.3em] text-primary">Built for ICT traders</span>
+            <h2 className="font-display text-4xl lg:text-6xl mt-4 leading-[0.95]">
+              Everything you need.
+              <br />
+              <span className="text-muted-foreground">Nothing you don't.</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border/60 rounded-2xl overflow-hidden border border-border/60">
+            {[
+              { icon: TrendingUp, title: 'Fill-level tracking', body: 'Log entries, exits, partials, fees and slippage with precision.' },
+              { icon: BarChart3, title: 'Honest analytics', body: 'Win rate, expectancy, R-multiple distribution, drawdown curves.' },
+              { icon: Brain, title: 'Confluence engine', body: 'Tag iFVGs, OBs, liquidity sweeps. See which setup actually pays.' },
+              { icon: Calendar, title: 'P&L calendar', body: 'Daily, weekly, monthly heatmaps. Spot tilt before it costs you.' },
+              { icon: Shield, title: 'Drawdown alerts', body: 'Prop-firm aware risk monitor with hard rules and soft warnings.' },
+              { icon: Zap, title: 'CSV / Rithmic import', body: 'Drag your fills. We pair them into round-trip trades automatically.' },
+            ].map((f, i) => (
+              <div key={i} className="group bg-card p-8 hover:bg-secondary/60 transition-colors">
+                <div className="h-10 w-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <f.icon className="h-5 w-5" />
+                </div>
+                <h3 className="font-display text-lg mb-2">{f.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{f.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Manifesto strip */}
+      <section className="relative py-32 overflow-hidden border-t border-border/40">
+        <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: 'radial-gradient(ellipse 50% 60% at 50% 50%, hsl(var(--brand-red) / 0.18), transparent 70%)' }} />
+        <div className="container mx-auto px-6 text-center">
+          <Sparkles className="h-6 w-6 text-primary mx-auto mb-6" />
+          <h2 className="font-display text-4xl sm:text-6xl lg:text-7xl leading-[0.9] max-w-4xl mx-auto">
+            We don't chase dopamine.
+            <br />
+            <span className="text-primary">We chase patience.</span>
+          </h2>
+          <p className="mt-8 text-muted-foreground max-w-xl mx-auto">
+            A journal isn't paperwork. It's the mirror that turns trades into a craft.
+          </p>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="relative py-24 border-t border-border/40">
+        <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-cirka font-light mb-6 leading-tight">Everything you need to scale</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Professional tools for serious traders who want to understand and improve their performance.
-            </p>
+            <span className="text-xs uppercase tracking-[0.3em] text-primary">Pricing</span>
+            <h2 className="font-display text-4xl lg:text-6xl mt-4 leading-[0.95]">Start free. Scale serious.</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="group p-6 rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 hover:border-brand-blue/50">
-              <div className="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-4 group-hover:bg-brand-blue/30 transition-colors">
-                <TrendingUp className="h-6 w-6 text-brand-blue" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Advanced Tracking</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Log every detail with precision. Entry, exit, P&L, risk, and more with our comprehensive trade journal.
-              </p>
-            </div>
-
-            <div className="group p-6 rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 hover:border-brand-blue/50">
-              <div className="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-4 group-hover:bg-brand-blue/30 transition-colors">
-                <BarChart3 className="h-6 w-6 text-brand-blue" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Performance Analytics</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Deep insights into your trading patterns with advanced metrics, win rates, and drawdown analysis.
-              </p>
-            </div>
-
-            <div className="group p-6 rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 hover:border-brand-blue/50">
-              <div className="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-4 group-hover:bg-brand-blue/30 transition-colors">
-                <TrendingUp className="h-6 w-6 text-brand-blue" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                Powerful Confluence Tool
-                <span className="text-xs px-2 py-1 bg-brand-blue/20 text-brand-blue rounded-full">Pro</span>
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Advanced pattern recognition and market confluence analysis to identify A+ trading setups with precision.
-              </p>
-            </div>
-
-            <div className="group p-6 rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 hover:border-brand-blue/50">
-              <div className="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-4 group-hover:bg-brand-blue/30 transition-colors">
-                <Calendar className="h-6 w-6 text-brand-blue" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Visual P&L Calendar</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Track daily, weekly, and monthly performance with our intuitive calendar interface.
-              </p>
-            </div>
-
-            <div className="group p-6 rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 hover:border-brand-blue/50">
-              <div className="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-4 group-hover:bg-brand-blue/30 transition-colors">
-                <Shield className="h-6 w-6 text-brand-blue" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Risk Management</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Built-in risk monitoring with drawdown alerts and position sizing recommendations.
-              </p>
-            </div>
-
-            <div className="group p-6 rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 hover:border-brand-blue/50">
-              <div className="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-4 group-hover:bg-brand-blue/30 transition-colors">
-                <Zap className="h-6 w-6 text-brand-blue" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Multi-Account Support</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Manage multiple trading accounts and strategies from a single unified dashboard.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Pricing Section */}
-        <section className="container mx-auto px-6 py-24">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-cirka font-light mb-6 leading-tight">Simple, transparent pricing</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Start free and scale as you grow. No hidden fees, cancel anytime.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Free Plan */}
-            <div className="p-8 rounded-2xl border border-border bg-card">
-              <h3 className="text-2xl font-cirka font-light mb-2">Starter</h3>
-              <p className="text-muted-foreground mb-6 leading-relaxed">Perfect for getting started with trading journaling</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div className="p-8 rounded-2xl border border-border/60 bg-card">
+              <h3 className="font-display text-2xl mb-1">Starter</h3>
+              <p className="text-sm text-muted-foreground mb-6">For new traders building the habit.</p>
               <div className="mb-8">
-                <span className="text-4xl font-bold">$0</span>
-                <span className="text-muted-foreground">/month</span>
+                <span className="font-display text-5xl">$0</span>
+                <span className="text-muted-foreground"> / month</span>
               </div>
-              
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>Up to 50 trades per month</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>Basic performance analytics</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>P&L calendar view</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>1 trading account</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>Basic risk management</span>
-                </li>
+              <ul className="space-y-3 mb-8 text-sm">
+                {['Up to 50 trades / month', 'Basic analytics', 'P&L calendar', '1 trading account', 'CSV import'].map((l) => (
+                  <li key={l} className="flex items-center gap-3"><Check className="h-4 w-4 text-primary flex-shrink-0" /><span>{l}</span></li>
+                ))}
               </ul>
-              
-              <Button className="w-full h-12 text-sm font-medium bg-white text-black hover:bg-white/90 rounded-lg" asChild>
-                <a href="/auth">Get Started</a>
+              <Button asChild className="w-full rounded-full h-11 bg-secondary text-foreground hover:bg-secondary/80 border border-border/60">
+                <a href="/auth">Get started</a>
               </Button>
             </div>
 
-            {/* Pro Plan */}
-            <div className="p-8 rounded-2xl border-2 border-brand-blue bg-card relative">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <div className="bg-brand-blue text-white px-4 py-1 rounded-full text-sm font-medium flex items-center gap-1">
-                  <Star className="h-4 w-4" />
-                  Most Popular
-                </div>
-              </div>
-              
-              <h3 className="text-2xl font-cirka font-light mb-2">Professional</h3>
-              <p className="text-muted-foreground mb-6 leading-relaxed">Advanced features for serious traders</p>
+            <div className="relative p-8 rounded-2xl border border-primary/60 bg-gradient-to-br from-card to-primary/5 shadow-[0_20px_60px_-20px_hsl(var(--brand-red)/0.5)]">
+              <div className="absolute -top-3 left-8 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] uppercase tracking-widest font-semibold">Most popular</div>
+              <h3 className="font-display text-2xl mb-1">Professional</h3>
+              <p className="text-sm text-muted-foreground mb-6">For serious traders and prop firm operators.</p>
               <div className="mb-8">
-                <span className="text-4xl font-bold">$10</span>
-                <span className="text-muted-foreground">/month</span>
+                <span className="font-display text-5xl">$10</span>
+                <span className="text-muted-foreground"> / month</span>
               </div>
-              
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>Unlimited trades</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>Advanced analytics & reports</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>Multiple trading accounts</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>AI Screenshot Analysis</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>Advanced risk management</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>Export & backup</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>Priority support</span>
-                </li>
+              <ul className="space-y-3 mb-8 text-sm">
+                {['Unlimited trades', 'Advanced analytics + reports', 'Multiple accounts', 'Confluence tagging', 'AI screenshot review', 'Rithmic / prop firm import', 'Priority support'].map((l) => (
+                  <li key={l} className="flex items-center gap-3"><Check className="h-4 w-4 text-primary flex-shrink-0" /><span>{l}</span></li>
+                ))}
               </ul>
-              
-              <RazorpayPayment plan="professional" amount={10} onSuccess={() => {
-              toast({
-                title: "Payment Successful!",
-                description: "Welcome to Professional plan! Redirecting to dashboard..."
-              });
-              setTimeout(() => {
-                window.location.href = '/dashboard';
-              }, 2000);
-            }} onError={error => {
-              console.error('Payment error:', error);
-            }}>
-                <div className="w-full h-12 flex items-center justify-center text-base font-medium">
-                  Start Professional Plan
+              <RazorpayPayment
+                plan="professional"
+                amount={10}
+                onSuccess={() => {
+                  toast({ title: 'Payment Successful!', description: 'Welcome to Professional. Redirecting…' });
+                  setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
+                }}
+                onError={(error) => { console.error('Payment error:', error); }}
+              >
+                <div className="w-full h-11 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center text-sm font-semibold transition-colors">
+                  Start Professional
                 </div>
               </RazorpayPayment>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Call to Action */}
-        <section className="container mx-auto px-6 py-24">
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-6">Ready to scale your trading?</h2>
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed">Join professional traders who trust IFVG Journal to track, analyze, and improve their performance.</p>
-            <Button size="lg" className="h-12 px-8 text-base font-medium" asChild>
-              <a href="/auth">
-                Create Free Account
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </a>
-            </Button>
-          </div>
-        </section>
-      </main>
+      {/* CTA */}
+      <section className="relative py-28 border-t border-border/40">
+        <div className="container mx-auto px-6 text-center max-w-3xl">
+          <h2 className="font-display text-4xl lg:text-6xl leading-[0.95] mb-6">
+            Your next trade deserves
+            <br />
+            <span className="text-primary">a real record.</span>
+          </h2>
+          <p className="text-muted-foreground mb-10">
+            Join the Arjun IFVG community traders journaling on IFVG Journal.
+          </p>
+          <Button size="lg" asChild className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full h-12 px-8 text-sm font-semibold shadow-[0_12px_40px_-10px_hsl(var(--brand-red)/0.7)]">
+            <a href="/auth">Create free account <ArrowRight className="ml-2 h-4 w-4" /></a>
+          </Button>
+        </div>
+      </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50">
-        <div className="container mx-auto px-6 py-12">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <TrendingUp className="h-5 w-5 text-brand-blue" />
-            <span className="font-semibold text-lg">IFVG Journal</span>
+      <footer className="border-t border-border/40 py-12">
+        <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
+              <span className="font-display text-primary-foreground text-xs leading-none">i</span>
+            </div>
+            <span className="font-display text-foreground">IFVG<span className="text-primary">Journal</span></span>
           </div>
-          <p className="text-center text-muted-foreground mb-6">
-            Professional trading journal platform for serious traders.
-          </p>
-          <div className="flex justify-center gap-8 text-sm">
-            <a href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms & Conditions</a>
-            <a href="/refund" className="text-muted-foreground hover:text-foreground transition-colors">Refund Policy</a>
+          <div className="flex gap-6">
+            <a href="/terms" className="hover:text-foreground transition">Terms</a>
+            <a href="/refund" className="hover:text-foreground transition">Refund</a>
+            <a href="https://ifvg.in" target="_blank" rel="noreferrer" className="hover:text-foreground transition">ifvg.in</a>
           </div>
+          <span className="text-xs">© {new Date().getFullYear()} IFVG Journal</span>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
+
 export default Index;
