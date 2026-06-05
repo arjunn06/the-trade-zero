@@ -10,7 +10,7 @@ const Terms = () => {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-6 w-6 text-brand-blue" />
-            <span className="font-bold text-xl">Trade Zero</span>
+            <span className="font-bold text-xl">IFVG Journal</span>
           </div>
           <Button variant="outline" asChild>
             <a href="/" className="flex items-center gap-2">
@@ -31,7 +31,7 @@ const Terms = () => {
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Terms and Conditions</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            These terms govern your use of Trade Zero. Please read them carefully.
+            These terms govern your use of IFVG Journal. Please read them carefully.
           </p>
           <div className="flex items-center justify-center gap-2 mt-6 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
@@ -53,7 +53,7 @@ const Terms = () => {
                 <h2 className="text-2xl font-bold">1. Acceptance of Terms</h2>
               </div>
               <p className="text-muted-foreground leading-relaxed">
-                By accessing and using Trade Zero ("the Service"), you accept and agree to be bound by the terms and provision of this agreement.
+                By accessing and using IFVG Journal ("the Service"), you accept and agree to be bound by the terms and provision of this agreement.
               </p>
             </CardContent>
           </Card>
@@ -67,7 +67,7 @@ const Terms = () => {
                 <h2 className="text-2xl font-bold">2. Use License</h2>
               </div>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                Permission is granted to temporarily download one copy of Trade Zero per device for personal, non-commercial transitory viewing only.
+                Permission is granted to temporarily download one copy of IFVG Journal per device for personal, non-commercial transitory viewing only.
               </p>
               <ul className="space-y-2 text-muted-foreground">
                 <li className="flex items-start gap-2">
@@ -177,7 +177,7 @@ const Terms = () => {
             <CardContent className="p-8">
               <h2 className="text-2xl font-bold mb-4">10. Limitation of Liability</h2>
               <p className="text-muted-foreground leading-relaxed">
-                In no event shall Trade Zero, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, punitive, consequential, or special damages.
+                In no event shall IFVG Journal, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, punitive, consequential, or special damages.
               </p>
             </CardContent>
           </Card>
@@ -198,7 +198,7 @@ const Terms = () => {
                 If you have any questions about these Terms and Conditions, please contact us at:
               </p>
               <div className="bg-background rounded-lg p-4 border">
-                <p className="font-medium">support@thetradezero.com</p>
+                <p className="font-medium">support@ifvg.in</p>
               </div>
             </CardContent>
           </Card>

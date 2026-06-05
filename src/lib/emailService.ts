@@ -74,9 +74,9 @@ class EmailService {
       const welcomeData: NotificationEmailData = {
         userEmail,
         userDisplayName: userName,
-        subject: 'Welcome to The Trade Zero! 🎉',
+        subject: 'Welcome to IFVG Journal! 🎉',
         heading: 'Welcome to Your Trading Journey!',
-        message: `We're excited to have you join The Trade Zero! Your account is now set up and ready to help you track and analyze your trading performance like never before.`,
+        message: `We're excited to have you join IFVG Journal! Your account is now set up and ready to help you track and analyze your trading performance like never before.`,
         buttonText: 'Start Trading Analytics',
         buttonUrl: `${window.location.origin}/dashboard`,
         footerMessage: 'Ready to take your trading to the next level? Log in to your dashboard and start tracking your first trade!',
@@ -118,7 +118,7 @@ class EmailService {
       const reminderData: NotificationEmailData = {
         userEmail,
         userDisplayName: userName,
-        subject: 'Please verify your Trade Zero account',
+        subject: 'Please verify your IFVG Journal account',
         heading: 'Account Verification Required',
         message: `To ensure the security of your account and access all features, please verify your email address. This helps us keep your trading data safe and secure.`,
         buttonText: 'Verify Account',
@@ -146,7 +146,7 @@ class EmailService {
         message: `Congratulations on reaching this important trading milestone! Your dedication to tracking and improving your trading performance is paying off. Keep up the excellent work!`,
         buttonText: 'View Your Progress',
         buttonUrl: `${window.location.origin}/dashboard`,
-        footerMessage: 'Thank you for being part of The Trade Zero community. Here\'s to your continued success!',
+        footerMessage: 'Thank you for being part of IFVG Journal community. Here\'s to your continued success!',
       };
 
       return await this.sendNotificationEmail(milestoneData);

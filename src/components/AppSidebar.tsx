@@ -70,18 +70,20 @@ export function AppSidebar() {
       <SidebarHeader className="p-6 border-b border-sidebar-border transition-all duration-300">
         {!collapsed && (
           <div className="flex items-center gap-3 animate-fade-in">
-            <div className="bg-primary text-primary-foreground rounded-lg p-2 hover:scale-110 transition-transform duration-200">
-              <TrendingUp className="h-5 w-5" />
+            <div className="bg-primary text-primary-foreground rounded-lg h-9 w-9 flex items-center justify-center shadow-[0_0_20px_hsl(var(--brand-red)/0.45)] hover:scale-110 transition-transform duration-200">
+              <span className="font-display text-base leading-none">i</span>
             </div>
             <div>
-              <span className="font-bold text-lg text-sidebar-foreground">The Trade Zero</span>
-              <p className="text-xs text-sidebar-foreground/60">Trading Journal</p>
+              <span className="font-display text-lg text-sidebar-foreground tracking-tight">
+                IFVG<span className="text-primary">Journal</span>
+              </span>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-sidebar-foreground/50">Trade with patience</p>
             </div>
           </div>
         )}
         {collapsed && (
-          <div className="bg-primary text-primary-foreground rounded-lg p-2 mx-auto hover:scale-110 transition-all duration-200 animate-fade-in">
-            <TrendingUp className="h-5 w-5" />
+          <div className="bg-primary text-primary-foreground rounded-lg h-9 w-9 mx-auto flex items-center justify-center shadow-[0_0_20px_hsl(var(--brand-red)/0.45)] hover:scale-110 transition-all duration-200 animate-fade-in">
+            <span className="font-display text-base leading-none">i</span>
           </div>
         )}
       </SidebarHeader>

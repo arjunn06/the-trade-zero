@@ -136,7 +136,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
               backgroundImage: `url('/lovable-uploads/d2ebd9e4-65b8-4650-9df3-b2d4d5ace41a.png')`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              fontFamily: '"Proxima Nova", system-ui, -apple-system, sans-serif'
+              fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
             }}
           >
             {/* Content */}
@@ -151,7 +151,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                     fontStyle: 'normal',
                     fontWeight: 700,
                     lineHeight: '1',
-                    fontFamily: '"Cirka Bold", "Proxima Nova", system-ui, sans-serif'
+                    fontFamily: '"Archivo Black", Inter, system-ui, sans-serif'
                   }}
                 >
                   {trade.symbol}
@@ -169,7 +169,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                     style={{ 
                       fontSize: '14px',
                       fontWeight: 300,
-                      fontFamily: '"Cirka Light", "Proxima Nova", system-ui, sans-serif',
+                      fontFamily: 'Inter, system-ui, sans-serif',
                       lineHeight: '1'
                     }}
                   >
@@ -272,7 +272,7 @@ export function ShareableTradeCard({ trade, isOpen, onClose }: ShareableTradeCar
                           lineHeight: '14px'
                         }}
                       >
-                        TheTradeZero
+                        IFVG Journal
                       </span>
                     </div>
                   </div>

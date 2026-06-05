@@ -19,11 +19,11 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				'sans': ['Proxima Nova', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-				'proxima': ['Proxima Nova', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-				'cirka': ['Cirka', 'serif'],
-				'cirka-bold': ['Cirka Bold', 'Cirka', 'serif'],
-				'cirka-light': ['Cirka Light', 'Cirka', 'serif'],
+				'sans': ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+				'display': ['"Archivo Black"', 'Inter', 'ui-sans-serif', 'sans-serif'],
+				'cirka': ['"Archivo Black"', 'Inter', 'sans-serif'],
+				'cirka-bold': ['"Archivo Black"', 'Inter', 'sans-serif'],
+				'cirka-light': ['Inter', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -80,7 +80,9 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				'brand-blue': 'hsl(var(--brand-blue))'
+				'brand-blue': 'hsl(var(--brand-red))',
+				'brand-red': 'hsl(var(--brand-red))',
+				'brand-glow': 'hsl(var(--brand-red) / 0.4)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

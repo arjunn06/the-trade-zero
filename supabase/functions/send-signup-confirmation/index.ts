@@ -93,9 +93,9 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const emailResponse = await resend.emails.send({
-      from: "TheTradeZero <noreply@thetradezero.com>",
+      from: "IFVG Journal <noreply@ifvg.in>",
       to: [email],
-      subject: "Welcome to TheTradeZero - Confirm your email",
+      subject: "Welcome to IFVG Journal - Confirm your email",
       html: emailHtml,
     });
 

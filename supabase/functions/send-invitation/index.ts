@@ -40,32 +40,32 @@ const InvitationEmail = ({ email, token, inviterName, inviteUrl }: {
 
   return React.createElement(Html, null,
     React.createElement(Head, null),
-    React.createElement(Preview, null, "You're invited to join TradeZero Beta - Professional Trading Analytics"),
+    React.createElement(Preview, null, "You're invited to join IFVG Journal Beta - Professional Trading Analytics"),
     React.createElement(Body, { style: main },
       React.createElement(Container, { style: container },
         // Header with branding
         React.createElement(Section, { style: header },
           React.createElement('div', { style: logoContainer },
             React.createElement('div', { style: logoIcon }, '🎉'),
-            React.createElement(Text, { style: logoText }, 'TradeZero')
+            React.createElement(Text, { style: logoText }, 'IFVG Journal')
           ),
           React.createElement(Text, { style: tagline }, 'Beta Trading Platform')
         ),
         
         // Main content
         React.createElement(Section, { style: content },
-          React.createElement(Heading, { style: h1 }, "You're Invited to TradeZero Beta!"),
+          React.createElement(Heading, { style: h1 }, "You're Invited to IFVG Journal Beta!"),
           
           React.createElement(Text, { style: greeting }, 'Hello!'),
           
           React.createElement(Text, { style: paragraph }, 
-            `${inviterName} has invited you to join the exclusive beta of TradeZero - our advanced trading journal and analytics platform.`
+            `${inviterName} has invited you to join the exclusive beta of IFVG Journal - our advanced trading journal and analytics platform.`
           ),
           
           React.createElement(Section, { style: inviteBox },
             React.createElement(Text, { style: inviteTitle }, '🎉 Welcome to the Future of Trading'),
             React.createElement(Text, { style: inviteText }, 
-              'TradeZero helps professional traders track, analyze, and optimize their trading performance with advanced analytics and AI-powered insights.'
+              'IFVG Journal helps professional traders track, analyze, and optimize their trading performance with advanced analytics and AI-powered insights.'
             ),
             React.createElement(Text, { style: inviteEmail }, 
               `Your invitation email: ${email}`
@@ -102,7 +102,7 @@ const InvitationEmail = ({ email, token, inviterName, inviteUrl }: {
           React.createElement(Text, { style: footerText }, 
             'If you didn\'t expect this invitation, you can safely ignore this email.'
           ),
-          React.createElement(Text, { style: footerSmall }, '© 2024 TradeZero. All rights reserved.')
+          React.createElement(Text, { style: footerSmall }, '© 2024 IFVG Journal. All rights reserved.')
         )
       )
     )
@@ -112,7 +112,7 @@ const InvitationEmail = ({ email, token, inviterName, inviteUrl }: {
 // Styles matching the landing page
 const main = {
   backgroundColor: '#0a0a0a',
-  fontFamily: 'Proxima Nova, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   color: '#ffffff',
 };
 
@@ -147,7 +147,7 @@ const logoText = {
   fontWeight: '700',
   color: '#ffffff',
   margin: '0',
-  fontFamily: 'Proxima Nova, sans-serif',
+  fontFamily: 'Inter, sans-serif',
 };
 
 const tagline = {
@@ -169,7 +169,7 @@ const h1 = {
   fontWeight: '700',
   margin: '0 0 24px',
   textAlign: 'center',
-  fontFamily: 'Proxima Nova, sans-serif',
+  fontFamily: 'Inter, sans-serif',
 };
 
 const greeting = {
@@ -226,7 +226,7 @@ const ctaButton = {
   display: 'inline-block',
   padding: '16px 32px',
   border: 'none',
-  fontFamily: 'Proxima Nova, sans-serif',
+  fontFamily: 'Inter, sans-serif',
 };
 
 const urgencyBox = {
@@ -307,7 +307,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const inviteUrl = `https://thetradezero.com/invite/${token}`;
+    const inviteUrl = `https://journal.ifvg.in/invite/${token}`;
 
     // Render the React email template
     const emailHtml = await renderAsync(
@@ -320,9 +320,9 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const emailResponse = await resend.emails.send({
-      from: "TradeZero <noreply@thetradezero.com>",
+      from: "IFVG Journal <noreply@ifvg.in>",
       to: [email],
-      subject: "You're invited to TradeZero Beta - Professional Trading Analytics",
+      subject: "You're invited to IFVG Journal Beta - Professional Trading Analytics",
       html: emailHtml,
     });
 

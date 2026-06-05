@@ -28,28 +28,28 @@ export const SignupConfirmationEmail = ({
 }: SignupConfirmationEmailProps) => (
   <Html>
     <Head />
-    <Preview>Welcome to TradeZero - Confirm your email to start trading analytics</Preview>
+    <Preview>Welcome to IFVG Journal - Confirm your email to start trading analytics</Preview>
     <Body style={main}>
       <Container style={container}>
         {/* Header with branding */}
         <Section style={header}>
           <div style={logoContainer}>
             <div style={logoIcon}>📊</div>
-            <Text style={logoText}>TradeZero</Text>
+            <Text style={logoText}>IFVG Journal</Text>
           </div>
           <Text style={tagline}>Professional Trading Analytics</Text>
         </Section>
         
         {/* Main content */}
         <Section style={content}>
-          <Heading style={h1}>Welcome to TradeZero!</Heading>
+          <Heading style={h1}>Welcome to IFVG Journal!</Heading>
           
           <Text style={greeting}>
             Hello {userDisplayName || 'Trader'},
           </Text>
           
           <Text style={paragraph}>
-            Thank you for joining TradeZero, the professional trading journal and analytics platform. 
+            Thank you for joining IFVG Journal, the professional trading journal and analytics platform. 
             To get started with tracking and analyzing your trades, please confirm your email address.
           </Text>
           
@@ -102,10 +102,10 @@ export const SignupConfirmationEmail = ({
         <Section style={footer}>
           <Text style={footerText}>
             Happy Trading,<br />
-            <strong>The TradeZero Team</strong>
+            <strong>The IFVG Journal Team</strong>
           </Text>
           <Text style={footerLink}>
-            <Link href="https://thetradezero.com" style={link}>thetradezero.com</Link>
+            <Link href="https://journal.ifvg.in" style={link}>ifvg.in</Link>
           </Text>
           <Text style={footerSmall}>
             This email was sent to {userEmail}
@@ -121,7 +121,7 @@ export default SignupConfirmationEmail;
 // Consistent styling matching landing page
 const main = {
   backgroundColor: '#0a0a0a',
-  fontFamily: 'Proxima Nova, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   color: '#ffffff',
 };
 
@@ -156,7 +156,7 @@ const logoText = {
   fontWeight: '700',
   color: '#ffffff',
   margin: '0',
-  fontFamily: 'Proxima Nova, sans-serif',
+  fontFamily: 'Inter, sans-serif',
 };
 
 const tagline = {
@@ -178,7 +178,7 @@ const h1 = {
   fontWeight: '700',
   margin: '0 0 24px',
   textAlign: 'center' as const,
-  fontFamily: 'Proxima Nova, sans-serif',
+  fontFamily: 'Inter, sans-serif',
 };
 
 const greeting = {
@@ -211,7 +211,7 @@ const ctaButton = {
   display: 'inline-block',
   padding: '16px 32px',
   border: 'none',
-  fontFamily: 'Proxima Nova, sans-serif',
+  fontFamily: 'Inter, sans-serif',
 };
 
 const alternativeText = {

@@ -133,7 +133,7 @@ export function AdminLogin() {
           </div>
           <CardTitle>Admin Login</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Access the TradeZero admin panel
+            Access the IFVG Journal admin panel
           </p>
         </CardHeader>
         <CardContent>
@@ -143,7 +143,7 @@ export function AdminLogin() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@thetradezero.com"
+                placeholder="admin@ifvg.in"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

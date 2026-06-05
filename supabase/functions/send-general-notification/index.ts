@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
 
     // Send the email using Resend
     const { data, error } = await resend.emails.send({
-      from: body.fromEmail || 'The Trade Zero <notifications@thetradezero.com>',
+      from: body.fromEmail || 'IFVG Journal <notifications@ifvg.in>',
       to: [body.userEmail],
       subject: body.subject,
       html,

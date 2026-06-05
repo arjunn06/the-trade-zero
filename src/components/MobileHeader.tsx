@@ -27,7 +27,7 @@ export function MobileHeader() {
       case '/notes':
         return 'Notes';
       default:
-        return 'The Trade Zero';
+        return 'IFVG Journal';
     }
   };
   return (

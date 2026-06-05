@@ -314,7 +314,7 @@ const Upgrade = () => {
                 Have questions about our plans or need assistance with upgrading?
               </p>
               <Button variant="outline" asChild>
-                <a href="mailto:support@tradezero.com">Contact Support</a>
+                <a href="mailto:support@ifvg.in">Contact Support</a>
               </Button>
             </CardContent>
           </Card>
